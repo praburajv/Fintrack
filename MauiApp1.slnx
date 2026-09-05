@@ -1,0 +1,11 @@
+<Solution>
+  <Project Path="../../MyFirstMauiApp-master/MyFirstMauiApp/MyFirstMauiApp.csproj">
+    <Deploy />
+  </Project>
+  <Project Path="../../MyFirstMauiApp-master/MyFirstMauiApp_fv10.1/MyFirstMauiApp_fv10.1.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+  <Project Path="MauiApp1/CrocHuntMPluto.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+</Solution>
