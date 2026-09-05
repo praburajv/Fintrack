@@ -2,15 +2,9 @@ namespace MauiApp1.Pages;
 
 public partial class MyMExpense : ContentPage
 {
-    private int count = 0;
-    public MyMExpense()
-	{
-		InitializeComponent();
-	}
-
-    private void Button_Clicked(object sender, EventArgs e)
+    public MyMExpense(ExpenseListPageModel model)
     {
-        count++;
-        lblCount.Text = $"Count: {count}";
+        InitializeComponent();
+        BindingContext = model;
     }
 }

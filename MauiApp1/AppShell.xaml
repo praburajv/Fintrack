@@ -15,24 +15,11 @@
         Route="main" />
 
     <ShellContent
-        Title="Projects"
-        Icon="{StaticResource IconProjects}"
-        ContentTemplate="{DataTemplate pages:ProjectListPage}"
-        Route="projects" />
-
-    <ShellContent
-        Title="MMExpense"
-        Icon="{StaticResource IconProjects}"
+        Title="MyExpense"
+        Icon="{StaticResource IconMyExpense}"
         ContentTemplate="{DataTemplate pages:MyMExpense}"
-        Route="MyMExpense" />
+        Route="myexpense" />
     
-
-    <ShellContent
-        Title="Manage Meta"
-        Icon="{StaticResource IconMeta}"
-        ContentTemplate="{DataTemplate pages:ManageMetaPage}"
-        Route="manage" />
- 
 
     <Shell.FlyoutFooter>
         <Grid Padding="15">

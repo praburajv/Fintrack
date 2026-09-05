@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Border xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:chart="clr-namespace:Syncfusion.Maui.Toolkit.Charts;assembly=Syncfusion.Maui.Toolkit" x:Class="MauiApp1.Pages.Controls.ShopExpenseChart" x:Name="ChartContainer" HeightRequest="300" Style="{StaticResource CardStyle}">
+ <chart:SfCircularChart SemanticProperties.Description="Expenses by shop pie chart">
+  <chart:DoughnutSeries ItemsSource="{Binding ItemsSource, Source={x:Reference ChartContainer}}" XBindingPath="ShopName" YBindingPath="TotalValue" ShowDataLabels="True" EnableTooltip="True" InnerRadius="0.6" />
+ </chart:SfCircularChart>
+</Border>

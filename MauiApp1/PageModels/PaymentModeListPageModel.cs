@@ -1,0 +1,6 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using MauiApp1.Models;
+namespace MauiApp1.PageModels;
+public partial class PaymentModeListPageModel:ObservableObject
+{private readonly PaymentModeRepository _repo;private readonly BillTransactionRepository _bills;private readonly ModalErrorHandler _errors;[ObservableProperty]private List<PaymentMode> _items=[];public PaymentModeListPageModel(PaymentModeRepository repo,BillTransactionRepository bills,ModalErrorHandler errors){_repo=repo;_bills=bills;_errors=errors;}[RelayCommand]private async Task Appearing(){try{Items=await _repo.ListAsync();}catch(Exception ex){_errors.HandleError(ex);}}[RelayCommand]private Task Add()=>Shell.Current.GoToAsync("paymentmode");[RelayCommand]private Task Edit(PaymentMode item)=>Shell.Current.GoToAsync($"paymentmode?id={item.Id}");[RelayCommand]private async Task Delete(PaymentMode item){if(await _bills.IsPaymentModeReferencedAsync(item.Id)){await Shell.Current.DisplayAlertAsync("Payment mode in use","This payment mode cannot be deleted because it is used by existing bills.","OK");return;}if(!await Shell.Current.DisplayAlertAsync("Delete payment mode?",item.Name,"Delete","Cancel"))return;try{await _repo.DeleteItemAsync(item);Items=await _repo.ListAsync();}catch(Exception ex){_errors.HandleError(ex);}}}

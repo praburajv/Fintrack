@@ -21,13 +21,6 @@ namespace MauiApp1
     					handler.PlatformView.SingleSelectionFollowsFocus = false;
     				});
 
-    				Microsoft.Maui.Handlers.ContentViewHandler.Mapper.AppendToMapping(nameof(Pages.Controls.CategoryChart), (handler, view) =>
-    				{
-    					if (view is Pages.Controls.CategoryChart && handler.PlatformView is Microsoft.Maui.Platform.ContentPanel contentPanel)
-    					{
-    						contentPanel.IsTabStop = true;
-    					}
-    				});
 #endif
                 })
                 .ConfigureFonts(fonts =>
@@ -43,18 +36,22 @@ namespace MauiApp1
     		builder.Services.AddLogging(configure => configure.AddDebug());
 #endif
 
-            builder.Services.AddSingleton<ProjectRepository>();
-            builder.Services.AddSingleton<TaskRepository>();
-            builder.Services.AddSingleton<CategoryRepository>();
-            builder.Services.AddSingleton<TagRepository>();
-            builder.Services.AddSingleton<SeedDataService>();
+            builder.Services.AddSingleton<ShopRepository>();
+            builder.Services.AddSingleton<PaymentModeRepository>();
+            builder.Services.AddSingleton<BillTransactionRepository>();
             builder.Services.AddSingleton<ModalErrorHandler>();
             builder.Services.AddSingleton<MainPageModel>();
-            builder.Services.AddSingleton<ProjectListPageModel>();
-            builder.Services.AddSingleton<ManageMetaPageModel>();
+            builder.Services.AddSingleton<ExpenseListPageModel>();
+            builder.Services.AddTransient<ShopListPageModel>();
+            builder.Services.AddTransient<ShopEntryPageModel>();
+            builder.Services.AddTransient<PaymentModeListPageModel>();
+            builder.Services.AddTransient<PaymentModeEntryPageModel>();
 
-            builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");
-            builder.Services.AddTransientWithShellRoute<TaskDetailPage, TaskDetailPageModel>("task");
+            builder.Services.AddTransientWithShellRoute<BillEntryPage, BillEntryPageModel>("bill");
+            builder.Services.AddTransientWithShellRoute<ShopListPage, ShopListPageModel>("shops");
+            builder.Services.AddTransientWithShellRoute<ShopEntryPage, ShopEntryPageModel>("shop");
+            builder.Services.AddTransientWithShellRoute<PaymentModeListPage, PaymentModeListPageModel>("paymentmodes");
+            builder.Services.AddTransientWithShellRoute<PaymentModeEntryPage, PaymentModeEntryPageModel>("paymentmode");
 
             return builder.Build();
         }
