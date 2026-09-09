@@ -9,17 +9,82 @@ namespace MauiApp1
     {
         private readonly IApplicationCloseService _closeService;
         private readonly ICriticalOperationState _criticalOperations;
+        private readonly IAuthenticationService _authentication;
         private bool _closePromptActive;
+        private bool _isClosing;
+        public static bool IsClosing { get; private set; }
 
-        public AppShell(IApplicationCloseService closeService, ICriticalOperationState criticalOperations)
+        public AppShell(IApplicationCloseService closeService, ICriticalOperationState criticalOperations, IAuthenticationService authentication)
         {
             _closeService = closeService;
             _criticalOperations = criticalOperations;
+            _authentication = authentication;
+            IsClosing = false;
+            BindingContext = this;
+            _authentication.AuthenticationStateChanged += OnAuthenticationStateChanged;
+            Unloaded += OnShellUnloaded;
             InitializeComponent();
             var currentTheme = Application.Current!.RequestedTheme;
             ThemeSegmentedControl.SelectedIndex = currentTheme == AppTheme.Light ? 0 : 1;
         }
 
+        public bool IsAuthenticated => _authentication.IsAuthenticated;
+        public bool IsLoggedOut => !IsAuthenticated;
+        public string CurrentUserName => _authentication.CurrentUser?.Name ?? string.Empty;
+        public string VersionText => $"Version {AppInfo.Current.VersionString}";
+
+        private void OnAuthenticationStateChanged(object? sender, EventArgs e)
+        {
+            if (_isClosing || IsClosing || Handler is null)
+                return;
+
+            try
+            {
+                OnPropertyChanged(nameof(IsAuthenticated));
+                OnPropertyChanged(nameof(IsLoggedOut));
+                OnPropertyChanged(nameof(CurrentUserName));
+            }
+            catch (ObjectDisposedException)
+            {
+                UnsubscribeFromAuthentication();
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("disposed", StringComparison.OrdinalIgnoreCase))
+            {
+                UnsubscribeFromAuthentication();
+            }
+        }
+
+        private void OnShellUnloaded(object? sender, EventArgs e) => UnsubscribeFromAuthentication();
+
+        private void UnsubscribeFromAuthentication()
+        {
+            _authentication.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+            Unloaded -= OnShellUnloaded;
+        }
+
+        private async void OnLoginClicked(object? sender, EventArgs e) => await NavigateFromFlyoutAsync("login");
+        private async void OnRegisterClicked(object? sender, EventArgs e) => await NavigateFromFlyoutAsync("register");
+        private void OnLogoutClicked(object? sender, EventArgs e) => _authentication.Logout();
+
+        private async Task NavigateFromFlyoutAsync(string route)
+        {
+            if (_isClosing || IsClosing)
+                return;
+            FlyoutIsPresented = false;
+            await Task.Yield();
+            if (_isClosing || IsClosing)
+                return;
+            await GoToAsync(route);
+        }
+
+
+        private async void OnBackupRestoreClicked(object? sender, EventArgs e)
+        {
+            await DisplayAlertAsync(
+                "Unavailable",
+                "Backup & Restore is currently unavailable.",
+                "OK");
+        }
         private async void OnCloseApplicationClicked(object? sender, EventArgs e)
         {
             if (_closePromptActive)
@@ -41,7 +106,21 @@ namespace MauiApp1
                     "Cancel");
 
                 if (close && !_criticalOperations.IsBusy)
-                    _closeService.Close();
+                {
+                    _isClosing = true;
+                    IsClosing = true;
+                    UnsubscribeFromAuthentication();
+                    FlyoutIsPresented = false;
+                    try
+                    {
+                        _closeService.Close();
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Application close failed during Activity teardown: {ex.GetType().Name}");
+                    }
+                    return;
+                }
                 else if (close)
                     await DisplayAlertAsync("Please wait", "Please wait until the current operation is complete.", "OK");
             }

@@ -28,6 +28,7 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
         {
             var counts = await GetCurrentSummaryAsync(token);
             await CopyDatabaseAsync(tempDb, token);
+            await RemoveAuthenticationDataAsync(tempDb, token);
             var metadata = new BackupMetadata { CreatedAtUtc = DateTime.UtcNow, ApplicationVersion = AppInfo.Current.VersionString, ShopCount = counts.ShopCount, PaymentModeCount = counts.PaymentModeCount, BillCount = counts.BillCount, DatabaseSha256 = await HashAsync(tempDb, token) };
             await using (var output = File.Create(path))
             using (var zip = new ZipArchive(output, ZipArchiveMode.Create))
@@ -84,12 +85,14 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
         var replacing = false;
         try
         {
+            var localAccount = await ReadAuthenticationAccountAsync(DatabasePath, token);
             await CopyDatabaseAsync(safety, token);
             await ExtractAsync(backupPath, candidate, token);
             var candidateCheck = await ValidateDatabaseAsync(candidate, token);
             if (!candidateCheck.IsValid) throw new InvalidDataException(candidateCheck.Error);
             if (File.Exists(DatabasePath)) { File.Move(DatabasePath, previous, true); replacing = true; }
             File.Move(candidate, DatabasePath, true);
+            await RestoreAuthenticationAccountAsync(DatabasePath, localAccount, token);
             var live = await ValidateDatabaseAsync(DatabasePath, token);
             if (!live.IsValid) throw new InvalidDataException(live.Error);
             Delete(previous); Delete(safety);
@@ -114,6 +117,50 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
         await using var source = await OpenAsync(DatabasePath, token);
         await using var target = await OpenAsync(destination, token);
         source.BackupDatabase(target);
+    }
+
+    private static async Task RemoveAuthenticationDataAsync(string path, CancellationToken token)
+    {
+        await using var connection = await OpenAsync(path, token);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DROP TABLE IF EXISTS UserAccount";
+        await command.ExecuteNonQueryAsync(token);
+    }
+
+    private static async Task<UserAccount?> ReadAuthenticationAccountAsync(string path, CancellationToken token)
+    {
+        if (!File.Exists(path)) return null;
+        await using var connection = await OpenAsync(path, token);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT 1 FROM sqlite_master WHERE type='table' AND name='UserAccount'";
+        if (Convert.ToInt32(await command.ExecuteScalarAsync(token)) != 1) return null;
+        command.CommandText = "SELECT Id, Name, Username, PasswordHash, PasswordSalt, CreatedAt FROM UserAccount LIMIT 1";
+        await using var reader = await command.ExecuteReaderAsync(token);
+        if (!await reader.ReadAsync(token)) return null;
+        return new UserAccount
+        {
+            Id = reader.GetInt32(0), Name = reader.GetString(1), Username = reader.GetString(2),
+            PasswordHash = (byte[])reader[3], PasswordSalt = (byte[])reader[4], CreatedAt = DateTime.Parse(reader.GetString(5), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind)
+        };
+    }
+
+    private static async Task RestoreAuthenticationAccountAsync(string path, UserAccount? account, CancellationToken token)
+    {
+        if (account is null) return;
+        await using var connection = await OpenAsync(path, token);
+        await using var command = connection.CreateCommand();
+        command.CommandText = @"CREATE TABLE IF NOT EXISTS UserAccount (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL, Username TEXT NOT NULL COLLATE NOCASE UNIQUE,
+    PasswordHash BLOB NOT NULL, PasswordSalt BLOB NOT NULL, CreatedAt TEXT NOT NULL);
+INSERT INTO UserAccount (Id, Name, Username, PasswordHash, PasswordSalt, CreatedAt)
+VALUES (@id, @name, @username, @hash, @salt, @created);";
+        command.Parameters.AddWithValue("@id", account.Id);
+        command.Parameters.AddWithValue("@name", account.Name);
+        command.Parameters.AddWithValue("@username", account.Username);
+        command.Parameters.Add("@hash", SqliteType.Blob).Value = account.PasswordHash;
+        command.Parameters.Add("@salt", SqliteType.Blob).Value = account.PasswordSalt;
+        command.Parameters.AddWithValue("@created", account.CreatedAt.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+        await command.ExecuteNonQueryAsync(token);
     }
 
     private static async Task ExtractAsync(string path, string destination, CancellationToken token)

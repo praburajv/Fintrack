@@ -33,6 +33,12 @@ On the second phone, open the APK. Android may initially say that installation f
 
 You do not need Developer Options or USB debugging just to install a properly packaged APK manually.
 
+Authentication
+--------------
+
+The application uses one local device account. Registration requires a name, username, and password of at least 8 characters. Passwords are stored only as a PBKDF2-SHA256 hash with a random salt (120,000 iterations); plaintext passwords are never stored. The session is in memory and requires login again after a complete application restart. Logout clears only the session and does not delete financial data.
+
+Financial backups intentionally exclude the local UserAccount table and authentication secrets. Restoring a financial backup preserves the account on the current device. A restored backup therefore does not transfer authentication to another phone.
 
 
 

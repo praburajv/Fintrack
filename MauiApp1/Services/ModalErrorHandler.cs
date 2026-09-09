@@ -13,6 +13,9 @@ namespace MauiApp1.Services
         /// <param name="ex">Exception.</param>
         public void HandleError(Exception ex)
         {
+            if (AppShell.IsClosing)
+                return;
+
             // A database/UI operation can finish while Android is tearing down the
             // current Activity. In that case there is no valid Shell on which to
             // display an error; never let the error-reporting path crash the app.
@@ -47,6 +50,9 @@ namespace MauiApp1.Services
                 await _semaphore.WaitAsync();
                 entered = true;
                 if (Application.Current is null)
+                    return;
+
+                if (AppShell.IsClosing)
                     return;
 
                 if (Shell.Current is Shell shell)

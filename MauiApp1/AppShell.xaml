@@ -5,8 +5,25 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:sf="clr-namespace:Syncfusion.Maui.Toolkit.SegmentedControl;assembly=Syncfusion.Maui.Toolkit"
     xmlns:pages="clr-namespace:MauiApp1.Pages"
+    x:Name="RootShell"
     Shell.FlyoutBehavior="Flyout"
-    Title="MauiApp1">
+    Title="Household Expense Tracker">
+
+    <Shell.FlyoutHeader>
+        <Border Padding="20,24,20,16" StrokeThickness="0" Background="{AppThemeBinding Light={StaticResource LightSecondaryBackground}, Dark={StaticResource DarkSecondaryBackground}}">
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Household Expense Tracker" Style="{StaticResource Title2}" />
+                <Label Text="Manage your household expenses in one place." IsVisible="{Binding IsLoggedOut, Source={x:Reference RootShell}}" />
+                <Label Text="Welcome," IsVisible="{Binding IsAuthenticated, Source={x:Reference RootShell}}" />
+                <Label Text="{Binding CurrentUserName, Source={x:Reference RootShell}}" Style="{StaticResource Title3}" IsVisible="{Binding IsAuthenticated, Source={x:Reference RootShell}}" />
+                <HorizontalStackLayout Spacing="8" IsVisible="{Binding IsLoggedOut, Source={x:Reference RootShell}}">
+                    <Button Text="Login" Clicked="OnLoginClicked" Padding="14,6" />
+                    <Button Text="Register" Clicked="OnRegisterClicked" Padding="14,6" />
+                </HorizontalStackLayout>
+                <Button Text="Logout" Clicked="OnLogoutClicked" Padding="14,6" HorizontalOptions="Start" IsVisible="{Binding IsAuthenticated, Source={x:Reference RootShell}}" />
+            </VerticalStackLayout>
+        </Border>
+    </Shell.FlyoutHeader>
 
     <ShellContent
         Title="Dashboard"
@@ -26,6 +43,18 @@
         ContentTemplate="{DataTemplate pages:DailyDashPage}"
         Route="dailydash" />
 
+    <ShellContent
+        Title="Calendar"
+        Icon="{StaticResource IconCalendar}"
+        ContentTemplate="{DataTemplate pages:MonthlyExpenseCalendarPage}"
+        Route="calendar" />
+
+    <ShellContent
+        Title="Backup &amp; Restore"
+        Icon="{StaticResource IconBackupRestore}"
+        ContentTemplate="{DataTemplate pages:BackupRestorePage}"
+        Route="backuprestore" />
+
     <MenuItem
         Text="Close Application"
         IconImageSource="{StaticResource IconClose}"
@@ -34,8 +63,10 @@
     
 
     <Shell.FlyoutFooter>
-        <Grid Padding="15">
+        <Grid Padding="15" RowDefinitions="Auto,Auto" RowSpacing="12">
+            <Label Text="{Binding VersionText, Source={x:Reference RootShell}}" HorizontalOptions="Center" FontSize="13" />
             <sf:SfSegmentedControl x:Name="ThemeSegmentedControl" 
+                Grid.Row="1"
                 VerticalOptions="Center" HorizontalOptions="Center" SelectionChanged="SfSegmentedControl_SelectionChanged"
                 SegmentWidth="40" SegmentHeight="40">
                 <sf:SfSegmentedControl.ItemsSource>

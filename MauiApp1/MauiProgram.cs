@@ -40,6 +40,8 @@ namespace MauiApp1
             builder.Services.AddSingleton<ShopRepository>();
             builder.Services.AddSingleton<PaymentModeRepository>();
             builder.Services.AddSingleton<BillTransactionRepository>();
+            builder.Services.AddSingleton<UserAccountRepository>();
+            builder.Services.AddSingleton<IAuthenticationService, LocalAuthenticationService>();
             builder.Services.AddSingleton<ModalErrorHandler>();
             builder.Services.AddSingleton<ICriticalOperationState, CriticalOperationState>();
             builder.Services.AddSingleton<IBackupService, BackupService>();
@@ -64,6 +66,9 @@ namespace MauiApp1
             builder.Services.AddTransient<ShopEntryPageModel>();
             builder.Services.AddTransient<PaymentModeListPageModel>();
             builder.Services.AddTransient<PaymentModeEntryPageModel>();
+            builder.Services.AddTransient<BackupRestorePageModel>();
+            builder.Services.AddTransient<LoginPageModel>();
+            builder.Services.AddTransient<RegisterPageModel>();
 
             builder.Services.AddTransientWithShellRoute<BillEntryPage, BillEntryPageModel>("bill");
             builder.Services.AddTransientWithShellRoute<ShopListPage, ShopListPageModel>("shops");
@@ -75,6 +80,10 @@ namespace MauiApp1
             builder.Services.AddTransientWithShellRoute<DailyBillListPage, DailyBillListPageModel>("dailybills");
             builder.Services.AddTransientWithShellRoute<DailyDashPage, DailyDashPageModel>("dailydash");
             builder.Services.AddTransientWithShellRoute<PaymentModeBillListPage, PaymentModeBillListPageModel>("paymentmodebills");
+            builder.Services.AddTransientWithShellRoute<BackupDataPage, BackupDataPageModel>("backup");
+            builder.Services.AddTransientWithShellRoute<RestoreDataPage, RestoreDataPageModel>("restore");
+            builder.Services.AddTransientWithShellRoute<LoginPage, LoginPageModel>("login");
+            builder.Services.AddTransientWithShellRoute<RegisterPage, RegisterPageModel>("register");
 
             return builder.Build();
         }
