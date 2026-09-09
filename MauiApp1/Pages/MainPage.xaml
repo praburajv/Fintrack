@@ -6,9 +6,14 @@
   <Label Text="{Binding CurrentYear, StringFormat='Total Expenses {0}'}" Style="{StaticResource Title2}" SemanticProperties.HeadingLevel="Level1" />
   <Label Text="{Binding AnnualTotalText}" FontSize="32" FontAttributes="Bold" HorizontalOptions="Center" />
   <Label Text="{Binding CurrentYear, StringFormat='Expenses by Shop {0}'}" Style="{StaticResource Title2}" Margin="0,12,0,0" />
-  <controls:ShopExpenseChart IsVisible="{Binding HasShopExpenses}" ItemsSource="{Binding ShopExpenseData}" />
+  <controls:ShopExpenseChart IsVisible="{Binding HasShopExpenses}" ItemsSource="{Binding ShopExpenseData}" ShopSelected="OnShopSelected" ShopLegendTapped="OnShopLegendTapped" />
+  <Label Text="{Binding CurrentMonthTitle}" Style="{StaticResource Title2}" Margin="0,12,0,0" />
+  <controls:ShopExpenseChart IsVisible="{Binding HasCurrentMonthShopExpenses}" ItemsSource="{Binding CurrentMonthShopExpenseData}" IsCurrentMonth="True" ShopSelected="OnShopSelected" ShopLegendTapped="OnShopLegendTapped" />
+  <Label Text="{Binding CurrentMonthName, StringFormat='No expenses for {0}'}" IsVisible="{Binding HasCurrentMonthShopExpenses, Converter={StaticResource InvertedBoolConverter}}" HorizontalOptions="Center" />
   <Label Text="{Binding CurrentYear, StringFormat='No expenses for {0}'}" IsVisible="{Binding HasShopExpenses, Converter={StaticResource InvertedBoolConverter}}" HorizontalOptions="Center" />
   <Label Text="{Binding CurrentYear, StringFormat='Monthly Expenses {0}'}" Style="{StaticResource Title2}" Margin="0,12,0,0" />
-  <controls:MonthlyExpenseChart ItemsSource="{Binding MonthlyExpenseData}" />
- </VerticalStackLayout></ScrollView></pullToRefresh:SfPullToRefresh.PullableContent></pullToRefresh:SfPullToRefresh></Grid>
+  <controls:MonthlyExpenseChart ItemsSource="{Binding MonthlyExpenseData}" MonthSelected="OnMonthSelected" />
+  <Label Text="{Binding WeeklyTitle}" Style="{StaticResource Title2}" Margin="0,12,0,0" />
+  <controls:WeeklyExpenseChart ItemsSource="{Binding WeeklyExpenseData}" DaySelected="OnWeeklyDaySelected" />
+ </VerticalStackLayout></ScrollView></pullToRefresh:SfPullToRefresh.PullableContent></pullToRefresh:SfPullToRefresh><controls:ProcessingOverlay IsBusy="{Binding IsBusy}" /></Grid>
 </ContentPage>

@@ -1,16 +1,54 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
+using MauiApp1.Services;
 using Font = Microsoft.Maui.Font;
 
 namespace MauiApp1
 {
     public partial class AppShell : Shell
     {
-        public AppShell()
+        private readonly IApplicationCloseService _closeService;
+        private readonly ICriticalOperationState _criticalOperations;
+        private bool _closePromptActive;
+
+        public AppShell(IApplicationCloseService closeService, ICriticalOperationState criticalOperations)
         {
+            _closeService = closeService;
+            _criticalOperations = criticalOperations;
             InitializeComponent();
             var currentTheme = Application.Current!.RequestedTheme;
             ThemeSegmentedControl.SelectedIndex = currentTheme == AppTheme.Light ? 0 : 1;
+        }
+
+        private async void OnCloseApplicationClicked(object? sender, EventArgs e)
+        {
+            if (_closePromptActive)
+                return;
+
+            if (_criticalOperations.IsBusy)
+            {
+                await DisplayAlertAsync("Please wait", "Please wait until the current operation is complete.", "OK");
+                return;
+            }
+
+            _closePromptActive = true;
+            try
+            {
+                var close = await DisplayAlertAsync(
+                    "Close Application?",
+                    "Are you sure you want to close Household Expense Tracker?",
+                    "Close",
+                    "Cancel");
+
+                if (close && !_criticalOperations.IsBusy)
+                    _closeService.Close();
+                else if (close)
+                    await DisplayAlertAsync("Please wait", "Please wait until the current operation is complete.", "OK");
+            }
+            finally
+            {
+                _closePromptActive = false;
+            }
         }
         public static async Task DisplaySnackbarAsync(string message)
         {

@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<Border xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:chart="clr-namespace:Syncfusion.Maui.Toolkit.Charts;assembly=Syncfusion.Maui.Toolkit" x:Class="MauiApp1.Pages.Controls.MonthlyExpenseChart" x:Name="ChartContainer" HeightRequest="320" Style="{StaticResource CardStyle}">
+<Border xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:chart="clr-namespace:Syncfusion.Maui.Toolkit.Charts;assembly=Syncfusion.Maui.Toolkit" xmlns:local="clr-namespace:MauiApp1.Utilities" x:Class="MauiApp1.Pages.Controls.MonthlyExpenseChart" x:Name="ChartContainer" HeightRequest="320" Style="{StaticResource CardStyle}">
+ <Border.Resources><ResourceDictionary><local:EuroCurrencyConverter x:Key="EuroCurrencyConverter" /></ResourceDictionary></Border.Resources>
  <chart:SfCartesianChart SemanticProperties.Description="Monthly expenses column chart">
-  <chart:SfCartesianChart.XAxes><chart:CategoryAxis><chart:CategoryAxis.Title><chart:ChartAxisTitle Text="Month" /></chart:CategoryAxis.Title></chart:CategoryAxis></chart:SfCartesianChart.XAxes>
-  <chart:SfCartesianChart.YAxes><chart:NumericalAxis><chart:NumericalAxis.Title><chart:ChartAxisTitle Text="Expense" /></chart:NumericalAxis.Title></chart:NumericalAxis></chart:SfCartesianChart.YAxes>
-  <chart:ColumnSeries ItemsSource="{Binding ItemsSource, Source={x:Reference ChartContainer}}" XBindingPath="MonthName" YBindingPath="TotalValue" EnableTooltip="True" />
+  <chart:SfCartesianChart.XAxes><chart:CategoryAxis Interval="1" LabelsIntersectAction="None" LabelRotation="-45"><chart:CategoryAxis.Title><chart:ChartAxisTitle Text="Month" /></chart:CategoryAxis.Title></chart:CategoryAxis></chart:SfCartesianChart.XAxes>
+  <chart:SfCartesianChart.YAxes><chart:NumericalAxis LabelCreated="OnYAxisLabelCreated"><chart:NumericalAxis.Title><chart:ChartAxisTitle Text="Expense (€)" /></chart:NumericalAxis.Title></chart:NumericalAxis></chart:SfCartesianChart.YAxes>
+  <chart:ColumnSeries ItemsSource="{Binding ItemsSource, Source={x:Reference ChartContainer}}" XBindingPath="MonthName" YBindingPath="TotalValue" PaletteBrushes="{Binding PaletteBrushes, Source={x:Reference ChartContainer}}" ShowDataLabels="True" EnableTooltip="True" TooltipTemplate="{StaticResource MonthlyTooltipTemplate}"><chart:ColumnSeries.SelectionBehavior><chart:DataPointSelectionBehavior SelectionBrush="Gray" SelectionChanged="OnSelectionChanged" /></chart:ColumnSeries.SelectionBehavior></chart:ColumnSeries>
+  <chart:SfCartesianChart.Resources><DataTemplate x:Key="MonthlyTooltipTemplate"><VerticalStackLayout Padding="4"><Label Text="{Binding Item.XValue}" FontAttributes="Bold" /><Label Text="{Binding Item.YValue, Converter={StaticResource EuroCurrencyConverter}}" /></VerticalStackLayout></DataTemplate></chart:SfCartesianChart.Resources>
  </chart:SfCartesianChart>
 </Border>

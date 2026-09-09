@@ -1,4 +1,5 @@
 using MauiApp1.Models;
+using MauiApp1.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 
@@ -8,7 +9,8 @@ public class ShopRepository
 {
     private bool _initialized;
     private readonly ILogger<ShopRepository> _logger;
-    public ShopRepository(ILogger<ShopRepository> logger) => _logger = logger;
+    private readonly ICriticalOperationState _criticalOperations;
+    public ShopRepository(ILogger<ShopRepository> logger, ICriticalOperationState criticalOperations) { _logger = logger; _criticalOperations = criticalOperations; }
 
     private async Task Init()
     {
@@ -53,6 +55,7 @@ public class ShopRepository
 
     public async Task<int> SaveItemAsync(Shop item)
     {
+        using var operation = _criticalOperations.Begin();
         await Init(); await using var c = new SqliteConnection(Constants.DatabasePath); await c.OpenAsync();
         var cmd = c.CreateCommand(); cmd.Parameters.AddWithValue("@name", item.Name.Trim());
         if (item.Id == 0) { cmd.CommandText = "INSERT INTO Shop(Name) VALUES(@name); SELECT last_insert_rowid();"; item.Id = Convert.ToInt32(await cmd.ExecuteScalarAsync()); }
@@ -62,6 +65,7 @@ public class ShopRepository
 
     public async Task<int> DeleteItemAsync(Shop item)
     {
+        using var operation = _criticalOperations.Begin();
         await Init(); await using var c = new SqliteConnection(Constants.DatabasePath); await c.OpenAsync();
         var cmd = c.CreateCommand(); cmd.CommandText = "DELETE FROM Shop WHERE Id=@id"; cmd.Parameters.AddWithValue("@id", item.Id); return await cmd.ExecuteNonQueryAsync();
     }

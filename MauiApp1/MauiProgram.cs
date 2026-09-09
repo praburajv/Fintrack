@@ -1,5 +1,6 @@
-﻿using CommunityToolkit.Maui;
+using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
+using MauiApp1.Services;
 using Syncfusion.Maui.Toolkit.Hosting;
 
 namespace MauiApp1
@@ -40,7 +41,24 @@ namespace MauiApp1
             builder.Services.AddSingleton<PaymentModeRepository>();
             builder.Services.AddSingleton<BillTransactionRepository>();
             builder.Services.AddSingleton<ModalErrorHandler>();
+            builder.Services.AddSingleton<ICriticalOperationState, CriticalOperationState>();
+            builder.Services.AddSingleton<IBackupService, BackupService>();
+#if ANDROID
+            builder.Services.AddSingleton<IBackupFileExporter, Platforms.Android.AndroidBackupFileExporter>();
+#else
+            builder.Services.AddSingleton<IBackupFileExporter, DefaultBackupFileExporter>();
+#endif
+#if ANDROID
+            builder.Services.AddSingleton<IApplicationCloseService, Platforms.Android.AndroidApplicationCloseService>();
+#else
+            builder.Services.AddSingleton<IApplicationCloseService, DefaultApplicationCloseService>();
+#endif
             builder.Services.AddSingleton<MainPageModel>();
+            builder.Services.AddTransient<ShopBillDetailsPageModel>();
+            builder.Services.AddTransient<MonthlyExpenseCalendarPageModel>();
+            builder.Services.AddTransient<DailyBillListPageModel>();
+            builder.Services.AddTransient<DailyDashPageModel>();
+            builder.Services.AddTransient<PaymentModeBillListPageModel>();
             builder.Services.AddSingleton<ExpenseListPageModel>();
             builder.Services.AddTransient<ShopListPageModel>();
             builder.Services.AddTransient<ShopEntryPageModel>();
@@ -52,6 +70,11 @@ namespace MauiApp1
             builder.Services.AddTransientWithShellRoute<ShopEntryPage, ShopEntryPageModel>("shop");
             builder.Services.AddTransientWithShellRoute<PaymentModeListPage, PaymentModeListPageModel>("paymentmodes");
             builder.Services.AddTransientWithShellRoute<PaymentModeEntryPage, PaymentModeEntryPageModel>("paymentmode");
+            builder.Services.AddTransientWithShellRoute<ShopBillDetailsPage, ShopBillDetailsPageModel>("shopbills");
+            builder.Services.AddTransientWithShellRoute<MonthlyExpenseCalendarPage, MonthlyExpenseCalendarPageModel>("monthlycalendar");
+            builder.Services.AddTransientWithShellRoute<DailyBillListPage, DailyBillListPageModel>("dailybills");
+            builder.Services.AddTransientWithShellRoute<DailyDashPage, DailyDashPageModel>("dailydash");
+            builder.Services.AddTransientWithShellRoute<PaymentModeBillListPage, PaymentModeBillListPageModel>("paymentmodebills");
 
             return builder.Build();
         }

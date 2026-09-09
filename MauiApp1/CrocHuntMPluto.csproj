@@ -28,15 +28,24 @@
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
 		<MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
 
-		<!-- Display name -->
+    <!-- 
+    Company							ACCOOM ,OMEACO
+    Application					Household Expense Tracker
+    Application ID				com.ooimaco.crochuntmpluto
+    Display version				1.0.0
+    Version code				1
+    Possible signed APK			com.ooimaco.crochuntmpluto-Signed.apk
+		-->
+    
+    <!-- Display name -->
 		<ApplicationTitle>MauiApp1</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.mauiapp1</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-		<ApplicationVersion>1</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0.2</ApplicationDisplayVersion>
+		<ApplicationVersion>3</ApplicationVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>

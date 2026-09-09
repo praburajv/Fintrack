@@ -19,6 +19,18 @@
         Icon="{StaticResource IconMyExpense}"
         ContentTemplate="{DataTemplate pages:MyMExpense}"
         Route="myexpense" />
+
+    <ShellContent
+        Title="DailyDash"
+        Icon="{StaticResource IconDailyDash}"
+        ContentTemplate="{DataTemplate pages:DailyDashPage}"
+        Route="dailydash" />
+
+    <MenuItem
+        Text="Close Application"
+        IconImageSource="{StaticResource IconClose}"
+        Clicked="OnCloseApplicationClicked"
+        SemanticProperties.Description="Close Household Expense Tracker" />
     
 
     <Shell.FlyoutFooter>
