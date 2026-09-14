@@ -39,7 +39,11 @@ CREATE TABLE IF NOT EXISTS Bill_transcation (
 CREATE INDEX IF NOT EXISTS IX_Bill_transcation_Bill_date ON Bill_transcation(Bill_date);
 CREATE INDEX IF NOT EXISTS IX_Bill_transcation_Shop_Id ON Bill_transcation(Shop_Id);
 CREATE INDEX IF NOT EXISTS IX_Bill_transcation_Payment_Mode_Id ON Bill_transcation(Payment_Mode_Id);";
-            await cmd.ExecuteNonQueryAsync(); _initialized = true;
+            await cmd.ExecuteNonQueryAsync();
+            await ShopRepository.EnsureCategoryColumnAsync(c);
+            await CategoryRepository.EnsureSchemaAndSeedAsync(c);
+            await ShopRepository.EnsureCategoryIdColumnAndMigrationAsync(c);
+            _initialized = true;
         }
         catch (Exception ex) { _logger.LogError(ex, "Error creating Bill_transcation table"); throw; }
     }
@@ -48,7 +52,7 @@ CREATE INDEX IF NOT EXISTS IX_Bill_transcation_Payment_Mode_Id ON Bill_transcati
     {
         Id = r.GetInt32(0), BillDate = DateTime.Parse(r.GetString(1), CultureInfo.InvariantCulture), ShopId = r.GetInt32(2),
         PaymentModeId = r.GetInt32(3), BillValue = decimal.Parse(r.GetString(4), CultureInfo.InvariantCulture), Note = r.IsDBNull(5) ? string.Empty : r.GetString(5),
-        ShopName = r.IsDBNull(6) ? string.Empty : r.GetString(6), PaymentModeName = r.IsDBNull(7) ? string.Empty : r.GetString(7)
+        ShopName = r.IsDBNull(6) ? string.Empty : r.GetString(6), PaymentModeName = r.IsDBNull(7) ? string.Empty : r.GetString(7), ShopCategory = ShopCategoryCatalog.Normalize(r.IsDBNull(8) ? null : r.GetString(8)), ShopCategoryId = r.IsDBNull(9) ? 0 : r.GetInt32(9), ShopCategoryIconKey = r.IsDBNull(10) ? "default_shop" : r.GetString(10)
     };
 
     private static void AddParams(SqliteCommand cmd, BillTransaction item)
@@ -61,11 +65,11 @@ CREATE INDEX IF NOT EXISTS IX_Bill_transcation_Payment_Mode_Id ON Bill_transcati
     public async Task<List<BillTransaction>> ListAsync(int? year = null)
     {
         await Init(); await using var c = new SqliteConnection(Constants.DatabasePath); await c.OpenAsync();
-        var cmd = c.CreateCommand(); cmd.CommandText = @"SELECT b.Id,b.Bill_date,b.Shop_Id,b.Payment_Mode_Id,b.Bill_value,b.Note,s.Name,p.Name
-FROM Bill_transcation b JOIN Shop s ON s.Id=b.Shop_Id JOIN Payment_mode p ON p.Id=b.Payment_Mode_Id";
-        if (year.HasValue) { cmd.CommandText += " WHERE b.Bill_date >= @from AND b.Bill_date < @to"; cmd.Parameters.AddWithValue("@from", new DateTime(year.Value,1,1).ToString("O", CultureInfo.InvariantCulture)); cmd.Parameters.AddWithValue("@to", new DateTime(year.Value+1,1,1).ToString("O", CultureInfo.InvariantCulture)); }
+        var cmd = c.CreateCommand(); cmd.CommandText = @"SELECT b.Id,b.Bill_date,b.Shop_Id,b.Payment_Mode_Id,b.Bill_value,b.Note,s.Name,p.Name,s.Category,s.Category_Id,c.IconKey
+FROM Bill_transcation b LEFT JOIN Shop s ON s.Id=b.Shop_Id LEFT JOIN Payment_mode p ON p.Id=b.Payment_Mode_Id LEFT JOIN Category c ON c.Id=s.Category_Id";
         cmd.CommandText += " ORDER BY b.Bill_date,b.Id";
-        var result = new List<BillTransaction>(); await using var r=await cmd.ExecuteReaderAsync(); while(await r.ReadAsync()) result.Add(Read(r)); return result;
+        var result = new List<BillTransaction>(); await using var r=await cmd.ExecuteReaderAsync(); while(await r.ReadAsync()) result.Add(Read(r));
+        return year.HasValue ? result.Where(b => b.BillDate.Year == year.Value).ToList() : result;
     }
 
     public async Task<decimal> GetAnnualTotalAsync(int year)
@@ -91,11 +95,20 @@ FROM Bill_transcation b JOIN Shop s ON s.Id=b.Shop_Id JOIN Payment_mode p ON p.I
 
     public async Task<List<WeeklyExpenseChartData>> GetExpensesByWeekAsync(DateTime weekStart)
     {
-        await Init(); await using var c = new SqliteConnection(Constants.DatabasePath); await c.OpenAsync();
-        var cmd = c.CreateCommand(); cmd.CommandText = @"SELECT CAST(strftime('%w', Bill_date) AS INTEGER), SUM(CAST(Bill_value AS NUMERIC)) FROM Bill_transcation WHERE Bill_date >= @from AND Bill_date < @to GROUP BY strftime('%w', Bill_date)";
-        cmd.Parameters.AddWithValue("@from", weekStart.ToString("O", CultureInfo.InvariantCulture)); cmd.Parameters.AddWithValue("@to", weekStart.AddDays(7).ToString("O", CultureInfo.InvariantCulture));
-        var totals = new Dictionary<int, decimal>(); await using var r = await cmd.ExecuteReaderAsync(); while (await r.ReadAsync()) totals[r.GetInt32(0)] = ParseDecimal(r.GetValue(1));
-        return Enumerable.Range(0, 7).Select(day => { var date = weekStart.AddDays(day); var sqliteDay = (int)date.DayOfWeek; return new WeeklyExpenseChartData { DayNumber = day + 1, DayName = date.ToString("ddd", CultureInfo.InvariantCulture), Date = date, TotalValue = totals.GetValueOrDefault(sqliteDay) }; }).ToList();
+        // Build the chart from the same parsed calendar dates used by the daily
+        // drill-down. This avoids SQLite weekday-number/time-format differences
+        // causing a bar to point at a different day's detail page.
+        var bills = await ListAsync();
+        var end = weekStart.Date.AddDays(7);
+        var totals = bills
+            .Where(b => b.BillDate >= weekStart.Date && b.BillDate < end)
+            .GroupBy(b => b.BillDate.Date)
+            .ToDictionary(g => g.Key, g => g.Sum(b => b.BillValue));
+        return Enumerable.Range(0, 7).Select(day =>
+        {
+            var date = weekStart.Date.AddDays(day);
+            return new WeeklyExpenseChartData { DayNumber = day + 1, DayName = date.ToString("ddd", CultureInfo.InvariantCulture), Date = date, TotalValue = totals.GetValueOrDefault(date) };
+        }).ToList();
     }
 
     public Task<List<BillTransaction>> GetBillsByShopAndYearAsync(int shopId, int year)
@@ -125,8 +138,8 @@ GROUP BY p.Id, p.Name ORDER BY p.Name";
     public async Task<List<BillTransaction>> GetBillsByPaymentModeAndDateRangeAsync(int paymentModeId, DateTime from, DateTime to)
     {
         await Init(); await using var c = new SqliteConnection(Constants.DatabasePath); await c.OpenAsync();
-        var cmd = c.CreateCommand(); cmd.CommandText = @"SELECT b.Id,b.Bill_date,b.Shop_Id,b.Payment_Mode_Id,b.Bill_value,b.Note,s.Name,p.Name
-FROM Bill_transcation b JOIN Shop s ON s.Id=b.Shop_Id JOIN Payment_mode p ON p.Id=b.Payment_Mode_Id
+        var cmd = c.CreateCommand(); cmd.CommandText = @"SELECT b.Id,b.Bill_date,b.Shop_Id,b.Payment_Mode_Id,b.Bill_value,b.Note,s.Name,p.Name,s.Category,s.Category_Id,c.IconKey
+FROM Bill_transcation b JOIN Shop s ON s.Id=b.Shop_Id JOIN Payment_mode p ON p.Id=b.Payment_Mode_Id LEFT JOIN Category c ON c.Id=s.Category_Id
 WHERE b.Payment_Mode_Id=@mode AND b.Bill_date >= @from AND b.Bill_date < @to ORDER BY b.Bill_date DESC,b.Id DESC";
         cmd.Parameters.AddWithValue("@mode", paymentModeId); cmd.Parameters.AddWithValue("@from", from.ToString("O", CultureInfo.InvariantCulture)); cmd.Parameters.AddWithValue("@to", to.ToString("O", CultureInfo.InvariantCulture));
         var result = new List<BillTransaction>(); await using var r = await cmd.ExecuteReaderAsync(); while (await r.ReadAsync()) result.Add(Read(r)); return result;
@@ -158,8 +171,8 @@ WHERE Bill_date >= @from AND Bill_date < @to
     private async Task<List<BillTransaction>> GetBillsForDateRangeAsync(DateTime from, DateTime to)
     {
         await Init(); await using var c = new SqliteConnection(Constants.DatabasePath); await c.OpenAsync();
-        var cmd = c.CreateCommand(); cmd.CommandText = @"SELECT b.Id,b.Bill_date,b.Shop_Id,b.Payment_Mode_Id,b.Bill_value,b.Note,s.Name,p.Name
-FROM Bill_transcation b JOIN Shop s ON s.Id=b.Shop_Id JOIN Payment_mode p ON p.Id=b.Payment_Mode_Id
+        var cmd = c.CreateCommand(); cmd.CommandText = @"SELECT b.Id,b.Bill_date,b.Shop_Id,b.Payment_Mode_Id,b.Bill_value,b.Note,s.Name,p.Name,s.Category,s.Category_Id,c.IconKey
+FROM Bill_transcation b JOIN Shop s ON s.Id=b.Shop_Id JOIN Payment_mode p ON p.Id=b.Payment_Mode_Id LEFT JOIN Category c ON c.Id=s.Category_Id
 WHERE b.Bill_date >= @from AND b.Bill_date < @to ORDER BY b.Bill_date DESC,b.Id DESC";
         cmd.Parameters.AddWithValue("@from", from.ToString("O", CultureInfo.InvariantCulture)); cmd.Parameters.AddWithValue("@to", to.ToString("O", CultureInfo.InvariantCulture));
         var result = new List<BillTransaction>(); await using var r = await cmd.ExecuteReaderAsync(); while (await r.ReadAsync()) result.Add(Read(r)); return result;
@@ -168,8 +181,8 @@ WHERE b.Bill_date >= @from AND b.Bill_date < @to ORDER BY b.Bill_date DESC,b.Id 
     private async Task<List<BillTransaction>> GetBillsByShopAsync(int shopId, DateTime from, DateTime to)
     {
         await Init(); await using var c = new SqliteConnection(Constants.DatabasePath); await c.OpenAsync();
-        var cmd = c.CreateCommand(); cmd.CommandText = @"SELECT b.Id,b.Bill_date,b.Shop_Id,b.Payment_Mode_Id,b.Bill_value,b.Note,s.Name,p.Name
-FROM Bill_transcation b JOIN Shop s ON s.Id=b.Shop_Id JOIN Payment_mode p ON p.Id=b.Payment_Mode_Id
+        var cmd = c.CreateCommand(); cmd.CommandText = @"SELECT b.Id,b.Bill_date,b.Shop_Id,b.Payment_Mode_Id,b.Bill_value,b.Note,s.Name,p.Name,s.Category,s.Category_Id,c.IconKey
+FROM Bill_transcation b JOIN Shop s ON s.Id=b.Shop_Id JOIN Payment_mode p ON p.Id=b.Payment_Mode_Id LEFT JOIN Category c ON c.Id=s.Category_Id
 WHERE b.Shop_Id=@shop AND b.Bill_date >= @from AND b.Bill_date < @to ORDER BY b.Bill_date DESC,b.Id DESC";
         cmd.Parameters.AddWithValue("@shop", shopId); cmd.Parameters.AddWithValue("@from", from.ToString("O", CultureInfo.InvariantCulture)); cmd.Parameters.AddWithValue("@to", to.ToString("O", CultureInfo.InvariantCulture));
         var result = new List<BillTransaction>(); await using var r = await cmd.ExecuteReaderAsync(); while (await r.ReadAsync()) result.Add(Read(r)); return result;
@@ -188,7 +201,7 @@ WHERE b.Shop_Id=@shop AND b.Bill_date >= @from AND b.Bill_date < @to ORDER BY b.
 
     public async Task<BillTransaction?> GetAsync(int id)
     {
-        await Init(); await using var c=new SqliteConnection(Constants.DatabasePath); await c.OpenAsync(); var cmd=c.CreateCommand(); cmd.CommandText=@"SELECT b.Id,b.Bill_date,b.Shop_Id,b.Payment_Mode_Id,b.Bill_value,b.Note,s.Name,p.Name FROM Bill_transcation b JOIN Shop s ON s.Id=b.Shop_Id JOIN Payment_mode p ON p.Id=b.Payment_Mode_Id WHERE b.Id=@id"; cmd.Parameters.AddWithValue("@id",id); await using var r=await cmd.ExecuteReaderAsync(); return await r.ReadAsync()?Read(r):null;
+        await Init(); await using var c=new SqliteConnection(Constants.DatabasePath); await c.OpenAsync(); var cmd=c.CreateCommand(); cmd.CommandText=@"SELECT b.Id,b.Bill_date,b.Shop_Id,b.Payment_Mode_Id,b.Bill_value,b.Note,s.Name,p.Name,s.Category,s.Category_Id,c.IconKey FROM Bill_transcation b JOIN Shop s ON s.Id=b.Shop_Id JOIN Payment_mode p ON p.Id=b.Payment_Mode_Id LEFT JOIN Category c ON c.Id=s.Category_Id WHERE b.Id=@id"; cmd.Parameters.AddWithValue("@id",id); await using var r=await cmd.ExecuteReaderAsync(); return await r.ReadAsync()?Read(r):null;
     }
 
     public async Task<bool> IsShopReferencedAsync(int id) => await IsReferencedAsync("Shop_Id", id);

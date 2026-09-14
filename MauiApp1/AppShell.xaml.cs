@@ -10,28 +10,40 @@ namespace MauiApp1
         private readonly IApplicationCloseService _closeService;
         private readonly ICriticalOperationState _criticalOperations;
         private readonly IAuthenticationService _authentication;
+        private readonly IThemeService _themes;
+        private readonly IBiometricAuthenticationService _biometric;
         private bool _closePromptActive;
         private bool _isClosing;
         public static bool IsClosing { get; private set; }
 
-        public AppShell(IApplicationCloseService closeService, ICriticalOperationState criticalOperations, IAuthenticationService authentication)
+        public AppShell(IApplicationCloseService closeService, ICriticalOperationState criticalOperations, IAuthenticationService authentication, IThemeService themes, IBiometricAuthenticationService biometric)
         {
             _closeService = closeService;
             _criticalOperations = criticalOperations;
             _authentication = authentication;
+            _themes = themes;
+            _biometric = biometric;
             IsClosing = false;
             BindingContext = this;
             _authentication.AuthenticationStateChanged += OnAuthenticationStateChanged;
+            Navigating += OnShellNavigating;
             Unloaded += OnShellUnloaded;
             InitializeComponent();
-            var currentTheme = Application.Current!.RequestedTheme;
-            ThemeSegmentedControl.SelectedIndex = currentTheme == AppTheme.Light ? 0 : 1;
+            ThemeSegmentedControl.SelectedIndex = _themes.CurrentAppearance == AppTheme.Dark ? 1 : 0;
+            Dispatcher.Dispatch(async () =>
+            {
+                if (await _biometric.GetConfiguredUserIdAsync() is not null)
+                    await GoToAsync("login");
+            });
         }
 
         public bool IsAuthenticated => _authentication.IsAuthenticated;
         public bool IsLoggedOut => !IsAuthenticated;
         public string CurrentUserName => _authentication.CurrentUser?.Name ?? string.Empty;
         public string VersionText => $"Version {AppInfo.Current.VersionString}";
+        // Explicit test-phase switch. Set to false before a public production release.
+        private const bool EnableDatabaseTools = true;
+        public bool IsDeveloperBuild => EnableDatabaseTools;
 
         private void OnAuthenticationStateChanged(object? sender, EventArgs e)
         {
@@ -56,6 +68,19 @@ namespace MauiApp1
 
         private void OnShellUnloaded(object? sender, EventArgs e) => UnsubscribeFromAuthentication();
 
+        private async void OnShellNavigating(object? sender, ShellNavigatingEventArgs e)
+        {
+            if (_isClosing || IsClosing)
+                return;
+            var target = e.Target.Location.OriginalString;
+            if (_authentication.IsAuthenticated)
+                return;
+            if (!target.Contains("myexpense", StringComparison.OrdinalIgnoreCase) || target.Contains("login", StringComparison.OrdinalIgnoreCase))
+                return;
+            e.Cancel();
+            await NavigateFromFlyoutAsync("login?returnTo=myexpense");
+        }
+
         private void UnsubscribeFromAuthentication()
         {
             _authentication.AuthenticationStateChanged -= OnAuthenticationStateChanged;
@@ -64,7 +89,31 @@ namespace MauiApp1
 
         private async void OnLoginClicked(object? sender, EventArgs e) => await NavigateFromFlyoutAsync("login");
         private async void OnRegisterClicked(object? sender, EventArgs e) => await NavigateFromFlyoutAsync("register");
+        private async void OnSetupClicked(object? sender, EventArgs e) => await NavigateToSetupAsync();
+        private async void OnSetupDataClicked(object? sender, EventArgs e) => await NavigateFromFlyoutAsync("setupdata");
         private void OnLogoutClicked(object? sender, EventArgs e) => _authentication.Logout();
+
+        private async void OnDbToolsClicked(object? sender, EventArgs e)
+        {
+            if (_isClosing || IsClosing)
+                return;
+
+            try
+            {
+                FlyoutIsPresented = false;
+                await Task.Yield();
+                var choice = await DisplayActionSheetAsync("DB Tools", "Cancel", null, "SQL QA", "Users");
+                if (choice == "SQL QA")
+                    await GoToAsync("sqlqa");
+                else if (choice == "Users")
+                    await GoToAsync("databasetools");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"DB Tools navigation failed: {ex.GetType().Name}");
+                await DisplayAlertAsync("DB Tools", "The selected tool could not be opened.", "OK");
+            }
+        }
 
         private async Task NavigateFromFlyoutAsync(string route)
         {
@@ -77,15 +126,37 @@ namespace MauiApp1
             await GoToAsync(route);
         }
 
+        public static async Task NavigateToSetupAsync()
+        {
+            if (IsClosing || Shell.Current is null)
+                return;
+
+            var currentRoute = Shell.Current.CurrentState?.Location?.OriginalString ?? string.Empty;
+            if (currentRoute.Contains("/setup", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(currentRoute, "setup", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            try
+            {
+                Shell.Current.FlyoutIsPresented = false;
+                await Task.Yield();
+                await Shell.Current.GoToAsync("//setup");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Setup navigation failed: {ex.GetType().Name}");
+                await Shell.Current.DisplayAlertAsync("Setup", "Setup could not be opened. Please try again.", "OK");
+            }
+        }
+
 
         private async void OnBackupRestoreClicked(object? sender, EventArgs e)
         {
-            await DisplayAlertAsync(
-                "Unavailable",
-                "Backup & Restore is currently unavailable.",
-                "OK");
+            await NavigateFromFlyoutAsync("backuprestore");
         }
-        private async void OnCloseApplicationClicked(object? sender, EventArgs e)
+        private async void OnCloseApplicationClicked(object? sender, EventArgs e) => await CloseApplicationAsync();
+
+        public async Task CloseApplicationAsync()
         {
             if (_closePromptActive)
                 return;
@@ -162,7 +233,7 @@ namespace MauiApp1
 
         private void SfSegmentedControl_SelectionChanged(object? sender, Syncfusion.Maui.Toolkit.SegmentedControl.SelectionChangedEventArgs e)
         {
-            Application.Current!.UserAppTheme = e.NewIndex == 0 ? AppTheme.Light : AppTheme.Dark;
+            _themes.ApplyAppearance(e.NewIndex == 0 ? AppTheme.Light : AppTheme.Dark);
         }
     }
 }

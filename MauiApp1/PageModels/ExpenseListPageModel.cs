@@ -9,14 +9,28 @@ public partial class ExpenseListPageModel : ObservableObject
 {
     private readonly BillTransactionRepository _bills;
     private readonly ModalErrorHandler _errors;
+    private readonly IAuthenticationService _authentication;
     [ObservableProperty] private ObservableCollection<ExpenseMonthGroup> _months = [];
     [ObservableProperty] private int _year = DateTime.Today.Year;
     [ObservableProperty] private bool _isBusy;
     public string YearTitle => Year.ToString();
     public bool HasNoExpenses => Months.Count == 0;
-    public ExpenseListPageModel(BillTransactionRepository bills, ModalErrorHandler errors) { _bills=bills; _errors=errors; }
+    [ObservableProperty] private bool _canMaintainExpenses;
+    public ExpenseListPageModel(BillTransactionRepository bills, ModalErrorHandler errors, IAuthenticationService authentication)
+    {
+        _bills=bills; _errors=errors; _authentication=authentication;
+        CanMaintainExpenses = authentication.IsAuthenticated;
+        _authentication.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
 
-    [RelayCommand] private async Task Appearing() => await LoadAsync();
+    private void OnAuthenticationStateChanged(object? sender, EventArgs e)
+    {
+        RefreshAuthorization();
+    }
+
+    public void RefreshAuthorization() => CanMaintainExpenses = _authentication.IsAuthenticated;
+
+    [RelayCommand] private async Task Appearing() { RefreshAuthorization(); await LoadAsync(); }
     [RelayCommand] private async Task Load() => await LoadAsync();
     [RelayCommand] private async Task PreviousYear() { Year--; await LoadAsync(); }
     [RelayCommand] private async Task NextYear() { Year++; await LoadAsync(); }
@@ -27,8 +41,27 @@ public partial class ExpenseListPageModel : ObservableObject
         finally { IsBusy=false; }
     }
     [RelayCommand] private void ToggleMonth(ExpenseMonthGroup group) { if(group is not null) group.IsExpanded=!group.IsExpanded; }
-    [RelayCommand] private Task AddBill()=>Shell.Current.GoToAsync("bill");
-    [RelayCommand] private Task EditBill(BillTransaction bill)=>Shell.Current.GoToAsync($"bill?id={bill.Id}");
+    [RelayCommand]
+    private async Task AddBill()
+    {
+        if (!await RequireAuthenticationAsync()) return;
+        await Shell.Current.GoToAsync("bill");
+    }
+
+    [RelayCommand]
+    private async Task EditBill(BillTransaction bill)
+    {
+        if (bill is null || !await RequireAuthenticationAsync()) return;
+        await Shell.Current.GoToAsync($"bill?id={bill.Id}");
+    }
+
+    private async Task<bool> RequireAuthenticationAsync()
+    {
+        if (AppShell.IsClosing) return false;
+        if (_authentication.IsAuthenticated) return true;
+        await Shell.Current.DisplayAlertAsync("Authentication Required", "Please login to add or modify expenses.", "OK");
+        return false;
+    }
     [RelayCommand] private Task ManageShops()=>Shell.Current.GoToAsync("shops");
     [RelayCommand] private Task ManagePaymentModes()=>Shell.Current.GoToAsync("paymentmodes");
 }

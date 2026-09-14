@@ -24,7 +24,6 @@ public sealed class LocalAuthenticationService(UserAccountRepository accounts, I
 
     public async Task<AuthenticationResult> RegisterAsync(string name, string username, string password)
     {
-        if (await accounts.HasAnyAccountAsync()) return new(false, "A local account already exists.");
         var salt = RandomNumberGenerator.GetBytes(SaltSize);
         var hash = Derive(password, salt);
         try
@@ -50,6 +49,51 @@ public sealed class LocalAuthenticationService(UserAccountRepository accounts, I
         _currentUser = user;
         _authenticationStateChanged.HandleEvent(this, EventArgs.Empty, nameof(AuthenticationStateChanged));
         return new(true, "", user);
+    }
+
+    public async Task<AuthenticationResult> AuthenticateLocalUserAfterBiometricAsync(int userId)
+    {
+        if (userId <= 0) return new(false, "The biometric account was not found.");
+        var user = await accounts.GetByIdAsync(userId);
+        if (user is null) return new(false, "The biometric account was not found.");
+
+        _currentUser = user;
+        _authenticationStateChanged.HandleEvent(this, EventArgs.Empty, nameof(AuthenticationStateChanged));
+        return new(true, "", user);
+    }
+
+    public Task<IReadOnlyList<LocalUserSummary>> GetLocalUsersAsync() => accounts.ListUserSummariesAsync();
+
+    public async Task<AuthenticationResult> ResetPasswordAsync(int userId, string newPassword)
+    {
+        if (string.IsNullOrEmpty(newPassword) || newPassword.Length < MinimumPasswordLength)
+            return new(false, $"Password must be at least {MinimumPasswordLength} characters.");
+
+        if (userId <= 0) return new(false, "The selected local account was not found.");
+
+        var user = await accounts.GetByIdAsync(userId);
+        if (user is null) return new(false, "The selected local account was not found.");
+
+        var salt = RandomNumberGenerator.GetBytes(SaltSize);
+        var hash = Derive(newPassword, salt);
+        var rowsAffected = await accounts.UpdatePasswordAsync(userId, hash, salt);
+        if (rowsAffected != 1)
+        {
+            logger.LogWarning("Local password reset did not update exactly one account: UserId = {UserId}, RowsAffected = {RowsAffected}", userId, rowsAffected);
+            return new(false, "The password could not be changed.");
+        }
+
+        var updatedUser = await accounts.GetByIdAsync(userId);
+        var hashChanged = updatedUser is not null && !CryptographicOperations.FixedTimeEquals(updatedUser.PasswordHash, user.PasswordHash);
+        var saltChanged = updatedUser is not null && !CryptographicOperations.FixedTimeEquals(updatedUser.PasswordSalt, user.PasswordSalt);
+        var storedCredentialsMatch = updatedUser is not null
+            && CryptographicOperations.FixedTimeEquals(updatedUser.PasswordHash, hash)
+            && CryptographicOperations.FixedTimeEquals(updatedUser.PasswordSalt, salt);
+        logger.LogDebug("Local password reset verification: UserId = {UserId}, RowsAffected = {RowsAffected}, PasswordHashChanged = {HashChanged}, PasswordSaltChanged = {SaltChanged}, StoredCredentialsMatch = {StoredCredentialsMatch}", userId, rowsAffected, hashChanged, saltChanged, storedCredentialsMatch);
+        if (!hashChanged || !saltChanged || !storedCredentialsMatch)
+            return new(false, "The password could not be verified after saving.");
+
+        return new(true, "Password changed successfully.");
     }
 
     public void Logout()

@@ -44,14 +44,72 @@ public sealed class UserAccountRepository
         return await reader.ReadAsync() ? Read(reader) : null;
     }
 
-    public async Task<bool> HasAnyAccountAsync()
+    public async Task<IReadOnlyList<LocalUserSummary>> ListUserSummariesAsync()
     {
         await InitAsync();
         await using var connection = new SqliteConnection(Constants.DatabasePath);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT EXISTS(SELECT 1 FROM UserAccount)";
-        return Convert.ToInt32(await command.ExecuteScalarAsync()) == 1;
+        command.CommandText = "SELECT Id, Name, Username, CreatedAt FROM UserAccount ORDER BY Name, Username";
+        await using var reader = await command.ExecuteReaderAsync();
+        var users = new List<LocalUserSummary>();
+        while (await reader.ReadAsync())
+        {
+            users.Add(new LocalUserSummary
+            {
+                Id = reader.GetInt32(0),
+                Name = reader.GetString(1),
+                Username = reader.GetString(2),
+                CreatedAt = DateTime.Parse(reader.GetString(3), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind)
+            });
+        }
+        return users;
+    }
+
+    public async Task<int> DeleteAllLocalUsersAsync()
+    {
+        await InitAsync();
+        await using var connection = new SqliteConnection(Constants.DatabasePath);
+        await connection.OpenAsync();
+        await using var transaction = connection.BeginTransaction();
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "DELETE FROM UserAccount";
+        var deletedCount = await command.ExecuteNonQueryAsync();
+        await transaction.CommitAsync();
+        return deletedCount;
+    }
+
+    public async Task<UserAccount?> GetByIdAsync(int id)
+    {
+        await InitAsync();
+        await using var connection = new SqliteConnection(Constants.DatabasePath);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT Id, Name, Username, PasswordHash, PasswordSalt, CreatedAt FROM UserAccount WHERE Id = @id LIMIT 1";
+        command.Parameters.AddWithValue("@id", id);
+        await using var reader = await command.ExecuteReaderAsync();
+        return await reader.ReadAsync() ? Read(reader) : null;
+    }
+
+    public async Task<int> UpdatePasswordAsync(int userId, byte[] passwordHash, byte[] passwordSalt)
+    {
+        await InitAsync();
+        await using var connection = new SqliteConnection(Constants.DatabasePath);
+        await connection.OpenAsync();
+        await using var transaction = connection.BeginTransaction();
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "UPDATE UserAccount SET PasswordHash = @hash, PasswordSalt = @salt WHERE Id = @id";
+        command.Parameters.Add("@hash", SqliteType.Blob).Value = passwordHash;
+        command.Parameters.Add("@salt", SqliteType.Blob).Value = passwordSalt;
+        command.Parameters.AddWithValue("@id", userId);
+        var rowsAffected = await command.ExecuteNonQueryAsync();
+        if (rowsAffected == 1)
+            await transaction.CommitAsync();
+        else
+            await transaction.RollbackAsync();
+        return rowsAffected;
     }
 
     public async Task<UserAccount> CreateAsync(string name, string username, byte[] passwordHash, byte[] passwordSalt)
@@ -59,17 +117,36 @@ public sealed class UserAccountRepository
         await InitAsync();
         await using var connection = new SqliteConnection(Constants.DatabasePath);
         await connection.OpenAsync();
+        await using var transaction = connection.BeginTransaction();
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = @"INSERT INTO UserAccount (Name, Username, PasswordHash, PasswordSalt, CreatedAt)
-VALUES (@name, @username, @hash, @salt, @created);
-SELECT last_insert_rowid();";
-        command.Parameters.AddWithValue("@name", name.Trim());
-        command.Parameters.AddWithValue("@username", NormalizeUsername(username));
+VALUES (@name, @username, @hash, @salt, @created);";
+        var normalizedName = name.Trim();
+        var normalizedUsername = NormalizeUsername(username);
+        var createdAt = DateTime.UtcNow;
+        command.Parameters.AddWithValue("@name", normalizedName);
+        command.Parameters.AddWithValue("@username", normalizedUsername);
         command.Parameters.Add("@hash", SqliteType.Blob).Value = passwordHash;
         command.Parameters.Add("@salt", SqliteType.Blob).Value = passwordSalt;
-        command.Parameters.AddWithValue("@created", DateTime.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
-        var id = Convert.ToInt32(await command.ExecuteScalarAsync());
-        return new UserAccount { Id = id, Name = name.Trim(), Username = NormalizeUsername(username), PasswordHash = passwordHash, PasswordSalt = passwordSalt, CreatedAt = DateTime.UtcNow };
+        command.Parameters.AddWithValue("@created", createdAt.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+        var rowsAffected = await command.ExecuteNonQueryAsync();
+        if (rowsAffected != 1)
+        {
+            await transaction.RollbackAsync();
+            throw new InvalidOperationException("The local account was not inserted.");
+        }
+
+        await using var idCommand = connection.CreateCommand();
+        idCommand.Transaction = transaction;
+        idCommand.CommandText = "SELECT last_insert_rowid()";
+        var id = Convert.ToInt32(await idCommand.ExecuteScalarAsync());
+        await transaction.CommitAsync();
+
+        var insertedUser = await GetByIdAsync(id);
+        if (insertedUser is null)
+            throw new InvalidOperationException("The local account could not be verified after insertion.");
+        return insertedUser;
     }
 
     private static UserAccount Read(SqliteDataReader reader) => new()

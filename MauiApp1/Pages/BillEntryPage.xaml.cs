@@ -1,2 +1,19 @@
 namespace MauiApp1.Pages;
-public partial class BillEntryPage : ContentPage { public BillEntryPage(BillEntryPageModel model){InitializeComponent();BindingContext=model;} }
+
+public partial class BillEntryPage : ContentPage
+{
+    private readonly BillEntryPageModel _model;
+
+    public BillEntryPage(BillEntryPageModel model)
+    {
+        InitializeComponent();
+        _model = model;
+        BindingContext = model;
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await _model.EnsureAuthenticatedAsync();
+    }
+}

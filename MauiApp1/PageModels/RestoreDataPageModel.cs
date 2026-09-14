@@ -9,6 +9,8 @@ public partial class RestoreDataPageModel(IBackupService backupService, ModalErr
 {
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _processingMessage = string.Empty;
+    [ObservableProperty] private double _progress;
+    public string ProgressText => $"{Progress:0}%";
     [ObservableProperty] private string _selectedFile = string.Empty;
     [ObservableProperty] private BackupValidationResult? _validation;
     [ObservableProperty] private BackupRecordSummary _currentData = new(0, 0, 0);
@@ -25,12 +27,13 @@ public partial class RestoreDataPageModel(IBackupService backupService, ModalErr
         {
             var file = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = "Select a Household Expense Tracker backup" });
             if (file is null) return;
-            IsBusy = true; ProcessingMessage = "Validating backup...";
+            Progress = 0; OnPropertyChanged(nameof(ProgressText)); IsBusy = true; ProcessingMessage = "Validating backup...";
+            await Task.Yield();
             var staged = Path.Combine(FileSystem.CacheDirectory, $".selected-{Guid.NewGuid():N}-{file.FileName}");
             await using (var source = await file.OpenReadAsync())
             await using (var destination = File.Create(staged))
                 await source.CopyToAsync(destination);
-            SelectedFile = staged; Validation = await backupService.ValidateBackupAsync(staged);
+            SelectedFile = staged; Progress = 35; OnPropertyChanged(nameof(ProgressText)); Validation = await backupService.ValidateBackupAsync(staged); Progress = 100; OnPropertyChanged(nameof(ProgressText));
             if (!HasValidBackup) await Shell.Current.DisplayAlertAsync("Backup Cannot Be Restored", Validation?.ErrorMessage ?? "The selected file is invalid, corrupted, or incompatible.", "OK");
             else CurrentData = await backupService.GetCurrentSummaryAsync();
             OnPropertyChanged(nameof(HasValidBackup)); OnPropertyChanged(nameof(BackupFileName)); OnPropertyChanged(nameof(Metadata)); OnPropertyChanged(nameof(BackupData)); OnPropertyChanged(nameof(CreatedText));
@@ -44,10 +47,11 @@ public partial class RestoreDataPageModel(IBackupService backupService, ModalErr
         var backup = BackupData;
         var message = string.Join(Environment.NewLine, "This will replace your current data.", "", "CURRENT DATA", $"Shops: {CurrentData.ShopCount}", $"Payment Modes: {CurrentData.PaymentModeCount}", $"Bills: {CurrentData.BillCount}", "", "BACKUP DATA", $"Shops: {backup.ShopCount}", $"Payment Modes: {backup.PaymentModeCount}", $"Bills: {backup.BillCount}", "", "A safety backup will be created automatically.");
         if (!await Shell.Current.DisplayAlertAsync("Restore Backup?", message, "Restore", "Cancel")) return;
-        IsBusy = true; ProcessingMessage = "Protecting current data...";
+        Progress = 0; OnPropertyChanged(nameof(ProgressText)); IsBusy = true; ProcessingMessage = "Protecting current data...";
+        await Task.Yield();
         try
         {
-            ProcessingMessage = "Restoring data..."; await backupService.RestoreBackupAsync(SelectedFile);
+            ProcessingMessage = "Restoring data..."; await backupService.RestoreBackupAsync(SelectedFile, progress: new Progress<double>(value => { Progress = value; OnPropertyChanged(nameof(ProgressText)); }));
             var restored = await backupService.GetCurrentSummaryAsync(); Validation = null; RestoreCompleted = true; CurrentData = restored;
             OnPropertyChanged(nameof(HasValidBackup)); OnPropertyChanged(nameof(Metadata));
             var success = string.Join(Environment.NewLine, $"Shops: {restored.ShopCount}", $"Payment Modes: {restored.PaymentModeCount}", $"Bills: {restored.BillCount}");
@@ -55,5 +59,14 @@ public partial class RestoreDataPageModel(IBackupService backupService, ModalErr
         }
         catch (Exception ex) { errors.HandleError(ex); } finally { IsBusy = false; ProcessingMessage = string.Empty; }
     }
+    [RelayCommand]
+    private async Task Back()
+    {
+        // Use the absolute dashboard route. A restore can replace the active
+        // database while this page is on a nested Shell route, so attempting
+        // to pop that route can leave Shell with an invalid navigation entry.
+        await Shell.Current.GoToAsync("//main");
+    }
+
     [RelayCommand] private Task ReturnToDashboard() => Shell.Current.GoToAsync("//main");
 }

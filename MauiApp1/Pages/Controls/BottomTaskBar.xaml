@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" x:Class="MauiApp1.Pages.Controls.BottomTaskBar">
+ <Border StrokeThickness="0" Stroke="Transparent" BackgroundColor="{DynamicResource BottomNavigationBackground}" Margin="12,6,12,8" Padding="8,6">
+  <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+   <ImageButton Source="{StaticResource IconDailyDash}" Clicked="OnHomeClicked" BackgroundColor="Transparent" WidthRequest="44" HeightRequest="44" Padding="10" SemanticProperties.Description="Home" />
+   <ImageButton Grid.Column="1" Source="{StaticResource IconSetup}" Clicked="OnSetupClicked" BackgroundColor="Transparent" WidthRequest="44" HeightRequest="44" Padding="10" SemanticProperties.Description="Setup" />
+   <ImageButton Grid.Column="2" Source="x.svg" Clicked="OnCloseClicked" BackgroundColor="Transparent" WidthRequest="44" HeightRequest="44" Padding="10" SemanticProperties.Description="Close application" />
+  </Grid>
+ </Border>
+</ContentView>

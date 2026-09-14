@@ -5,8 +5,25 @@
 
     <!-- Note: For Android please see also Platforms\Android\Resources\values\colors.xml -->
 
-    <Color x:Key="Primary">#512BD4</Color>
-    <Color x:Key="PrimaryDark">#ac99ea</Color>
+    <Color x:Key="Primary">#B42318</Color>
+    <Color x:Key="PrimaryDark">#8E1B12</Color>
+    <Color x:Key="PrimaryLight">#F04438</Color>
+    <Color x:Key="Accent">#D92D20</Color>
+    <Color x:Key="Background">#F8FAFC</Color>
+    <Color x:Key="Surface">#FFFFFF</Color>
+    <Color x:Key="SurfaceSecondary">#F2F4F7</Color>
+    <Color x:Key="Border">#F04438</Color>
+    <Color x:Key="TextPrimary">#101828</Color>
+    <Color x:Key="TextSecondary">#475467</Color>
+    <Color x:Key="TextOnPrimary">#FFFFFF</Color>
+    <Color x:Key="Danger">#B42318</Color>
+    <Color x:Key="TextOnDanger">#FFFFFF</Color>
+    <Color x:Key="Success">#027A48</Color>
+    <Color x:Key="Warning">#B54708</Color>
+    <Color x:Key="Highlight">#F79009</Color>
+    <Color x:Key="BottomNavigationBackground">#FFFFFF</Color>
+    <Color x:Key="BottomNavigationInactive">#667085</Color>
+    <Color x:Key="BottomNavigationActive">#B42318</Color>
     <Color x:Key="PrimaryDarkText">#242424</Color>
     <Color x:Key="Secondary">#DFD8F7</Color>
     <Color x:Key="SecondaryDarkText">#9880e5</Color>
@@ -35,7 +52,7 @@
     <Color x:Key="Gray900">#212121</Color>
     <Color x:Key="Gray950">#141414</Color>
 
-    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{DynamicResource Primary}"/>
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>
     <SolidColorBrush x:Key="TertiaryBrush" Color="{StaticResource Tertiary}"/>
     <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource White}"/>

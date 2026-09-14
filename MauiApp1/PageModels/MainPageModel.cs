@@ -16,6 +16,8 @@ public partial class MainPageModel : ObservableObject
     [ObservableProperty] private List<ShopExpenseChartData> _currentMonthShopExpenseData = [];
     [ObservableProperty] private List<MonthlyExpenseChartData> _monthlyExpenseData = [];
     [ObservableProperty] private List<WeeklyExpenseChartData> _weeklyExpenseData = [];
+    [ObservableProperty] private decimal _currentMonthTotal;
+    [ObservableProperty] private decimal _currentWeekTotal;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _isRefreshing;
     public bool HasShopExpenses => ShopExpenseData.Count > 0;
@@ -23,6 +25,8 @@ public partial class MainPageModel : ObservableObject
     public string CurrentMonthName => new DateTime(CurrentYear, CurrentMonth, 1).ToString("MMMM", System.Globalization.CultureInfo.CurrentCulture);
     public string CurrentMonthTitle => $"Expenses by Shop — {CurrentMonthName}";
     public string WeeklyTitle => $"Expenses — Current Week ({WeeklyExpenseData.FirstOrDefault()?.Date:dd/MM} – {WeeklyExpenseData.LastOrDefault()?.Date:dd/MM})";
+    public string CurrentMonthTotalText => EuroFormatter.Format(CurrentMonthTotal);
+    public string CurrentWeekTotalText => EuroFormatter.Format(CurrentWeekTotal);
     public string AnnualTotalText => EuroFormatter.Format(AnnualTotal);
 
     public MainPageModel(BillTransactionRepository billRepository, ModalErrorHandler errorHandler) { _billRepository = billRepository; _errorHandler = errorHandler; }
@@ -40,7 +44,11 @@ public partial class MainPageModel : ObservableObject
             CurrentMonthShopExpenseData = MapShops(await _billRepository.GetExpensesByShopForMonthAsync(CurrentYear, CurrentMonth));
             MonthlyExpenseData = (await _billRepository.GetExpensesByMonthAsync(CurrentYear)).Select(item => new MonthlyExpenseChartData { MonthNumber = item.MonthNumber, MonthName = item.MonthName, TotalValue = item.TotalValue, Color = ChartColorPalette.ForMonth(item.MonthNumber) }).ToList();
             WeeklyExpenseData = await _billRepository.GetExpensesByWeekAsync(weekStart);
-            OnPropertyChanged(nameof(AnnualTotalText)); OnPropertyChanged(nameof(HasShopExpenses)); OnPropertyChanged(nameof(HasCurrentMonthShopExpenses)); OnPropertyChanged(nameof(CurrentMonthName)); OnPropertyChanged(nameof(CurrentMonthTitle)); OnPropertyChanged(nameof(WeeklyTitle));
+            // Use the exact collections rendered by the two charts so their
+            // displayed totals always reconcile with the chart segments/bars.
+            CurrentMonthTotal = CurrentMonthShopExpenseData.Sum(item => item.TotalValue);
+            CurrentWeekTotal = WeeklyExpenseData.Sum(item => item.TotalValue);
+            OnPropertyChanged(nameof(AnnualTotalText)); OnPropertyChanged(nameof(HasShopExpenses)); OnPropertyChanged(nameof(HasCurrentMonthShopExpenses)); OnPropertyChanged(nameof(CurrentMonthName)); OnPropertyChanged(nameof(CurrentMonthTitle)); OnPropertyChanged(nameof(CurrentMonthTotalText)); OnPropertyChanged(nameof(WeeklyTitle)); OnPropertyChanged(nameof(CurrentWeekTotalText));
         }
         catch (Exception ex) { _errorHandler.HandleError(ex); }
         finally { IsBusy = false; IsRefreshing = false; }

@@ -10,12 +10,12 @@
     Title="Household Expense Tracker">
 
     <Shell.FlyoutHeader>
-        <Border Padding="20,24,20,16" StrokeThickness="0" Background="{AppThemeBinding Light={StaticResource LightSecondaryBackground}, Dark={StaticResource DarkSecondaryBackground}}">
+        <Border Padding="20,24,20,16" StrokeThickness="0" Background="{DynamicResource SurfaceSecondary}">
             <VerticalStackLayout Spacing="6">
-                <Label Text="Household Expense Tracker" Style="{StaticResource Title2}" />
-                <Label Text="Manage your household expenses in one place." IsVisible="{Binding IsLoggedOut, Source={x:Reference RootShell}}" />
-                <Label Text="Welcome," IsVisible="{Binding IsAuthenticated, Source={x:Reference RootShell}}" />
-                <Label Text="{Binding CurrentUserName, Source={x:Reference RootShell}}" Style="{StaticResource Title3}" IsVisible="{Binding IsAuthenticated, Source={x:Reference RootShell}}" />
+                <Label Text="Household Expense Tracker" Style="{StaticResource Title2}" TextColor="{DynamicResource TextPrimary}" />
+                <Label Text="Manage your household expenses in one place." TextColor="{DynamicResource TextPrimary}" IsVisible="{Binding IsLoggedOut, Source={x:Reference RootShell}}" />
+                <Label Text="Welcome," TextColor="{DynamicResource TextPrimary}" IsVisible="{Binding IsAuthenticated, Source={x:Reference RootShell}}" />
+                <Label Text="{Binding CurrentUserName, Source={x:Reference RootShell}}" Style="{StaticResource Title3}" TextColor="{DynamicResource TextPrimary}" IsVisible="{Binding IsAuthenticated, Source={x:Reference RootShell}}" />
                 <HorizontalStackLayout Spacing="8" IsVisible="{Binding IsLoggedOut, Source={x:Reference RootShell}}">
                     <Button Text="Login" Clicked="OnLoginClicked" Padding="14,6" />
                     <Button Text="Register" Clicked="OnRegisterClicked" Padding="14,6" />
@@ -49,11 +49,39 @@
         ContentTemplate="{DataTemplate pages:MonthlyExpenseCalendarPage}"
         Route="calendar" />
 
+    <!-- Setup is a hidden Shell route so menu and taskbar navigation use the
+         same reliable route without adding a duplicate Flyout item. -->
     <ShellContent
+        Title="Setup"
+        Shell.FlyoutItemIsVisible="False"
+        ContentTemplate="{DataTemplate pages:SetupPage}"
+        Route="setup" />
+
+    <MenuItem
+        Text="DB Tools"
+        IconImageSource="{StaticResource IconDatabase}"
+        IsEnabled="{Binding IsDeveloperBuild, Source={x:Reference RootShell}}"
+        Clicked="OnDbToolsClicked"
+        SemanticProperties.Description="Open DB Tools options" />
+
+    <!--<ShellContent
         Title="Backup &amp; Restore"
         Icon="{StaticResource IconBackupRestore}"
         ContentTemplate="{DataTemplate pages:BackupRestorePage}"
-        Route="backuprestore" />
+        Route="backuprestore" />-->
+
+    <MenuItem
+        Text="Backup &amp; Restore"
+    IconImageSource="{StaticResource IconBackupRestore}"
+        Clicked="OnBackupRestoreClicked" />
+
+    <MenuItem
+        Text="Setup"
+        IconImageSource="{StaticResource IconSetup}"
+        Clicked="OnSetupClicked"
+        SemanticProperties.Description="Open application setup" />
+
+    <MenuItem Text="Setup Data" IconImageSource="{StaticResource IconDatabase}" Clicked="OnSetupDataClicked" SemanticProperties.Description="Manage payment modes, categories and shops" />
 
     <MenuItem
         Text="Close Application"

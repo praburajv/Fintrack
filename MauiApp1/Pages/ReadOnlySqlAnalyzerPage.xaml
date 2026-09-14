@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:controls="clr-namespace:MauiApp1.Pages.Controls" x:Class="MauiApp1.Pages.ReadOnlySqlAnalyzerPage" x:Name="AnalyzerPage" Title="SQL Query Analyzer">
+ <Grid RowDefinitions="*,Auto">
+  <ScrollView Grid.Row="0"><VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
+   <Label Text="SQL Query Analyzer" Style="{StaticResource Title1}" />
+   <Label Text="READ ONLY" TextColor="{DynamicResource Danger}" FontAttributes="Bold" HorizontalOptions="Center" />
+   <Label Text="Database" Style="{StaticResource Title3}" />
+   <Label Text="{Binding DatabaseFilename}" />
+   <Label Text="SQL Query" Style="{StaticResource Title3}" />
+   <Editor Text="{Binding SqlText}" AutoSize="TextChanges" MinimumHeightRequest="140" Placeholder="Enter a SELECT query" Keyboard="Chat" />
+   <HorizontalStackLayout Spacing="8"><Button Text="Execute Query" Command="{Binding ExecuteQueryCommand}" /><Button Text="Clear" Command="{Binding ClearCommand}" /></HorizontalStackLayout>
+   <Label Text="Quick Queries" Style="{StaticResource Title3}" />
+   <FlexLayout Direction="Row" Wrap="Wrap">
+    <Button Text="Tables" Command="{Binding TablesQueryCommand}" Margin="0,0,8,8" /><Button Text="Shop Schema" Command="{Binding ShopSchemaQueryCommand}" Margin="0,0,8,8" /><Button Text="Bill Schema" Command="{Binding BillSchemaQueryCommand}" Margin="0,0,8,8" /><Button Text="Counts" Command="{Binding CountsQueryCommand}" Margin="0,0,8,8" />
+   </FlexLayout>
+   <Label Text="{Binding Status}" FontAttributes="Bold" />
+   <Label Text="{Binding Error}" TextColor="{DynamicResource Danger}" IsVisible="{Binding HasError}" />
+   <Label Text="Results" Style="{StaticResource Title3}" />
+   <Label Text="{Binding ResultSummary}" IsVisible="{Binding HasResults}" />
+   <Label Text="{Binding TruncationText}" IsVisible="{Binding IsTruncated}" TextColor="{DynamicResource Danger}" />
+   <Button Text="Copy Selected Value to Query" Command="{Binding CopySelectedValueToQueryCommand}" IsEnabled="{Binding HasSelectedSqlValue}" HorizontalOptions="Start" />
+   <ScrollView Orientation="Both" HeightRequest="360" IsVisible="{Binding HasResults}">
+    <VerticalStackLayout Spacing="0">
+     <HorizontalStackLayout BindableLayout.ItemsSource="{Binding Columns}" Spacing="18"><BindableLayout.ItemTemplate><DataTemplate><Label Text="{Binding .}" FontAttributes="Bold" MinimumWidthRequest="110"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding BindingContext.SelectSqlValueCommand, Source={x:Reference AnalyzerPage}}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label></DataTemplate></BindableLayout.ItemTemplate></HorizontalStackLayout>
+     <CollectionView ItemsSource="{Binding Rows}" SelectionMode="None" HeightRequest="320"><CollectionView.ItemTemplate><DataTemplate><HorizontalStackLayout BindableLayout.ItemsSource="{Binding .}" Spacing="18"><BindableLayout.ItemTemplate><DataTemplate><Label Text="{Binding .}" MinimumWidthRequest="110"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding BindingContext.SelectSqlValueCommand, Source={x:Reference AnalyzerPage}}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label></DataTemplate></BindableLayout.ItemTemplate></HorizontalStackLayout></DataTemplate></CollectionView.ItemTemplate></CollectionView>
+    </VerticalStackLayout>
+   </ScrollView>
+  </VerticalStackLayout></ScrollView>
+  <controls:ProcessingOverlay Grid.Row="0" IsBusy="{Binding IsBusy}" Message="Executing query..." />
+  <controls:BottomTaskBar Grid.Row="1" />
+ </Grid>
+</ContentPage>

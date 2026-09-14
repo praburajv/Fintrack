@@ -1,9 +1,19 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace MauiApp1.PageModels;
 
 public partial class BackupRestorePageModel : ObservableObject
 {
-    public Task OpenBackupAsync() => Shell.Current.GoToAsync("backup");
-    public Task OpenRestoreAsync() => Shell.Current.GoToAsync("restore");
+    [RelayCommand]
+    private async Task OpenBackup()
+    {
+        await Shell.Current.GoToAsync("backup");
+    }
+
+    [RelayCommand]
+    private async Task OpenRestore()
+    {
+        await Shell.Current.GoToAsync("restore");
+    }
 }

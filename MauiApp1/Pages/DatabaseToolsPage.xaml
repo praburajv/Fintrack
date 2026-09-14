@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:MauiApp1.PageModels" xmlns:models="clr-namespace:MauiApp1.Models" xmlns:controls="clr-namespace:MauiApp1.Pages.Controls" xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit" x:Class="MauiApp1.Pages.DatabaseToolsPage" x:Name="DatabasePage" x:DataType="vm:DatabaseToolsPageModel" Title="Database Tools">
+ <ContentPage.Behaviors><toolkit:EventToCommandBehavior BindingContext="{Binding Path=BindingContext, Source={x:Reference DatabasePage}, x:DataType=ContentPage}" EventName="Appearing" Command="{Binding AppearingCommand}" /></ContentPage.Behaviors>
+ <Grid RowDefinitions="*,Auto"><ScrollView Grid.Row="0"><VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
+  <Label Text="Database Tools" Style="{StaticResource Title1}" />
+  <Label Text="Local Authentication" Style="{StaticResource Title2}" />
+  <Label Text="{Binding UserCount, StringFormat='Registered Users: {0}'}" />
+  <Button Text="View Local Users" Command="{Binding ViewLocalUsersCommand}" />
+  <Button Text="Delete All Local Users" Command="{Binding DeleteAllLocalUsersCommand}" BackgroundColor="{DynamicResource Danger}" TextColor="{DynamicResource TextOnDanger}" />
+  <BoxView HeightRequest="1" Margin="0,12" />
+  <Label Text="Database Information" Style="{StaticResource Title2}" />
+  <Label Text="{Binding DatabaseFilename, StringFormat='Database: {0}'}" />
+  <Label Text="{Binding DatabasePath, StringFormat='Path: {0}'}" FontSize="12" />
+  <Button Text="Register New User" Command="{Binding RegisterNewUserCommand}" />
+ </VerticalStackLayout></ScrollView><controls:ProcessingOverlay IsBusy="{Binding IsBusy}" Message="Deleting local users..." /><controls:BottomTaskBar Grid.Row="1" /></Grid>
+</ContentPage>

@@ -19,27 +19,33 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
         return await CountsAsync(c, token);
     }
 
-    public async Task<(string Path, BackupMetadata Metadata)> CreateBackupAsync(CancellationToken token = default)
+    public async Task<(string Path, BackupMetadata Metadata)> CreateBackupAsync(CancellationToken token = default, IProgress<double>? progress = null)
     {
         using var lease = criticalOperations.Begin();
         var tempDb = Path.Combine(FileSystem.CacheDirectory, $".backup-{Guid.NewGuid():N}.db3");
         var path = Path.Combine(FileSystem.CacheDirectory, $"HouseholdExpenseTracker_{DateTime.Now:yyyyMMdd_HHmmss}.hhtbackup");
         try
         {
+            Report(progress, 0);
             var counts = await GetCurrentSummaryAsync(token);
+            Report(progress, 10);
             await CopyDatabaseAsync(tempDb, token);
+            Report(progress, 55);
             await RemoveAuthenticationDataAsync(tempDb, token);
+            Report(progress, 65);
             var metadata = new BackupMetadata { CreatedAtUtc = DateTime.UtcNow, ApplicationVersion = AppInfo.Current.VersionString, ShopCount = counts.ShopCount, PaymentModeCount = counts.PaymentModeCount, BillCount = counts.BillCount, DatabaseSha256 = await HashAsync(tempDb, token) };
             await using (var output = File.Create(path))
             using (var zip = new ZipArchive(output, ZipArchiveMode.Create))
             {
-                await AddFileAsync(zip, Constants.DatabaseFilename, tempDb, token);
+                await AddFileAsync(zip, Constants.DatabaseFilename, tempDb, token, progress, 65, 88);
                 var entry = zip.CreateEntry(MetadataName);
                 await using var stream = entry.Open();
                 await JsonSerializer.SerializeAsync(stream, metadata, cancellationToken: token);
             }
+            Report(progress, 90);
             var check = await ValidateBackupAsync(path, token);
             if (!check.IsValid) throw new InvalidDataException(check.ErrorMessage);
+            Report(progress, 100);
             return (path, metadata);
         }
         catch { Delete(path); throw; }
@@ -74,36 +80,40 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
         catch (Exception ex) when (ex is InvalidDataException or IOException or JsonException or SqliteException) { return Invalid(sourcePath, "The selected file is invalid, corrupted, or incompatible."); }
     }
 
-    public async Task RestoreBackupAsync(string backupPath, CancellationToken token = default)
+    public async Task RestoreBackupAsync(string backupPath, CancellationToken token = default, IProgress<double>? progress = null)
     {
         using var lease = criticalOperations.Begin();
+        Report(progress, 0);
         var check = await ValidateBackupAsync(backupPath, token);
         if (!check.IsValid) throw new InvalidDataException(check.ErrorMessage);
         var safety = Path.Combine(FileSystem.CacheDirectory, $"HouseholdExpenseTracker_safety_{DateTime.UtcNow:yyyyMMdd_HHmmss}.db3");
         var candidate = Path.Combine(FileSystem.CacheDirectory, $".restore-{Guid.NewGuid():N}.db3");
-        var previous = Path.Combine(FileSystem.CacheDirectory, $".previous-{Guid.NewGuid():N}.db3");
         var replacing = false;
         try
         {
             var localAccount = await ReadAuthenticationAccountAsync(DatabasePath, token);
+            Report(progress, 20);
             await CopyDatabaseAsync(safety, token);
+            Report(progress, 45);
             await ExtractAsync(backupPath, candidate, token);
+            Report(progress, 70);
             var candidateCheck = await ValidateDatabaseAsync(candidate, token);
             if (!candidateCheck.IsValid) throw new InvalidDataException(candidateCheck.Error);
-            if (File.Exists(DatabasePath)) { File.Move(DatabasePath, previous, true); replacing = true; }
-            File.Move(candidate, DatabasePath, true);
+            await ReplaceDatabaseContentsAsync(candidate, DatabasePath, token);
+            replacing = true;
             await RestoreAuthenticationAccountAsync(DatabasePath, localAccount, token);
+            Report(progress, 90);
             var live = await ValidateDatabaseAsync(DatabasePath, token);
             if (!live.IsValid) throw new InvalidDataException(live.Error);
-            Delete(previous); Delete(safety);
+            Delete(safety);
+            Report(progress, 100);
         }
         catch
         {
             Delete(candidate);
             if (replacing)
             {
-                Delete(DatabasePath);
-                if (File.Exists(previous)) File.Move(previous, DatabasePath, true);
+                await ReplaceDatabaseContentsAsync(safety, DatabasePath, CancellationToken.None);
                 var rollback = await ValidateDatabaseAsync(DatabasePath, CancellationToken.None);
                 if (!rollback.IsValid) throw new InvalidOperationException("Restore failed and rollback validation also failed. The safety backup was preserved at " + safety);
             }
@@ -117,6 +127,13 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
         await using var source = await OpenAsync(DatabasePath, token);
         await using var target = await OpenAsync(destination, token);
         source.BackupDatabase(target);
+    }
+
+    private static async Task ReplaceDatabaseContentsAsync(string sourcePath, string destinationPath, CancellationToken token)
+    {
+        await using var source = await OpenAsync(sourcePath, token);
+        await using var destination = await OpenAsync(destinationPath, token);
+        source.BackupDatabase(destination);
     }
 
     private static async Task RemoveAuthenticationDataAsync(string path, CancellationToken token)
@@ -146,13 +163,17 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
 
     private static async Task RestoreAuthenticationAccountAsync(string path, UserAccount? account, CancellationToken token)
     {
-        if (account is null) return;
         await using var connection = await OpenAsync(path, token);
         await using var command = connection.CreateCommand();
-        command.CommandText = @"CREATE TABLE IF NOT EXISTS UserAccount (
+        command.CommandText = @"DROP TABLE IF EXISTS UserAccount;
+CREATE TABLE UserAccount (
     Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL, Username TEXT NOT NULL COLLATE NOCASE UNIQUE,
-    PasswordHash BLOB NOT NULL, PasswordSalt BLOB NOT NULL, CreatedAt TEXT NOT NULL);
-INSERT INTO UserAccount (Id, Name, Username, PasswordHash, PasswordSalt, CreatedAt)
+    PasswordHash BLOB NOT NULL, PasswordSalt BLOB NOT NULL, CreatedAt TEXT NOT NULL);";
+        await command.ExecuteNonQueryAsync(token);
+
+        if (account is null) return;
+
+        command.CommandText = @"INSERT INTO UserAccount (Id, Name, Username, PasswordHash, PasswordSalt, CreatedAt)
 VALUES (@id, @name, @username, @hash, @salt, @created);";
         command.Parameters.AddWithValue("@id", account.Id);
         command.Parameters.AddWithValue("@name", account.Name);
@@ -173,12 +194,21 @@ VALUES (@id, @name, @username, @hash, @salt, @created);";
         await input.CopyToAsync(output, token);
     }
 
-    private static async Task AddFileAsync(ZipArchive zip, string name, string path, CancellationToken token)
+    private static async Task AddFileAsync(ZipArchive zip, string name, string path, CancellationToken token, IProgress<double>? progress, double start, double end)
     {
         var entry = zip.CreateEntry(name);
         await using var input = File.OpenRead(path);
         await using var output = entry.Open();
-        await input.CopyToAsync(output, token);
+        var total = input.Length;
+        var copied = 0L;
+        var buffer = new byte[81920];
+        int read;
+        while ((read = await input.ReadAsync(buffer, token)) > 0)
+        {
+            await output.WriteAsync(buffer.AsMemory(0, read), token);
+            copied += read;
+            Report(progress, start + (end - start) * copied / Math.Max(1d, total));
+        }
     }
 
     private static async Task<(bool IsValid, string Error)> ValidateDatabaseAsync(string path, CancellationToken token)
@@ -208,5 +238,6 @@ VALUES (@id, @name, @username, @hash, @salt, @created);";
     private static async Task<SqliteConnection> OpenAsync(string path, CancellationToken token) { var c = new SqliteConnection($"Data Source={path};Mode=ReadWriteCreate;Cache=Shared"); await c.OpenAsync(token); return c; }
     private static async Task<string> HashAsync(string path, CancellationToken token) { await using var s = File.OpenRead(path); using var h = IncrementalHash.CreateHash(HashAlgorithmName.SHA256); var b = new byte[81920]; int n; while ((n = await s.ReadAsync(b, token)) > 0) h.AppendData(b, 0, n); return Convert.ToHexString(h.GetHashAndReset()); }
     private static BackupValidationResult Invalid(string? path, string error) => new() { FilePath = path ?? string.Empty, ErrorMessage = error };
+    private static void Report(IProgress<double>? progress, double value) => progress?.Report(Math.Clamp(value, 0, 100));
     private static void Delete(string path) { try { if (File.Exists(path)) File.Delete(path); } catch { } }
 }
