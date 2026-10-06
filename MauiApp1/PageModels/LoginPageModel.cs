@@ -59,7 +59,12 @@ public partial class LoginPageModel(IAuthenticationService authentication, IBiom
             var result = await authentication.LoginAsync(Username, Password);
             if (!result.Succeeded) { await Shell.Current.DisplayAlertAsync("Login", result.Message, "OK"); return; }
             Password = string.Empty;
-            await Shell.Current.GoToAsync(string.Equals(_returnRoute, "myexpense", StringComparison.OrdinalIgnoreCase) ? "//myexpense" : string.Equals(_returnRoute, "setup", StringComparison.OrdinalIgnoreCase) ? ".." : "//main");
+            if (string.Equals(_returnRoute, "myexpense", StringComparison.OrdinalIgnoreCase))
+                await Shell.Current.GoToAsync("//myexpense");
+            else if (string.Equals(_returnRoute, "setup", StringComparison.OrdinalIgnoreCase))
+                await Shell.Current.GoToAsync("..");
+            else
+                await AppShell.NavigateToDashboardAsync();
         }
         catch (Exception ex) { errors.HandleError(ex); }
         finally { IsBusy = false; }
@@ -100,7 +105,10 @@ public partial class LoginPageModel(IAuthenticationService authentication, IBiom
                 return;
             }
 
-            await Shell.Current.GoToAsync(string.Equals(_returnRoute, "myexpense", StringComparison.OrdinalIgnoreCase) ? "//myexpense" : "//dailydash");
+            if (string.Equals(_returnRoute, "myexpense", StringComparison.OrdinalIgnoreCase))
+                await Shell.Current.GoToAsync("//myexpense");
+            else
+                await AppShell.NavigateToDashboardAsync();
         }
         catch (Exception ex) { errors.HandleError(ex); }
         finally { IsBusy = false; }

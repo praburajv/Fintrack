@@ -4,7 +4,7 @@ using MauiApp1.Services;
 
 namespace MauiApp1.PageModels;
 
-public partial class ReadOnlySqlAnalyzerPageModel(IReadOnlySqlAnalyzerService analyzer) : ObservableObject
+public partial class ReadOnlySqlAnalyzerPageModel(IReadOnlySqlAnalyzerService analyzer, ISqlSchemaMetadataService schema, SqlQueryBuilderService builder) : ObservableObject
 {
     public const string TablesSql = "SELECT name, type FROM sqlite_master WHERE type IN ('table', 'view') ORDER BY type, name;";
     public const string ShopSchemaSql = "PRAGMA table_info(Shop);";
@@ -21,6 +21,9 @@ public partial class ReadOnlySqlAnalyzerPageModel(IReadOnlySqlAnalyzerService an
     [ObservableProperty] private bool _isTruncated;
     [ObservableProperty] private long _executionTimeMs;
     [ObservableProperty] private string _selectedSqlValue = string.Empty;
+    [ObservableProperty] private bool _isStopping;
+
+    private CancellationTokenSource? _executionCts;
 
     public string DatabaseFilename => Data.Constants.DatabaseFilename;
     public string DatabasePath => Path.Combine(FileSystem.AppDataDirectory, Data.Constants.DatabaseFilename);
@@ -34,21 +37,34 @@ public partial class ReadOnlySqlAnalyzerPageModel(IReadOnlySqlAnalyzerService an
     private async Task ExecuteQuery()
     {
         if (IsBusy) return;
-        IsBusy = true; Error = string.Empty; Status = "Executing query... Please wait.";
+        if (IsBusy) return;
+        _executionCts?.Dispose(); _executionCts = new CancellationTokenSource();
+        IsBusy = true; IsStopping = false; Error = string.Empty; Status = "Executing query... Please wait.";
         try
         {
-            var result = await analyzer.ExecuteAsync(SqlText);
-            Columns = result.Columns.ToList(); Rows = result.Rows.ToList(); RowsReturned = result.RowsReturned; SelectedSqlValue = string.Empty;
-            IsTruncated = result.IsTruncated; ExecutionTimeMs = result.ExecutionTimeMs;
-            Error = result.ErrorMessage ?? string.Empty;
-            Status = HasError ? "SQL Error" : "Query completed.";
+            var result = await analyzer.ExecuteAsync(SqlText, _executionCts.Token);
+            if (result.IsCancelled) { Status = "Query stopped. Previous results retained."; return; }
+            if (result.ErrorMessage is null)
+            {
+                Columns = result.Columns.ToList(); Rows = result.Rows.ToList(); RowsReturned = result.RowsReturned; SelectedSqlValue = string.Empty;
+                IsTruncated = result.IsTruncated; ExecutionTimeMs = result.ExecutionTimeMs; Status = "Query completed.";
+            }
+            else { Error = result.ErrorMessage; Status = "SQL Error"; }
             NotifyResultProperties();
         }
+        catch (OperationCanceledException) { Status = "Query stopped. Previous results retained."; }
         catch (Exception ex)
         {
             Columns = []; Rows = []; RowsReturned = 0; IsTruncated = false; Error = ex.Message; Status = "SQL Error"; NotifyResultProperties();
         }
-        finally { IsBusy = false; }
+        finally { _executionCts?.Dispose(); _executionCts = null; IsStopping = false; IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private void StopQuery()
+    {
+        if (!IsBusy || IsStopping) return;
+        IsStopping = true; Status = "Stopping query..."; _executionCts?.Cancel();
     }
 
     [RelayCommand]

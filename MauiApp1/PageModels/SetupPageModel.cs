@@ -1,5 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MauiApp1.Models;
+using MauiApp1.Services;
 
 namespace MauiApp1.PageModels;
 
@@ -8,20 +10,25 @@ public partial class SetupPageModel : ObservableObject
     private readonly IAuthenticationService _authentication;
     private readonly IThemeService _themes;
     private readonly IBiometricAuthenticationService _biometric;
+    private readonly ICurrencyService _currencies;
     [ObservableProperty] private string _selectedTheme = "Red";
     [ObservableProperty] private string _selectedAppearance = "System";
     [ObservableProperty] private bool _isBiometricEnabled;
     [ObservableProperty] private bool _isBiometricAvailable;
+    [ObservableProperty] private DisplayCurrency? _selectedCurrency;
+    [ObservableProperty] private string _currencyStatusText = string.Empty;
 
     public bool IsAuthenticated => _authentication.IsAuthenticated;
     public string[] AvailableThemes { get; } = ["Red", "Blue", "Green", "Purple"];
     public string[] AvailableAppearances { get; } = ["System", "Light", "Dark"];
+    public IReadOnlyList<DisplayCurrency> AvailableCurrencies => _currencies.AvailableCurrencies;
 
-    public SetupPageModel(IAuthenticationService authentication, IThemeService themes, IBiometricAuthenticationService biometric)
+    public SetupPageModel(IAuthenticationService authentication, IThemeService themes, IBiometricAuthenticationService biometric, ICurrencyService currencies)
     {
         _authentication = authentication;
         _themes = themes;
         _biometric = biometric;
+        _currencies = currencies;
         _selectedTheme = themes.CurrentColorTheme;
         _selectedAppearance = themes.CurrentAppearance switch
         {
@@ -29,6 +36,7 @@ public partial class SetupPageModel : ObservableObject
             AppTheme.Dark => "Dark",
             _ => "System"
         };
+        _selectedCurrency = currencies.CurrentCurrency;
         authentication.AuthenticationStateChanged += (_, _) => OnPropertyChanged(nameof(IsAuthenticated));
     }
 
@@ -84,5 +92,15 @@ public partial class SetupPageModel : ObservableObject
 
     [RelayCommand]
     private void SelectTheme(string theme) => SelectedTheme = theme;
+
+    [RelayCommand]
+    private void ApplyCurrency()
+    {
+        if (SelectedCurrency is null)
+            return;
+
+        _currencies.ApplyCurrency(SelectedCurrency.Code);
+        CurrencyStatusText = $"Display currency changed to {SelectedCurrency.Code}. Stored amounts were not converted.";
+    }
 
 }

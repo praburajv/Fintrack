@@ -3,11 +3,12 @@
  <Shell.BackButtonBehavior><BackButtonBehavior Command="{Binding BackCommand}" /></Shell.BackButtonBehavior>
  <Grid RowDefinitions="*,Auto"><ScrollView Grid.Row="0"><VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
   <Label Text="Restore Data" Style="{StaticResource Title2}" /><Label Text="Restore Household Expense Tracker data from a backup file." />
-  <Label Text="Restoring will replace the current application data after confirmation." /><Label Text="A safety copy of your current data will be created before restoration." />
+  <Label Text="Restoring a complete backup replaces current application data. Selected-month restore replaces only the backed-up months." /><Label Text="A safety copy of your current data will be created before complete restoration." />
   <Button Text="Select Backup File" Command="{Binding SelectBackupCommand}" />
   <VerticalStackLayout IsVisible="{Binding HasValidBackup}" Spacing="8">
    <Label Text="Selected Backup" FontAttributes="Bold" /><Label Text="{Binding BackupFileName}" /><Label Text="{Binding CreatedText, StringFormat='Created: {0}'}" />
    <Label Text="{Binding Metadata.ApplicationVersion, StringFormat='Application Version: {0}'}" /><Label Text="{Binding Metadata.BackupFormatVersion, StringFormat='Backup Version: {0}'}" />
+   <Label Text="Selected months: {Binding SelectedMonthsText}" IsVisible="{Binding IsSelectedMonthsBackup}" />
    <Label Text="Status: Backup Valid" TextColor="Green" /><Label Text="{Binding BackupData.ShopCount, StringFormat='Shops: {0}'}" /><Label Text="{Binding BackupData.PaymentModeCount, StringFormat='Payment Modes: {0}'}" /><Label Text="{Binding BackupData.BillCount, StringFormat='Bills: {0}'}" />
    <Button Text="Choose Another File" Command="{Binding ChooseAnotherFileCommand}" /><Button Text="Restore This Backup" Command="{Binding RestoreCommand}" />
   </VerticalStackLayout>

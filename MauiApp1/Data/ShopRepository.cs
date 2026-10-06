@@ -40,6 +40,29 @@ public class ShopRepository
         return result;
     }
 
+    public async Task<List<Shop>> SearchByPrefixAsync(string searchText, int limit = 8, CancellationToken cancellationToken = default)
+    {
+        var prefix = searchText.Trim();
+        if (prefix.Length == 0) return [];
+
+        await Init();
+        await using var connection = new SqliteConnection(Constants.DatabasePath);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = @"SELECT s.Id, s.Name, s.Category, s.Category_Id, c.Name, c.IconKey
+FROM Shop s
+LEFT JOIN Category c ON c.Id=s.Category_Id
+WHERE s.Name LIKE @prefix ESCAPE '\' COLLATE NOCASE
+ORDER BY s.Name COLLATE NOCASE
+LIMIT @limit";
+        command.Parameters.AddWithValue("@prefix", EscapeLikePrefix(prefix) + "%");
+        command.Parameters.AddWithValue("@limit", Math.Clamp(limit, 1, 20));
+        var result = new List<Shop>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken)) result.Add(Read(reader));
+        return result;
+    }
+
     public async Task<Shop?> GetAsync(int id)
     {
         await Init(); await using var c = new SqliteConnection(Constants.DatabasePath); await c.OpenAsync();
@@ -107,6 +130,8 @@ public class ShopRepository
     private static async Task<int> GetDefaultCategoryIdAsync(SqliteConnection connection)
     { var command = connection.CreateCommand(); command.CommandText = "SELECT Id FROM Category WHERE Name='Default Shop' COLLATE NOCASE LIMIT 1"; return Convert.ToInt32(await command.ExecuteScalarAsync()); }
     private static Shop Read(SqliteDataReader reader) => new() { Id = reader.GetInt32(0), Name = reader.GetString(1), Category = ShopCategoryCatalog.Normalize(reader.IsDBNull(2) ? null : reader.GetString(2)), CategoryId = reader.IsDBNull(3) ? 0 : reader.GetInt32(3), CategoryName = reader.IsDBNull(4) ? "Default Shop" : reader.GetString(4), CategoryIconKey = reader.IsDBNull(5) ? "default_shop" : reader.GetString(5) };
+
+    private static string EscapeLikePrefix(string value) => value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("%", "\\%", StringComparison.Ordinal).Replace("_", "\\_", StringComparison.Ordinal);
 
     public async Task<int> DeleteItemAsync(Shop item)
     {

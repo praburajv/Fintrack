@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:pm="clr-namespace:MauiApp1.PageModels"
+             xmlns:models="clr-namespace:MauiApp1.Models"
+             xmlns:controls="clr-namespace:MauiApp1.Pages.Controls"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="MauiApp1.Pages.ShopTransactionDatesPage"
+             x:Name="DatesPage"
+             x:DataType="pm:ShopTransactionDatesPageModel"
+             Title="Transaction Dates">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior
+            BindingContext="{Binding BindingContext, Source={x:Reference DatesPage}}"
+            EventName="Appearing"
+            Command="{Binding AppearingCommand}" />
+    </ContentPage.Behaviors>
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
+                <Label Text="Transaction Dates" Style="{StaticResource Title2}" />
+                <Label Text="{Binding ShopName}" FontSize="24" FontAttributes="Bold" MaxLines="2" LineBreakMode="TailTruncation" />
+                <Label Text="{Binding MonthTitle}" FontSize="18" FontAttributes="Bold" />
+                <Label Text="Tap a date to view this shop's bills." FontSize="13" />
+
+                <Label Text="{Binding EmptyText}"
+                       IsVisible="{Binding HasDates, Converter={StaticResource InvertedBoolConverter}}"
+                       HorizontalOptions="Center"
+                       FontAttributes="Italic" />
+
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Dates}"
+                                     IsVisible="{Binding HasDates}"
+                                     Spacing="8">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="models:ShopTransactionDateSummary">
+                            <Border StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 12"
+                                    Background="{DynamicResource SurfaceSecondary}"
+                                    Padding="14,12">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding OpenDateCommand, Source={RelativeSource AncestorType={x:Type pm:ShopTransactionDatesPageModel}}}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12">
+                                    <Label Text="{Binding DateText}" FontSize="18" FontAttributes="Bold" />
+                                    <Label Grid.Column="1" Text="{Binding TotalSpentText}" FontSize="18" FontAttributes="Bold" />
+                                    <Label Grid.Row="1" Text="{Binding BillCountText}" FontSize="13" />
+                                    <Label Grid.Row="1" Grid.Column="1" Text="View bills  ›" FontSize="13" HorizontalTextAlignment="End" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+        <controls:ProcessingOverlay Grid.RowSpan="2"
+                                    IsBusy="{Binding IsOverlayBusy}"
+                                    Message="{Binding ProcessingMessage}"
+                                    SpinnerColor="#3B82F6"
+                                    ShowProgress="False" />
+        <controls:BottomTaskBar Grid.Row="1" />
+    </Grid>
+</ContentPage>

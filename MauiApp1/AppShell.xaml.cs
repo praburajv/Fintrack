@@ -13,6 +13,7 @@ namespace MauiApp1
         private readonly IThemeService _themes;
         private readonly IBiometricAuthenticationService _biometric;
         private bool _closePromptActive;
+        private bool _expenseRouteNormalizationInProgress;
         private bool _isClosing;
         public static bool IsClosing { get; private set; }
 
@@ -32,8 +33,15 @@ namespace MauiApp1
             ThemeSegmentedControl.SelectedIndex = _themes.CurrentAppearance == AppTheme.Dark ? 1 : 0;
             Dispatcher.Dispatch(async () =>
             {
-                if (await _biometric.GetConfiguredUserIdAsync() is not null)
-                    await GoToAsync("login");
+                try
+                {
+                    if (await _biometric.GetConfiguredUserIdAsync() is not null)
+                        await GoToAsync("login");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Startup authentication check failed: {ex}");
+                }
             });
         }
 
@@ -74,11 +82,24 @@ namespace MauiApp1
                 return;
             var target = e.Target.Location.OriginalString;
             if (_authentication.IsAuthenticated)
+            {
+                if (!_expenseRouteNormalizationInProgress
+                    && target.Contains("myexpense", StringComparison.OrdinalIgnoreCase)
+                    && !target.Contains("mode=", StringComparison.OrdinalIgnoreCase))
+                {
+                    e.Cancel();
+                    _expenseRouteNormalizationInProgress = true;
+                    try { await GoToAsync("//myexpense?mode=FullYear"); }
+                    finally { _expenseRouteNormalizationInProgress = false; }
+                    return;
+                }
                 return;
-            if (!target.Contains("myexpense", StringComparison.OrdinalIgnoreCase) || target.Contains("login", StringComparison.OrdinalIgnoreCase))
+            }
+            var protectedRoute = target.Contains("main", StringComparison.OrdinalIgnoreCase) || target.Contains("dashboard", StringComparison.OrdinalIgnoreCase) || target.Contains("myexpense", StringComparison.OrdinalIgnoreCase) || target.Contains("incomeanalysis", StringComparison.OrdinalIgnoreCase) || target.Contains("incomeflow", StringComparison.OrdinalIgnoreCase) || target.Contains("dailydash", StringComparison.OrdinalIgnoreCase) || target.Contains("calendar", StringComparison.OrdinalIgnoreCase) || target.Contains("expenseanalysis", StringComparison.OrdinalIgnoreCase) || target.Contains("monthlybudget", StringComparison.OrdinalIgnoreCase) || target.Contains("budgetreport", StringComparison.OrdinalIgnoreCase) || target.Contains("expensereport", StringComparison.OrdinalIgnoreCase) || target.Contains("billanalysis", StringComparison.OrdinalIgnoreCase) || target.Contains("shoptransactiondates", StringComparison.OrdinalIgnoreCase) || target.Contains("dailybills", StringComparison.OrdinalIgnoreCase);
+            if (!protectedRoute || target.Contains("login", StringComparison.OrdinalIgnoreCase))
                 return;
             e.Cancel();
-            await NavigateFromFlyoutAsync("login?returnTo=myexpense");
+            await NavigateFromFlyoutAsync("login");
         }
 
         private void UnsubscribeFromAuthentication()
@@ -91,7 +112,11 @@ namespace MauiApp1
         private async void OnRegisterClicked(object? sender, EventArgs e) => await NavigateFromFlyoutAsync("register");
         private async void OnSetupClicked(object? sender, EventArgs e) => await NavigateToSetupAsync();
         private async void OnSetupDataClicked(object? sender, EventArgs e) => await NavigateFromFlyoutAsync("setupdata");
-        private void OnLogoutClicked(object? sender, EventArgs e) => _authentication.Logout();
+        private async void OnLogoutClicked(object? sender, EventArgs e)
+        {
+            _authentication.Logout();
+            await GoToAsync("//login");
+        }
 
         private async void OnDbToolsClicked(object? sender, EventArgs e)
         {
@@ -123,7 +148,8 @@ namespace MauiApp1
             await Task.Yield();
             if (_isClosing || IsClosing)
                 return;
-            await GoToAsync(route);
+            var rootRoutes = new[] { "main", "dashboard", "myexpense", "incomeanalysis", "incomeflow", "dailydash", "calendar", "setup" };
+            await GoToAsync(rootRoutes.Contains(route, StringComparer.OrdinalIgnoreCase) ? $"//{route}" : route);
         }
 
         public static async Task NavigateToSetupAsync()
@@ -146,6 +172,29 @@ namespace MauiApp1
             {
                 System.Diagnostics.Debug.WriteLine($"Setup navigation failed: {ex.GetType().Name}");
                 await Shell.Current.DisplayAlertAsync("Setup", "Setup could not be opened. Please try again.", "OK");
+            }
+        }
+
+        public static async Task NavigateToDashboardAsync()
+        {
+            if (IsClosing || Shell.Current is null)
+                return;
+
+            try
+            {
+                Shell.Current.FlyoutIsPresented = false;
+                await Task.Yield();
+                var route = Shell.Current.CurrentState?.Location?.OriginalString ?? string.Empty;
+                var rootRoute = route.Split('?', 2)[0].Trim('/');
+                if (string.Equals(rootRoute, "main", StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                await Shell.Current.GoToAsync("//main", false);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Dashboard navigation failed: {ex.GetType().Name}");
+                await Shell.Current.GoToAsync("//main", false);
             }
         }
 

@@ -7,7 +7,7 @@ public partial class BottomTaskBar : ContentView
     private async void OnHomeClicked(object? sender, EventArgs e)
     {
         if (AppShell.IsClosing) return;
-        await Shell.Current.GoToAsync("//dailydash");
+        await AppShell.NavigateToDashboardAsync();
     }
 
     private async void OnSetupClicked(object? sender, EventArgs e)

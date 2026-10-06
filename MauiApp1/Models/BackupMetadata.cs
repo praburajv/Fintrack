@@ -11,4 +11,8 @@ public sealed class BackupMetadata
  public int PaymentModeCount { get; set; }
  public int BillCount { get; set; }
  public string DatabaseSha256 { get; set; } = string.Empty;
+ public string BackupType { get; set; } = "Complete";
+ public int? SelectedYear { get; set; }
+ public List<int> SelectedMonths { get; set; } = [];
+ public int SelectedMonthBillCount { get; set; }
 }

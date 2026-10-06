@@ -7,7 +7,18 @@
     xmlns:pages="clr-namespace:MauiApp1.Pages"
     x:Name="RootShell"
     Shell.FlyoutBehavior="Flyout"
-    Title="Household Expense Tracker">
+    Title="Household Expense Tracker"
+    BackgroundColor="#4B2BD6"
+    ForegroundColor="White"
+    TitleColor="White"
+    Shell.NavBarHasShadow="False">
+
+    <Shell.TitleView>
+        <Grid BackgroundColor="#4B2BD6" ColumnDefinitions="56,*" ColumnSpacing="8" Padding="6,4" HeightRequest="56">
+            <Image Source="et_top_menu_logo.png" Aspect="AspectFit" HeightRequest="42" WidthRequest="42" />
+            <Image Grid.Column="1" Source="expense_tracker_text.png" Aspect="AspectFit" HorizontalOptions="Start" HeightRequest="30" />
+        </Grid>
+    </Shell.TitleView>
 
     <Shell.FlyoutHeader>
         <Border Padding="20,24,20,16" StrokeThickness="0" Background="{DynamicResource SurfaceSecondary}">
@@ -27,25 +38,44 @@
 
     <ShellContent
         Title="Dashboard"
-        Icon="{StaticResource IconDashboard}"
-        ContentTemplate="{DataTemplate pages:MainPage}"
+        Icon="{StaticResource FlyoutIconDashboard}"
+        ContentTemplate="{DataTemplate pages:LandingDashboardPage}"
         Route="main" />
 
+    <!-- Preserve the existing analytical dashboard as a separate Flyout destination. -->
     <ShellContent
-        Title="MyExpense"
-        Icon="{StaticResource IconMyExpense}"
+        Title="Expense Analytics Dash"
+        Icon="{StaticResource FlyoutIconDashboard}"
+        ContentTemplate="{DataTemplate pages:MainPage}"
+        Route="dashboard" />
+
+    <ShellContent
+        Title="My Financial Entry"
+        Icon="{StaticResource FlyoutIconMyExpense}"
         ContentTemplate="{DataTemplate pages:MyMExpense}"
         Route="myexpense" />
 
     <ShellContent
+        Title="Income Analytics Dash"
+        Icon="{StaticResource FlyoutIconDashboard}"
+        ContentTemplate="{DataTemplate pages:IncomeAnalysisPage}"
+        Route="incomeanalysis" />
+
+    <ShellContent
+        Title="Income Expense Flow"
+        Icon="{StaticResource FlyoutIconDashboard}"
+        ContentTemplate="{DataTemplate pages:IncomeExpenseFlowPage}"
+        Route="incomeflow" />
+
+    <ShellContent
         Title="DailyDash"
-        Icon="{StaticResource IconDailyDash}"
+        Icon="{StaticResource FlyoutIconDailyDash}"
         ContentTemplate="{DataTemplate pages:DailyDashPage}"
         Route="dailydash" />
 
     <ShellContent
         Title="Calendar"
-        Icon="{StaticResource IconCalendar}"
+        Icon="{StaticResource FlyoutIconCalendar}"
         ContentTemplate="{DataTemplate pages:MonthlyExpenseCalendarPage}"
         Route="calendar" />
 
@@ -59,7 +89,7 @@
 
     <MenuItem
         Text="DB Tools"
-        IconImageSource="{StaticResource IconDatabase}"
+        IconImageSource="{StaticResource FlyoutIconDatabase}"
         IsEnabled="{Binding IsDeveloperBuild, Source={x:Reference RootShell}}"
         Clicked="OnDbToolsClicked"
         SemanticProperties.Description="Open DB Tools options" />
@@ -72,20 +102,20 @@
 
     <MenuItem
         Text="Backup &amp; Restore"
-    IconImageSource="{StaticResource IconBackupRestore}"
+    IconImageSource="{StaticResource FlyoutIconBackupRestore}"
         Clicked="OnBackupRestoreClicked" />
 
     <MenuItem
         Text="Setup"
-        IconImageSource="{StaticResource IconSetup}"
+        IconImageSource="{StaticResource FlyoutIconSetup}"
         Clicked="OnSetupClicked"
         SemanticProperties.Description="Open application setup" />
 
-    <MenuItem Text="Setup Data" IconImageSource="{StaticResource IconDatabase}" Clicked="OnSetupDataClicked" SemanticProperties.Description="Manage payment modes, categories and shops" />
+    <MenuItem Text="Setup Data" IconImageSource="{StaticResource FlyoutIconDatabase}" Clicked="OnSetupDataClicked" SemanticProperties.Description="Manage payment modes, categories and shops" />
 
     <MenuItem
         Text="Close Application"
-        IconImageSource="{StaticResource IconClose}"
+        IconImageSource="{StaticResource FlyoutIconClose}"
         Clicked="OnCloseApplicationClicked"
         SemanticProperties.Description="Close Household Expense Tracker" />
     

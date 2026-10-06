@@ -10,6 +10,8 @@ public class DailyExpenseCalendarItem
     public int GridRow { get; init; }
     public int GridColumn { get; init; }
     public decimal TotalValue { get; init; }
+    public bool IsIncome { get; init; }
+    public Color AmountColor => IsIncome ? (Application.Current?.Resources["Success"] as Color ?? Colors.Green) : (Application.Current?.Resources["TextPrimary"] as Color ?? Colors.Black);
     public string FormattedTotalValue => IsPlaceholder ? string.Empty : EuroFormatter.Format(TotalValue);
     public double AmountFontSize => FormattedTotalValue.Length switch
     {

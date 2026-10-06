@@ -64,10 +64,45 @@ public sealed class ReadOnlySqlAnalyzerService : IReadOnlySqlAnalyzerService
             stopwatch.Stop();
             return new SqlAnalyzerResult(columns, rows, rowsReturned, truncated, stopwatch.ElapsedMilliseconds);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            stopwatch.Stop();
+            return new SqlAnalyzerResult([], [], 0, false, stopwatch.ElapsedMilliseconds, "Query stopped.", true);
+        }
         catch (Exception ex) when (ex is SqliteException or InvalidOperationException or IOException)
         {
             stopwatch.Stop();
             return new SqlAnalyzerResult([], [], 0, false, stopwatch.ElapsedMilliseconds, ex.Message);
+        }
+    }
+
+    public async Task<string?> ValidateBuildAsync(string sql, CancellationToken cancellationToken = default)
+    {
+        var validation = Validate(sql);
+        if (validation is not null) return validation;
+
+        try
+        {
+            var connectionString = new SqliteConnectionStringBuilder
+            {
+                DataSource = Path.Combine(FileSystem.AppDataDirectory, Constants.DatabaseFilename),
+                Mode = SqliteOpenMode.ReadOnly,
+                Cache = SqliteCacheMode.Shared
+            }.ToString();
+            await using var connection = new SqliteConnection(connectionString);
+            await connection.OpenAsync(cancellationToken);
+            await using var command = connection.CreateCommand();
+            command.CommandText = sql.Trim();
+            command.Prepare();
+            return null;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return "SQL validation was cancelled.";
+        }
+        catch (Exception ex) when (ex is SqliteException or InvalidOperationException or IOException)
+        {
+            return $"SQL build check failed: {ex.Message}";
         }
     }
 

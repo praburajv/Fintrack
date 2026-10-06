@@ -80,6 +80,29 @@ public sealed class UserAccountRepository
         return deletedCount;
     }
 
+    public async Task<int> DeleteLocalUserAsync(int id)
+    {
+        await InitAsync();
+        await using var connection = new SqliteConnection(Constants.DatabasePath);
+        await connection.OpenAsync();
+        await using var transaction = connection.BeginTransaction();
+        try
+        {
+            await using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = "DELETE FROM UserAccount WHERE Id=@id";
+            command.Parameters.AddWithValue("@id", id);
+            var deleted = await command.ExecuteNonQueryAsync();
+            await transaction.CommitAsync();
+            return deleted;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
     public async Task<UserAccount?> GetByIdAsync(int id)
     {
         await InitAsync();

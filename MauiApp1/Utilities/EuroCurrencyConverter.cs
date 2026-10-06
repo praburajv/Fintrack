@@ -10,6 +10,7 @@ public sealed class EuroCurrencyConverter : IValueConverter
             decimal amount => EuroFormatter.Format(amount),
             double amount => EuroFormatter.Format((decimal)amount),
             float amount => EuroFormatter.Format((decimal)amount),
+            string formatted => formatted,
             _ => EuroFormatter.Format(0)
         };
 

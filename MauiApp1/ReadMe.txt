@@ -1,8 +1,8 @@
-﻿1. Publish an APK
+﻿	1. Publish an APK
 
 Open a command prompt in your project folder:
 
-cd /d "C:\src\HuntCrocMaui\MauiApp1\MauiApp1"
+cd   "C:\src\HuntCrocMaui\MauiApp1\MauiApp1"
 
 Then run:
 

@@ -25,7 +25,8 @@ public sealed class CategoryRepository
         ("Education", "education"), ("Children", "children"), ("Pets", "pets"),
         ("Entertainment", "entertainment"), ("Subscriptions", "subscriptions"), ("Gifts", "gifts"),
         ("Taxes / Government", "taxes_government"), ("Home Maintenance", "home_maintenance"),
-        ("Electronics", "electronics")
+        ("Electronics", "electronics"),
+        ("Credits", "default_shop")
     ];
 
     public CategoryRepository(ILogger<CategoryRepository> logger, ICriticalOperationState criticalOperations)
@@ -53,7 +54,7 @@ public sealed class CategoryRepository
             // with the normalized schema and migrate recognizable legacy values.
             var legacyColumn = columns.Contains("Category") ? "Category" : columns.Contains("CategoryName") ? "CategoryName" : null;
             var rename = connection.CreateCommand(); rename.CommandText = "ALTER TABLE Category RENAME TO Category_Legacy"; await rename.ExecuteNonQueryAsync();
-            var createRepaired = connection.CreateCommand(); createRepaired.CommandText = "CREATE TABLE Category (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL COLLATE NOCASE UNIQUE, IconKey TEXT NOT NULL)"; await createRepaired.ExecuteNonQueryAsync();
+            var createRepaired = connection.CreateCommand(); createRepaired.CommandText = "CREATE TABLE Category (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL COLLATE NOCASE UNIQUE, IconKey TEXT NOT NULL, Budgeted REAL NOT NULL DEFAULT 0)"; await createRepaired.ExecuteNonQueryAsync();
             if (columns.Contains("Id") && legacyColumn is not null)
             {
                 var legacy = connection.CreateCommand(); legacy.CommandText = $"SELECT Id, {legacyColumn} FROM Category_Legacy";
@@ -62,18 +63,22 @@ public sealed class CategoryRepository
                 foreach (var row in rows)
                 {
                     var name = LegacyName(row.Value); var icon = IconKeyFor(row.Value);
-                    var insert = connection.CreateCommand(); insert.CommandText = "INSERT OR IGNORE INTO Category(Id,Name,IconKey) VALUES(@id,@name,@icon)"; insert.Parameters.AddWithValue("@id", row.Id); insert.Parameters.AddWithValue("@name", name); insert.Parameters.AddWithValue("@icon", icon); await insert.ExecuteNonQueryAsync();
+                    var insert = connection.CreateCommand(); insert.CommandText = "INSERT OR IGNORE INTO Category(Id,Name,IconKey,Budgeted) VALUES(@id,@name,@icon,0)"; insert.Parameters.AddWithValue("@id", row.Id); insert.Parameters.AddWithValue("@name", name); insert.Parameters.AddWithValue("@icon", icon); await insert.ExecuteNonQueryAsync();
                 }
             }
         }
         else
         {
-            var create = connection.CreateCommand(); create.CommandText = "CREATE TABLE IF NOT EXISTS Category (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL COLLATE NOCASE UNIQUE, IconKey TEXT NOT NULL);"; await create.ExecuteNonQueryAsync();
+            var create = connection.CreateCommand(); create.CommandText = "CREATE TABLE IF NOT EXISTS Category (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL COLLATE NOCASE UNIQUE, IconKey TEXT NOT NULL, Budgeted REAL NOT NULL DEFAULT 0);"; await create.ExecuteNonQueryAsync();
+            if (columns.Count > 0 && !columns.Contains("Budgeted"))
+            {
+                var addBudget = connection.CreateCommand(); addBudget.CommandText = "ALTER TABLE Category ADD COLUMN Budgeted REAL NOT NULL DEFAULT 0"; await addBudget.ExecuteNonQueryAsync();
+            }
         }
         foreach (var seed in Seeds)
         {
             var insert = connection.CreateCommand();
-            insert.CommandText = "INSERT OR IGNORE INTO Category(Name, IconKey) VALUES(@name, @icon);";
+            insert.CommandText = "INSERT OR IGNORE INTO Category(Name, IconKey, Budgeted) VALUES(@name, @icon, 0);";
             insert.Parameters.AddWithValue("@name", seed.Name); insert.Parameters.AddWithValue("@icon", seed.IconKey);
             await insert.ExecuteNonQueryAsync();
         }
@@ -100,7 +105,7 @@ public sealed class CategoryRepository
     public async Task<List<Category>> ListAsync()
     {
         await Init(); await using var connection = new SqliteConnection(Constants.DatabasePath); await connection.OpenAsync();
-        var command = connection.CreateCommand(); command.CommandText = "SELECT Id, Name, IconKey FROM Category ORDER BY Name COLLATE NOCASE";
+        var command = connection.CreateCommand(); command.CommandText = "SELECT Id, Name, IconKey, Budgeted FROM Category ORDER BY Name COLLATE NOCASE";
         var result = new List<Category>(); await using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync()) result.Add(Read(reader));
         return result;
@@ -109,7 +114,7 @@ public sealed class CategoryRepository
     public async Task<Category?> GetAsync(int id)
     {
         await Init(); await using var connection = new SqliteConnection(Constants.DatabasePath); await connection.OpenAsync();
-        var command = connection.CreateCommand(); command.CommandText = "SELECT Id, Name, IconKey FROM Category WHERE Id=@id"; command.Parameters.AddWithValue("@id", id);
+        var command = connection.CreateCommand(); command.CommandText = "SELECT Id, Name, IconKey, Budgeted FROM Category WHERE Id=@id"; command.Parameters.AddWithValue("@id", id);
         await using var reader = await command.ExecuteReaderAsync(); return await reader.ReadAsync() ? Read(reader) : null;
     }
 
@@ -125,8 +130,8 @@ public sealed class CategoryRepository
     {
         using var operation = _criticalOperations.Begin(); await Init();
         await using var connection = new SqliteConnection(Constants.DatabasePath); await connection.OpenAsync();
-        var command = connection.CreateCommand(); command.CommandText = "INSERT INTO Category(Name, IconKey) VALUES(@name,@icon); SELECT last_insert_rowid();";
-        command.Parameters.AddWithValue("@name", category.Name.Trim()); command.Parameters.AddWithValue("@icon", CategoryIconCatalog.Find(category.IconKey).IconKey);
+        var command = connection.CreateCommand(); command.CommandText = "INSERT INTO Category(Name, IconKey, Budgeted) VALUES(@name,@icon,@budgeted); SELECT last_insert_rowid();";
+        command.Parameters.AddWithValue("@name", category.Name.Trim()); command.Parameters.AddWithValue("@icon", CategoryIconCatalog.Find(category.IconKey).IconKey); command.Parameters.AddWithValue("@budgeted", category.Budgeted);
         category.Id = Convert.ToInt32(await command.ExecuteScalarAsync()); return category.Id;
     }
 
@@ -134,8 +139,8 @@ public sealed class CategoryRepository
     {
         using var operation = _criticalOperations.Begin(); await Init();
         await using var connection = new SqliteConnection(Constants.DatabasePath); await connection.OpenAsync();
-        var command = connection.CreateCommand(); command.CommandText = "UPDATE Category SET Name=@name, IconKey=@icon WHERE Id=@id";
-        command.Parameters.AddWithValue("@name", category.Name.Trim()); command.Parameters.AddWithValue("@icon", CategoryIconCatalog.Find(category.IconKey).IconKey); command.Parameters.AddWithValue("@id", category.Id);
+        var command = connection.CreateCommand(); command.CommandText = "UPDATE Category SET Name=@name, IconKey=@icon, Budgeted=@budgeted WHERE Id=@id";
+        command.Parameters.AddWithValue("@name", category.Name.Trim()); command.Parameters.AddWithValue("@icon", CategoryIconCatalog.Find(category.IconKey).IconKey); command.Parameters.AddWithValue("@budgeted", category.Budgeted); command.Parameters.AddWithValue("@id", category.Id);
         await command.ExecuteNonQueryAsync();
     }
 
@@ -156,5 +161,5 @@ public sealed class CategoryRepository
     }
 
     public async Task<Category> GetDefaultCategoryAsync() => (await ListAsync()).First(x => x.Name.Equals("Default Shop", StringComparison.OrdinalIgnoreCase));
-    private static Category Read(SqliteDataReader reader) => new() { Id = reader.GetInt32(0), Name = reader.GetString(1), IconKey = reader.GetString(2) };
+    private static Category Read(SqliteDataReader reader) => new() { Id = reader.GetInt32(0), Name = reader.GetString(1), IconKey = reader.GetString(2), Budgeted = reader.IsDBNull(3) ? 0 : Convert.ToDecimal(reader.GetValue(3), System.Globalization.CultureInfo.InvariantCulture) };
 }

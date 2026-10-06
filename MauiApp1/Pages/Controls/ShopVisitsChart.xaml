@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Border xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:chart="clr-namespace:Syncfusion.Maui.Toolkit.Charts;assembly=Syncfusion.Maui.Toolkit" xmlns:local="clr-namespace:MauiApp1.Utilities" x:Class="MauiApp1.Pages.Controls.ShopVisitsChart" x:Name="ChartContainer" Style="{StaticResource CardStyle}">
+ <Border.Resources><ResourceDictionary><local:EuroCurrencyConverter x:Key="EuroCurrencyConverter" /><DataTemplate x:Key="Tooltip"><VerticalStackLayout Padding="4"><Label Text="{Binding Item.XValue}" FontAttributes="Bold" /><Label Text="{Binding Item.YValue, StringFormat='Visits: {0}'}" /></VerticalStackLayout></DataTemplate></ResourceDictionary></Border.Resources>
+ <VerticalStackLayout Spacing="6">
+ <Button Text="{Binding SortText, Source={x:Reference ChartContainer}}" IsVisible="{Binding ShowSortControl, Source={x:Reference ChartContainer}}" Clicked="OnSortClicked" HorizontalOptions="End" Padding="12,6" SemanticProperties.Description="Sort shop visits by visit count ascending or descending" />
+ <chart:SfCartesianChart IsTransposed="True" HeightRequest="320" SemanticProperties.Description="Shop visits bar chart">
+  <chart:SfCartesianChart.XAxes><chart:CategoryAxis LabelsIntersectAction="MultipleRows" /></chart:SfCartesianChart.XAxes>
+  <chart:SfCartesianChart.YAxes><chart:NumericalAxis LabelCreated="OnYAxisLabelCreated" /></chart:SfCartesianChart.YAxes>
+  <chart:ColumnSeries ItemsSource="{Binding DisplayedItems, Source={x:Reference ChartContainer}}" XBindingPath="ShopDisplayName" YBindingPath="VisitCount" PaletteBrushes="{Binding PaletteBrushes, Source={x:Reference ChartContainer}}" ShowDataLabels="True" EnableTooltip="True" TooltipTemplate="{StaticResource Tooltip}"><chart:ColumnSeries.SelectionBehavior><chart:DataPointSelectionBehavior SelectionBrush="Gray" SelectionChanged="OnSelectionChanged" /></chart:ColumnSeries.SelectionBehavior></chart:ColumnSeries>
+ </chart:SfCartesianChart>
+ </VerticalStackLayout>
+</Border>

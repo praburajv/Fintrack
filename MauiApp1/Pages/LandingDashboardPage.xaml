@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:pm="clr-namespace:MauiApp1.PageModels" xmlns:m="clr-namespace:MauiApp1.Models" xmlns:controls="clr-namespace:MauiApp1.Pages.Controls" xmlns:f="clr-namespace:Fonts" x:Class="MauiApp1.Pages.LandingDashboardPage" x:Name="DashboardPage" x:DataType="pm:LandingDashboardPageModel" Title="Dashboard" BackgroundColor="{AppThemeBinding Light=#F7F8FC, Dark=#101114}">
+    <Grid>
+        <ScrollView><VerticalStackLayout x:Name="DashboardContent" SizeChanged="OnDashboardContentSizeChanged" Padding="8,16,8,20" Spacing="10">
+            <Border Stroke="{DynamicResource Primary}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Background="{DynamicResource SurfaceSecondary}" Padding="10,4">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                    <Label Text="⌕" FontSize="26" VerticalOptions="Center" TextColor="{DynamicResource Primary}" />
+                    <Entry Grid.Column="1" Text="{Binding SearchText}" Placeholder="Search for shop and bills" ClearButtonVisibility="WhileEditing" VerticalOptions="Center" />
+                    <ImageButton Grid.Column="2" Command="{Binding OpenAnalysisCommand}" IsEnabled="{Binding CanSearch}" BackgroundColor="Transparent" WidthRequest="44" HeightRequest="44" Padding="10" SemanticProperties.Description="Search selected shop bills"><ImageButton.Source><FontImageSource Glyph="{x:Static f:FluentUI.search_24_regular}" FontFamily="{x:Static f:FluentUI.FontFamily}" Color="{DynamicResource Primary}" Size="24" /></ImageButton.Source></ImageButton>
+                </Grid>
+            </Border>
+            <ActivityIndicator IsRunning="{Binding IsSearching}" IsVisible="{Binding IsSearching}" Color="{DynamicResource Primary}" HorizontalOptions="Start" />
+            <Border IsVisible="{Binding HasSuggestions}" Stroke="{DynamicResource Primary}" StrokeThickness="1" StrokeShape="RoundRectangle 12" Background="{DynamicResource SurfaceSecondary}" Padding="8">
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Suggestions}" Spacing="2">
+                    <BindableLayout.ItemTemplate><DataTemplate x:DataType="m:Shop"><Border StrokeThickness="0" Padding="10,8" Background="Transparent"><Border.GestureRecognizers><TapGestureRecognizer Command="{Binding BindingContext.SelectShopCommand, Source={x:Reference DashboardPage}}" CommandParameter="{Binding .}" /></Border.GestureRecognizers><Grid ColumnDefinitions="Auto,*" ColumnSpacing="10"><Image Source="{Binding IconFileName}" WidthRequest="28" HeightRequest="28" /><Label Grid.Column="1" Text="{Binding Name}" MaxLines="1" LineBreakMode="TailTruncation" VerticalOptions="Center" /></Grid></Border></DataTemplate></BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </Border>
+            <Label Text="No matching shops found." IsVisible="{Binding ShowNoMatches}" HorizontalOptions="Center" FontAttributes="Italic" />
+            <Border x:Name="ExpenseRidePanel" StrokeThickness="0" StrokeShape="RoundRectangle 18" HeightRequest="230"><Image x:Name="ExpenseRideImage" Source="expense_ride_panel_background.png" Aspect="AspectFill" /></Border>
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="10">
+                <Border x:Name="DailyDashPanel" HeightRequest="205" StrokeThickness="0" StrokeShape="RoundRectangle 14"><Border.GestureRecognizers><TapGestureRecognizer Tapped="OnDailyDashClicked" /></Border.GestureRecognizers><Image x:Name="DailyDashImage" Source="daily_dash_box_background.png" Aspect="AspectFill" /></Border>
+                <Border x:Name="ExpenseEntryPanel" Grid.Column="1" HeightRequest="205" StrokeThickness="0" StrokeShape="RoundRectangle 14"><Border.GestureRecognizers><TapGestureRecognizer Tapped="OnExpenseEntryClicked" /></Border.GestureRecognizers><Image x:Name="ExpenseEntryImage" Source="expense_entry_box_background.png" Aspect="AspectFill" /></Border>
+                <Border x:Name="CalendarPanel" Grid.Row="1" HeightRequest="205" StrokeThickness="0" StrokeShape="RoundRectangle 14"><Border.GestureRecognizers><TapGestureRecognizer Tapped="OnCalendarClicked" /></Border.GestureRecognizers><Image x:Name="CalendarImage" Source="expense_calendar_box_background.png" Aspect="AspectFill" /></Border>
+                <Border x:Name="AnalysisPanel" Grid.Row="1" Grid.Column="1" HeightRequest="205" StrokeThickness="0" StrokeShape="RoundRectangle 14"><Border.GestureRecognizers><TapGestureRecognizer Tapped="OnAnalysisClicked" /></Border.GestureRecognizers><Image x:Name="AnalysisImage" Source="expense_analysis_box_background.png" Aspect="AspectFill" /></Border>
+                <Border x:Name="BudgetPanel" Grid.Row="2" HeightRequest="205" StrokeThickness="0" StrokeShape="RoundRectangle 14"><Border.GestureRecognizers><TapGestureRecognizer Tapped="OnBudgetClicked" /></Border.GestureRecognizers><Image x:Name="BudgetImage" Source="expense_budget_box_background.png" Aspect="AspectFill" /></Border>
+                <Border x:Name="MonthReportPanel" Grid.Row="2" Grid.Column="1" HeightRequest="205" StrokeThickness="0" StrokeShape="RoundRectangle 14"><Border.GestureRecognizers><TapGestureRecognizer Tapped="OnMonthReportClicked" /></Border.GestureRecognizers><Image x:Name="MonthReportImage" Source="expense_month_report_background.png" Aspect="AspectFill" /></Border>
+            </Grid>
+        </VerticalStackLayout></ScrollView>
+        <controls:ProcessingOverlay IsBusy="{Binding IsOpeningAnalysis}" Message="{Binding ProcessingMessage}" SpinnerColor="#3B82F6" ShowProgress="False" />
+    </Grid>
+</ContentPage>

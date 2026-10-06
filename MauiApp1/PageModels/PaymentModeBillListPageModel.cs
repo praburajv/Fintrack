@@ -13,12 +13,14 @@ public partial class PaymentModeBillListPageModel(BillTransactionRepository bill
     [ObservableProperty] private string _paymentModeName = string.Empty;
     [ObservableProperty] private DateTime _startDate, _endDate;
     [ObservableProperty] private ObservableCollection<BillTransaction> _items = [];
+    [ObservableProperty] private ObservableCollection<CategoryExpenseGroup> _groups = [];
     [ObservableProperty] private decimal _total;
     [ObservableProperty] private bool _isBusy;
     public string PeriodText => $"{StartDate:dd/MM/yyyy} – {EndDate.AddDays(-1):dd/MM/yyyy}";
     public string TitleText => $"{PaymentModeName} — {PeriodText}";
     public string TotalText => $"Total: {EuroFormatter.Format(Total)}";
     public bool HasBills => Items.Count > 0;
+    public bool HasGroups => Groups.Count > 0;
     public string EmptyText => $"No bills found for {PaymentModeName} in this period.";
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
@@ -33,8 +35,21 @@ public partial class PaymentModeBillListPageModel(BillTransactionRepository bill
     {
         if (IsBusy || PaymentModeId <= 0 || StartDate == default || EndDate <= StartDate) return;
         IsBusy = true;
-        try { Items = new(await bills.GetBillsByPaymentModeAndDateRangeAsync(PaymentModeId, StartDate, EndDate)); Total = Items.Sum(x => x.BillValue); OnPropertyChanged(nameof(HasBills)); OnPropertyChanged(nameof(TotalText)); OnPropertyChanged(nameof(EmptyText)); }
+        try
+        {
+            Items = new(await bills.GetBillsByPaymentModeAndDateRangeAsync(PaymentModeId, StartDate, EndDate));
+            Groups = CategoryExpenseGrouping.Group(Items);
+            Total = Items.Sum(x => x.BillValue);
+            OnPropertyChanged(nameof(HasBills)); OnPropertyChanged(nameof(HasGroups)); OnPropertyChanged(nameof(TotalText)); OnPropertyChanged(nameof(EmptyText));
+        }
         catch (Exception ex) { errors.HandleError(ex); }
         finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private static Task ToggleCategory(CategoryExpenseGroup group)
+    {
+        if (group is not null) group.IsExpanded = !group.IsExpanded;
+        return Task.CompletedTask;
     }
 }

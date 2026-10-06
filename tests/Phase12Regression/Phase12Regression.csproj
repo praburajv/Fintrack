@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NuGetAudit>false</NuGetAudit>
+    <AppSource>../../MauiApp1</AppSource>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(AppSource)/Models/MonthlyDeletionChoice.cs" Link="App/Models/MonthlyDeletionChoice.cs" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="8.0.8" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.10" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="UglyToad.PdfPig" Version="1.7.0-custom-5" />
+    <Compile Include="$(AppSource)/Services/EtlPdfImportService.cs;$(AppSource)/Services/EtlTextMappingService.cs;$(AppSource)/Services/IAuthenticationService.cs;$(AppSource)/Data/EtlTextMapRepository.cs;$(AppSource)/Models/EtlTextMap.cs;$(AppSource)/Models/EtlBankTransaction.cs;$(AppSource)/Models/EtlImportResult.cs;$(AppSource)/Models/BillChangedMessage.cs;$(AppSource)/Models/ExpenseMonthGroup.cs;$(AppSource)/Models/ExpenseListMode.cs;$(AppSource)/Models/LocalUserSummary.cs;$(AppSource)/PageModels/MonthlyExpenseDataPageModel.cs;$(AppSource)/PageModels/ExpenseListPageModel.cs" Link="App/ETLAndMaintenance/%(Filename)%(Extension)" />
+    <Compile Include="$(AppSource)/Data/BillTransactionRepository.cs;$(AppSource)/Data/IncomeTransactionRepository.cs;$(AppSource)/Data/ShopRepository.cs;$(AppSource)/Data/CategoryRepository.cs;$(AppSource)/Data/EtlImportSchema.cs" Link="App/Data/%(Filename)%(Extension)" />
+    <Compile Include="$(AppSource)/Services/MonthlyFinancialDeletionService.cs;$(AppSource)/Services/ICriticalOperationState.cs;$(AppSource)/Services/CriticalOperationState.cs;$(AppSource)/Services/ExpenseStatementBuilder.cs;$(AppSource)/Services/IExpenseStatementBuilder.cs;$(AppSource)/Services/ExpenseStatementDocumentService.cs;$(AppSource)/Services/IExpenseStatementDocumentService.cs;$(AppSource)/Services/ICurrencyService.cs" Link="App/Services/%(Filename)%(Extension)" />
+    <Compile Include="$(AppSource)/Models/BillTransaction.cs;$(AppSource)/Models/IncomeTransaction.cs;$(AppSource)/Models/Shop.cs;$(AppSource)/Models/ShopCategory.cs;$(AppSource)/Models/Category.cs;$(AppSource)/Models/CategoryIconCatalog.cs;$(AppSource)/Models/CategoryExpenseGroup.cs;$(AppSource)/Models/CategoryExpenseChartData.cs;$(AppSource)/Models/ShopExpenseChartData.cs;$(AppSource)/Models/MonthlyExpenseChartData.cs;$(AppSource)/Models/WeeklyExpenseChartData.cs;$(AppSource)/Models/PaymentModeExpenseChartData.cs;$(AppSource)/Models/ShopBillAnalysisResult.cs;$(AppSource)/Models/DailyExpenseCalendarItem.cs;$(AppSource)/Models/FinancialTransactionType.cs;$(AppSource)/Models/MonthlyDeletionPlan.cs;$(AppSource)/Models/ExpenseMonthMaintenanceItem.cs;$(AppSource)/Models/ExpensePeriodType.cs;$(AppSource)/Models/ExpenseStatementSnapshot.cs;$(AppSource)/Models/BudgetReportSnapshot.cs;$(AppSource)/Models/DisplayCurrency.cs" Link="App/Models/%(Filename)%(Extension)" />
+    <Compile Include="$(AppSource)/Utilities/ReportBillOrdering.cs;$(AppSource)/Utilities/ShopVisitOrdering.cs;$(AppSource)/Utilities/ShopBillNavigation.cs;$(AppSource)/Utilities/CategoryExpenseGrouping.cs;$(AppSource)/Utilities/EuroFormatter.cs;$(AppSource)/Utilities/ChartColorPalette.cs;$(AppSource)/Utilities/ShopNameAbbreviator.cs" Link="App/Utilities/%(Filename)%(Extension)" />
+    <Compile Include="$(AppSource)/PageModels/DailyBillListPageModel.cs" Link="App/PageModels/DailyBillListPageModel.cs" />
+    <Compile Include="$(AppSource)/Data/PaymentModeRepository.cs;$(AppSource)/Models/PaymentMode.cs" Link="App/PaymentModes/%(Filename)%(Extension)" />
+    <Compile Include="$(AppSource)/Services/BackupService.cs;$(AppSource)/Services/IBackupService.cs;$(AppSource)/Models/BackupMetadata.cs;$(AppSource)/Models/BackupRecordSummary.cs;$(AppSource)/Models/BackupValidationResult.cs;$(AppSource)/Models/SelectedMonthsRestoreResult.cs;$(AppSource)/Models/UserAccount.cs" Link="App/Backup/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

@@ -5,6 +5,9 @@
              x:Class="MauiApp1.App">
     <Application.Resources>
         <ResourceDictionary>
+            <x:String x:Key="DisplayCurrencySymbol">€</x:String>
+            <x:String x:Key="CurrencyExpenseAxisTitle">Expense (€)</x:String>
+            <x:String x:Key="CurrencyBillValueHint">Bill value (€)</x:String>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />

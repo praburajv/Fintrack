@@ -1,9 +1,12 @@
 using MauiApp1.PageModels;
+using MauiApp1.Models;
 
 namespace MauiApp1.Pages;
 
 public partial class MonthlyExpenseCalendarPage : ContentPage
 {
+    private bool _navigationPending;
+
     public MonthlyExpenseCalendarPage(MonthlyExpenseCalendarPageModel model)
     {
         InitializeComponent();
@@ -20,5 +23,32 @@ public partial class MonthlyExpenseCalendarPage : ContentPage
                 tile.HeightRequest = desiredHeight;
             }
         }
+    }
+
+    private async void OnTrendDaySelected(object? sender, DailyExpenseCalendarItem day)
+    {
+        if (_navigationPending) return;
+        try
+        {
+            _navigationPending = true;
+            var type = BindingContext is MonthlyExpenseCalendarPageModel model && model.TransactionType == FinancialTransactionType.Income ? "&type=Income" : string.Empty;
+            await Shell.Current.GoToAsync($"dailybills?date={day.Date:yyyy-MM-dd}{type}");
+        }
+        finally { _navigationPending = false; }
+    }
+
+    private async void OnCategorySelected(object? sender, CategoryExpenseChartData category)
+    {
+        if (_navigationPending || BindingContext is not MonthlyExpenseCalendarPageModel model) return;
+        try
+        {
+            _navigationPending = true;
+            var start = new DateTime(model.Year, model.Month, 1);
+            var end = start.AddMonths(1);
+            var name = Uri.EscapeDataString(category.CategoryName);
+            var type = model.TransactionType == FinancialTransactionType.Income ? "&type=Income" : string.Empty;
+            await Shell.Current.GoToAsync($"dailybills?from={start:yyyy-MM-dd}&to={end:yyyy-MM-dd}&categoryId={category.CategoryId}&categoryName={name}{type}");
+        }
+        finally { _navigationPending = false; }
     }
 }

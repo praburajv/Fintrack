@@ -98,6 +98,17 @@
                      Color="{AppThemeBinding Light={StaticResource DarkOnLightBackground}, Dark={StaticResource LightOnDarkBackground}}"
                      Size="{StaticResource IconSize}" />
 
+    <!-- Stable image resources used only by the Shell Flyout. The original
+         FontImageSource resources above remain available to existing controls. -->
+    <FileImageSource x:Key="FlyoutIconDashboard" File="flyout_dashboard.svg" />
+    <FileImageSource x:Key="FlyoutIconClose" File="flyout_close.svg" />
+    <FileImageSource x:Key="FlyoutIconBackupRestore" File="flyout_backup.svg" />
+    <FileImageSource x:Key="FlyoutIconMyExpense" File="flyout_expense.svg" />
+    <FileImageSource x:Key="FlyoutIconDailyDash" File="flyout_daily.svg" />
+    <FileImageSource x:Key="FlyoutIconCalendar" File="flyout_calendar.svg" />
+    <FileImageSource x:Key="FlyoutIconDatabase" File="flyout_database.svg" />
+    <FileImageSource x:Key="FlyoutIconSetup" File="flyout_setup.svg" />
+
     <FontImageSource x:Key="IconDelete"
                 Glyph="{x:Static f:FluentUI.delete_32_regular}"
                 FontFamily="{x:Static f:FluentUI.FontFamily}"

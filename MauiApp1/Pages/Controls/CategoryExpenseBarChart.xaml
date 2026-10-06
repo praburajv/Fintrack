@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Border
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:chart="clr-namespace:Syncfusion.Maui.Toolkit.Charts;assembly=Syncfusion.Maui.Toolkit"
+    xmlns:local="clr-namespace:MauiApp1.Utilities"
+    x:Class="MauiApp1.Pages.Controls.CategoryExpenseBarChart"
+    x:Name="ChartContainer"
+    HeightRequest="340"
+    Style="{StaticResource CardStyle}">
+    <Border.Resources>
+        <ResourceDictionary>
+            <local:EuroCurrencyConverter x:Key="EuroCurrencyConverter" />
+            <DataTemplate x:Key="CategoryTooltipTemplate">
+                <VerticalStackLayout Padding="4" Spacing="2">
+                    <Label Text="{Binding Item.XValue}" FontAttributes="Bold" />
+                    <Label Text="{Binding Item.YValue, Converter={StaticResource EuroCurrencyConverter}}" />
+                </VerticalStackLayout>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Border.Resources>
+
+    <chart:SfCartesianChart IsTransposed="True" HeightRequest="320" SemanticProperties.Description="Expenses by category bar chart">
+        <chart:SfCartesianChart.XAxes>
+            <chart:CategoryAxis LabelsIntersectAction="MultipleRows" />
+        </chart:SfCartesianChart.XAxes>
+        <chart:SfCartesianChart.YAxes>
+            <chart:NumericalAxis LabelCreated="OnYAxisLabelCreated">
+                <chart:NumericalAxis.Title>
+                    <chart:ChartAxisTitle Text="{DynamicResource CurrencyExpenseAxisTitle}" />
+                </chart:NumericalAxis.Title>
+            </chart:NumericalAxis>
+        </chart:SfCartesianChart.YAxes>
+        <chart:ColumnSeries
+            ItemsSource="{Binding ItemsSource, Source={x:Reference ChartContainer}}"
+            XBindingPath="CategoryDisplayName"
+            YBindingPath="TotalValue"
+            PaletteBrushes="{Binding PaletteBrushes, Source={x:Reference ChartContainer}}"
+            EnableTooltip="True"
+            TooltipTemplate="{StaticResource CategoryTooltipTemplate}">
+            <chart:ColumnSeries.SelectionBehavior>
+                <chart:DataPointSelectionBehavior SelectionBrush="Gray" SelectionChanged="OnSelectionChanged" />
+            </chart:ColumnSeries.SelectionBehavior>
+        </chart:ColumnSeries>
+    </chart:SfCartesianChart>
+</Border>
