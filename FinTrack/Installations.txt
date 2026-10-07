@@ -1,0 +1,695 @@
+# Task — Prepare FinTracker for Signed Android Release APK Distribution
+
+Work on the currently opened:
+
+corc_hunt_maui repository / FinTracker application.
+
+The application is a .NET 10 MAUI Android application using SQLite.
+
+The application is currently being developed and tested through Visual Studio, Android Emulator, and a physical Android phone.
+
+I now want to prepare the application so that I can create a proper Release APK and install it on other Android phones.
+
+IMPORTANT:
+
+Do not immediately modify files.
+
+First inspect the existing Android/MAUI release configuration and report what is already configured.
+
+Then make only the changes actually required.
+
+The existing MyExpense functionality and SQLite data must remain safe.
+
+--------------------------------------------------
+1. INSPECT CURRENT ANDROID CONFIGURATION
+--------------------------------------------------
+
+Inspect at minimum:
+
+- FinTracker.csproj
+- Platforms/Android/AndroidManifest.xml
+- Platforms/Android/
+- Resources/AppIcon/
+- Resources/Splash/
+- FinTrackerProgram.cs
+- App.xaml / App.xaml.cs
+- Data/Constants.cs
+- Existing SQLite initialization
+- Existing package/application identifiers
+- Existing version configuration
+- Existing signing configuration
+- Existing Release configuration
+
+Determine:
+
+1. Application ID / Android package ID
+2. Application display name
+3. Application version name
+4. Application version code
+5. Android minimum SDK
+6. Android target SDK
+7. Current app icon configuration
+8. Current splash-screen configuration
+9. Current APK package format configuration
+10. Whether Release signing already exists
+11. Whether an Android keystore already exists/configured
+12. Whether Release builds currently generate a signed APK
+13. Whether AAB generation is currently supported/configured
+
+Do not change identifiers until the existing configuration is understood.
+
+--------------------------------------------------
+2. APPLICATION ID
+--------------------------------------------------
+
+The application must have a stable Android Application ID.
+
+Inspect the existing value before changing anything.
+
+For example:
+
+com.companyname.crochuntmpluto
+
+Do NOT casually change an existing Application ID if the application is already installed and being tested.
+
+Changing the Application ID causes Android to treat the application as a different application.
+
+Preserve the current ID unless there is a strong reason to change it.
+
+Report the final Application ID.
+
+--------------------------------------------------
+3. APPLICATION NAME
+--------------------------------------------------
+
+Verify the user-facing Android application name.
+
+Preferred:
+
+FinTracker
+
+If the project already defines an intentional application name, preserve it unless adjustment is required.
+
+The installed application should display an appropriate name underneath its Android launcher icon.
+
+--------------------------------------------------
+4. VERSIONING
+--------------------------------------------------
+
+Configure/verify proper Android application versioning.
+
+The project should have equivalents of:
+
+ApplicationDisplayVersion
+
+and:
+
+ApplicationVersion
+
+For example:
+
+ApplicationDisplayVersion = 1.0.0
+ApplicationVersion = 1
+
+Explain the actual properties used by this .NET 10 MAUI project.
+
+For every future Android release:
+
+ApplicationVersion MUST increase.
+
+Example:
+
+1.0.0 -> version code 1
+1.0.1 -> version code 2
+1.1.0 -> version code 3
+
+Do not automatically invent a versioning system that conflicts with the existing project.
+
+--------------------------------------------------
+5. APP ICON
+--------------------------------------------------
+
+Inspect the existing MAUI app icon configuration.
+
+Verify that Release APK installations display the correct FinTracker icon.
+
+Do not replace the existing icon unless it is missing or incorrectly configured.
+
+Verify Android adaptive-icon generation where applicable.
+
+--------------------------------------------------
+6. SPLASH SCREEN
+--------------------------------------------------
+
+Inspect the existing splash screen.
+
+Preserve it if already working.
+
+Do not redesign the splash screen as part of this task.
+
+Only fix Release configuration if required.
+
+--------------------------------------------------
+7. RELEASE APK
+--------------------------------------------------
+
+Configure/verify the project so a Release APK can be produced.
+
+The expected build workflow should support something equivalent to:
+
+dotnet publish FinTracker.csproj -f net10.0-android -c Release -p:AndroidPackageFormats=apk
+
+Use the correct syntax for the actual .NET 10 MAUI project.
+
+Do not assume this exact command if inspection shows different requirements.
+
+The final output must include an installable signed Release APK.
+
+--------------------------------------------------
+8. ANDROID SIGNING
+--------------------------------------------------
+
+Production/reusable Android releases must be signed with a stable signing key.
+
+Inspect whether a keystore/signing configuration already exists.
+
+If no production keystore exists:
+
+DO NOT silently generate or commit secrets.
+
+Instead:
+
+1. Explain exactly what needs to be created.
+2. Provide the appropriate keytool command/instructions.
+3. Explain which values the developer must choose.
+4. Configure the project only after required values can be safely supplied.
+
+Never hard-code or commit:
+
+- Keystore passwords
+- Key passwords
+- Private signing secrets
+
+into Git-tracked source files.
+
+--------------------------------------------------
+9. KEYSTORE SAFETY
+--------------------------------------------------
+
+The signing keystore is critical.
+
+Document clearly:
+
+The same signing key must be retained for future application updates.
+
+If a manually distributed APK is installed with signing key A, a future APK signed with an incompatible key generally cannot update that installed application in place.
+
+The developer must securely back up:
+
+- Keystore file
+- Alias
+- Keystore password
+- Key password
+
+Do not place these secrets in the repository.
+
+--------------------------------------------------
+10. GIT SAFETY
+--------------------------------------------------
+
+Inspect .gitignore.
+
+Ensure sensitive Android signing artifacts are not accidentally committed.
+
+Where appropriate, ignore:
+
+- *.keystore
+- *.jks
+- local signing-property files containing passwords
+
+Do not remove legitimate project files.
+
+Do not expose signing passwords in:
+
+- csproj
+- source code
+- documentation committed with real credentials
+- logs
+
+--------------------------------------------------
+11. DEBUG VS RELEASE SIGNING
+--------------------------------------------------
+
+Clearly distinguish:
+
+DEBUG BUILD
+
+Used for development/testing.
+
+RELEASE BUILD
+
+Used for installation/distribution.
+
+Do not accidentally configure the production Release build to depend on the Android debug signing key.
+
+The Release package should have a stable release-signing strategy.
+
+--------------------------------------------------
+12. APK FOR DIRECT INSTALLATION
+--------------------------------------------------
+
+The application must support producing an APK that can be copied to another Android phone.
+
+Expected workflow:
+
+FinTracker
+        ↓
+Release Build
+        ↓
+Signed APK
+        ↓
+Copy APK to Phone
+        ↓
+Install
+        ↓
+Run FinTracker
+
+The receiving phone should not require:
+
+- Visual Studio
+- .NET SDK
+- ADB
+- Developer Options
+- USB debugging
+
+The user may need Android permission to install apps from the particular source used to open the APK.
+
+--------------------------------------------------
+13. AAB FOR FUTURE GOOGLE PLAY DISTRIBUTION
+--------------------------------------------------
+
+Also verify that the application can eventually produce an Android App Bundle:
+
+.aab
+
+Do not publish anything to Google Play as part of this task.
+
+Simply ensure/report how the project can generate:
+
+APK -> direct/private testing
+
+AAB -> future Google Play distribution
+
+--------------------------------------------------
+14. SQLITE — CRITICAL REQUIREMENT
+--------------------------------------------------
+
+FinTracker uses SQLite.
+
+The application currently contains important functionality and potentially user-entered data including:
+
+- Bills
+- Shops
+- Payment Modes
+- MyExpense information
+
+A Release/update process MUST NOT automatically delete the SQLite database.
+
+Do NOT:
+
+- Delete the database during startup
+- Recreate the database on every application version
+- Drop MyExpense tables
+- Clear application data
+- Delete the database as part of an upgrade
+- Change the database path unnecessarily
+
+--------------------------------------------------
+15. NEW PHONE DATABASE BEHAVIOUR
+--------------------------------------------------
+
+A fresh installation on another Android phone should create its own local application database using the existing database initialization strategy.
+
+This is expected:
+
+Phone A
+    -> FinTracker database A
+
+Phone B
+    -> FinTracker database B
+
+Installing the APK on Phone B does NOT automatically copy Phone A's expenses.
+
+Do not implement cloud synchronization as part of this task.
+
+--------------------------------------------------
+16. APPLICATION UPDATE BEHAVIOUR
+--------------------------------------------------
+
+This is critical.
+
+When a newer APK is installed over an existing compatible installation:
+
+Existing SQLite data should remain available.
+
+Expected:
+
+Version 1
+    ↓
+User creates Bills/Shops/Payment Modes
+    ↓
+Install Version 2 as an update
+    ↓
+Existing data remains
+    ↓
+New application version starts normally
+
+Do not require uninstalling the old version to install routine updates.
+
+--------------------------------------------------
+17. DATABASE SCHEMA CHANGES
+--------------------------------------------------
+
+The project currently uses SQLite and may not have a centralized migration framework.
+
+Inspect the actual implementation.
+
+Do NOT introduce a major migration framework merely to produce a Release APK.
+
+However, document the risk:
+
+CREATE TABLE IF NOT EXISTS does not automatically modify an existing table when future model/schema fields change.
+
+Recommend a controlled migration/version strategy for future schema changes.
+
+Do not perform unrelated database migrations during this task.
+
+--------------------------------------------------
+18. BACKUP / RESTORE — FUTURE PREPARATION
+--------------------------------------------------
+
+Do NOT implement backup/restore unless it already exists or is required for safe release preparation.
+
+However, report recommendations for a future MyExpense feature that could allow:
+
+Export Backup
+    ↓
+File
+    ↓
+Transfer to another phone
+    ↓
+Import Backup
+
+This could eventually allow users to move their Shops, Payment Modes, and Bills between phones.
+
+Keep this outside the current release-preparation scope unless specifically requested.
+
+--------------------------------------------------
+19. RELEASE OPTIMIZATION
+--------------------------------------------------
+
+Inspect the current Release configuration.
+
+Do not aggressively enable trimming/AOT/linking changes that could break:
+
+- CommunityToolkit.Mvvm
+- XAML bindings
+- Syncfusion/chart controls
+- SQLite
+- reflection-based behavior
+
+Prefer a safe working Release build over premature optimization.
+
+If existing Release optimization settings are already appropriate, preserve them.
+
+--------------------------------------------------
+20. ANDROID PERMISSIONS
+--------------------------------------------------
+
+Inspect AndroidManifest.xml.
+
+Retain only permissions actually required by existing functionality.
+
+Do not add unnecessary permissions merely for APK distribution.
+
+Installing a local SQLite application does not itself require broad storage permission when the database is stored in the application's normal private data directory.
+
+--------------------------------------------------
+21. BUILD VERIFICATION
+--------------------------------------------------
+
+After required configuration changes, build/publish the Android Release.
+
+Report the exact command used.
+
+The result must have:
+
+0 build errors
+
+Report warnings separately.
+
+--------------------------------------------------
+22. LOCATE RELEASE ARTIFACT
+--------------------------------------------------
+
+After successful publishing, report the exact generated APK path.
+
+For example, it may be under:
+
+bin/Release/net10.0-android/publish/
+
+but do not guess.
+
+Report the actual path generated by this repository.
+
+Also report:
+
+- APK filename
+- APK size
+- Whether it is signed
+- Application ID
+- Version name
+- Version code
+
+--------------------------------------------------
+23. VERIFY APK SIGNATURE
+--------------------------------------------------
+
+Where Android SDK tooling permits, verify the APK signature.
+
+Use the appropriate installed Android SDK signing verification tool if available.
+
+Report whether verification succeeds.
+
+Do not expose private signing credentials in output.
+
+--------------------------------------------------
+24. INSTALLATION TEST
+--------------------------------------------------
+
+If the currently connected physical Android device is available, test the Release APK.
+
+Verify:
+
+1. APK installs.
+2. Application launches.
+3. Dashboard opens.
+4. Expense List opens.
+5. Existing navigation works.
+6. SQLite database initializes.
+7. Add Bill works.
+8. Shops work.
+9. Payment Modes work.
+10. Dashboard charts work.
+11. Monthly Calendar works.
+
+Do not claim these were tested unless they actually were.
+
+--------------------------------------------------
+25. UPDATE TEST — IMPORTANT
+--------------------------------------------------
+
+If safe and possible using the existing test device:
+
+1. Confirm existing MyExpense data.
+2. Install the newer signed Release APK as an UPDATE without uninstalling.
+3. Launch application.
+4. Confirm existing Bills remain.
+5. Confirm Shops remain.
+6. Confirm Payment Modes remain.
+
+Do NOT uninstall the application as part of this test because that may delete application-local SQLite data.
+
+If update testing cannot safely be performed, report that explicitly.
+
+--------------------------------------------------
+26. OTHER-PHONE INSTALLATION INSTRUCTIONS
+--------------------------------------------------
+
+At the end provide simple instructions for installing the generated APK on another Android phone.
+
+Include:
+
+1. Copy APK to phone.
+2. Open APK.
+3. Android may request permission to install unknown apps from that source.
+4. Allow installation from that source if the user trusts the APK.
+5. Install FinTracker.
+6. Open application.
+
+Explain that a fresh installation creates a separate local database on that phone.
+
+--------------------------------------------------
+27. DO NOT BREAK EXISTING FEATURES
+--------------------------------------------------
+
+Preserve all existing functionality, including:
+
+- MyExpense
+- Expense List
+- Pagination
+- Add/Edit/Delete Bill
+- Shop management
+- Payment Mode management
+- Dashboard
+- Annual Pie Chart
+- Current-month Pie Chart
+- Monthly Expenses chart
+- Weekly Expenses chart
+- Monthly Calendar
+- Daily Bill List
+- Shop Bill Details
+- Processing overlay
+- Existing navigation
+- Euro formatting
+
+Do not make unrelated UI changes.
+
+--------------------------------------------------
+28. DO NOT PERFORM DESTRUCTIVE OPERATIONS
+--------------------------------------------------
+
+Do NOT:
+
+- Delete the SQLite database
+- Drop existing MyExpense tables
+- Uninstall the test application without explicit approval
+- Delete user data
+- Change Application ID casually
+- Generate/overwrite an existing production signing key
+- Commit signing secrets
+- Publish to Google Play
+
+--------------------------------------------------
+29. FINAL REPORT
+--------------------------------------------------
+
+After completing the work, provide:
+
+A. Existing Configuration Found
+
+Report:
+- Application ID
+- Display name
+- Version
+- Android SDK configuration
+- Existing signing configuration
+
+B. Files Modified
+
+List exact paths and reasons.
+
+C. Signing
+
+Explain:
+- Signing approach
+- Keystore location strategy
+- How secrets are protected
+- What the developer must securely back up
+
+Never print passwords.
+
+D. APK
+
+Report:
+- Exact APK filename
+- Exact output path
+- File size
+- Signed/unsigned status
+
+E. AAB
+
+Report whether/how an AAB can be generated.
+
+F. SQLite Safety
+
+Confirm whether installing an update preserves the existing application database.
+
+Explain any risks discovered.
+
+G. Build Result
+
+Report:
+- Command
+- Errors
+- Warnings
+
+H. Device Test
+
+State exactly what was tested.
+
+I. Installation Instructions
+
+Give concise instructions for installing the APK on another Android phone.
+
+J. Future Update Procedure
+
+Provide the exact recommended process for:
+
+Version N
+    ↓
+Increase version
+    ↓
+Build signed Release APK using SAME signing key
+    ↓
+Install over existing application
+    ↓
+Preserve SQLite data
+
+--------------------------------------------------
+FINAL OBJECTIVE
+--------------------------------------------------
+
+Prepare FinTracker for safe Android distribution so I can:
+
+Build
+    ↓
+Signed Release APK
+    ↓
+Copy APK to another Android phone
+    ↓
+Install FinTracker
+    ↓
+Run without Visual Studio
+
+while also establishing a safe future update process:
+
+Existing installation + SQLite data
+    ↓
+New version signed with same release key
+    ↓
+Install as update
+    ↓
+Existing MyExpense data remains available
+
+Prioritize:
+
+1. Stable Application ID
+2. Correct versioning
+3. Secure Release signing
+4. Installable APK
+5. Future AAB capability
+6. SQLite data preservation
+7. Safe future updates
+8. No committed signing secrets
+9. No unrelated application changes

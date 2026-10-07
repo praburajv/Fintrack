@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:pageModels="clr-namespace:FinTracker.PageModels" xmlns:models="clr-namespace:FinTracker.Models" xmlns:controls="clr-namespace:FinTracker.Pages.Controls" x:Class="FinTracker.Pages.BackupDataPage" x:Name="BackupPage" x:DataType="pageModels:BackupDataPageModel" Title="Backup Data">
+ <Grid RowDefinitions="*,Auto"><ScrollView Grid.Row="0"><VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
+  <Label Text="Backup Data" Style="{StaticResource Title2}" /><Label Text="Create a safe copy of your Household Expense Tracker data." />
+  <Label Text="Current Data" FontAttributes="Bold" />
+  <Label Text="{Binding CurrentData.ShopCount, StringFormat='Shops: {0}'}" /><Label Text="{Binding CurrentData.PaymentModeCount, StringFormat='Payment Modes: {0}'}" /><Label Text="{Binding CurrentData.BillCount, StringFormat='Bills: {0}'}" />
+  <Button Text="Create Backup" Command="{Binding CreateBackupCommand}" />
+  <BoxView HeightRequest="1" BackgroundColor="{DynamicResource Primary}" Margin="0,12" />
+  <Label Text="Selected Month Backup" Style="{StaticResource Title2}" />
+  <Picker Title="Year" ItemsSource="{Binding Years}" SelectedItem="{Binding SelectedYear}" />
+  <VerticalStackLayout BindableLayout.ItemsSource="{Binding Months}" Spacing="4"><BindableLayout.ItemTemplate><DataTemplate x:DataType="models:BackupMonthSelection"><HorizontalStackLayout><CheckBox IsChecked="{Binding IsSelected}" /><Label Text="{Binding MonthName}" VerticalOptions="Center" /></HorizontalStackLayout></DataTemplate></BindableLayout.ItemTemplate></VerticalStackLayout>
+  <Button Text="Backup Selected Months" Command="{Binding CreateSelectedMonthsBackupCommand}" />
+  <VerticalStackLayout IsVisible="{Binding HasBackup}" Spacing="8">
+   <Label Text="Backup Created Successfully" FontAttributes="Bold" /><Label Text="{Binding BackupFileName}" /><Label Text="{Binding CreatedText, StringFormat='Created: {0}'}" />
+   <Label Text="{Binding BackupMetadata.ShopCount, StringFormat='Shops: {0}'}" /><Label Text="{Binding BackupMetadata.PaymentModeCount, StringFormat='Payment Modes: {0}'}" /><Label Text="{Binding BackupMetadata.BillCount, StringFormat='Bills: {0}'}" />
+   <Button Text="Save Backup" Command="{Binding SaveBackupCommand}" /><Button Text="Share Backup" Command="{Binding ShareBackupCommand}" />
+  </VerticalStackLayout>
+ </VerticalStackLayout></ScrollView><controls:ProcessingOverlay Grid.Row="0" IsBusy="{Binding IsBusy}" Message="{Binding ProcessingMessage}" Progress="{Binding Progress}" ProgressText="{Binding ProgressText}" /><controls:BottomTaskBar Grid.Row="1" /></Grid>
+</ContentPage>

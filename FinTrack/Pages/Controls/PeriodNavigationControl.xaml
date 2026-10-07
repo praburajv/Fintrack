@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Border xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:f="clr-namespace:Fonts" x:Class="FinTracker.Pages.Controls.PeriodNavigationControl" Stroke="{DynamicResource Primary}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Background="{DynamicResource SurfaceSecondary}" Padding="4" x:Name="Control">
+ <Grid ColumnDefinitions="52,*,52" ColumnSpacing="8">
+  <ImageButton Command="{Binding PreviousCommand, Source={x:Reference Control}}" BackgroundColor="Transparent" WidthRequest="48" HeightRequest="48" Padding="12" SemanticProperties.Description="Previous period"><ImageButton.Source><FontImageSource Glyph="{x:Static f:FluentUI.chevron_left_24_regular}" FontFamily="{x:Static f:FluentUI.FontFamily}" Color="{DynamicResource Primary}" Size="24" /></ImageButton.Source></ImageButton>
+  <Label Grid.Column="1" Text="{Binding PeriodText, Source={x:Reference Control}}" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" FontAttributes="Bold" FontSize="18" />
+  <ImageButton Grid.Column="2" Command="{Binding NextCommand, Source={x:Reference Control}}" BackgroundColor="Transparent" WidthRequest="48" HeightRequest="48" Padding="12" SemanticProperties.Description="Next period"><ImageButton.Source><FontImageSource Glyph="{x:Static f:FluentUI.chevron_right_24_regular}" FontFamily="{x:Static f:FluentUI.FontFamily}" Color="{DynamicResource Primary}" Size="24" /></ImageButton.Source></ImageButton>
+ </Grid>
+</Border>

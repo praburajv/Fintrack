@@ -1,0 +1,159 @@
+using CommunityToolkit.Maui;
+using Microsoft.Extensions.Logging;
+using FinTracker.Services;
+using FinTracker.Data;
+using Syncfusion.Maui.Toolkit.Hosting;
+
+namespace FinTracker
+{
+    public static class FinTrackerProgram
+    {
+        public static MauiApp CreateMauiApp()
+        {
+            var builder = MauiApp.CreateBuilder();
+            builder
+                .UseMauiApp<App>()
+                .UseMauiCommunityToolkit()
+                .ConfigureSyncfusionToolkit()
+                .ConfigureMauiHandlers(handlers =>
+                {
+#if WINDOWS
+    				Microsoft.Maui.Controls.Handlers.Items.CollectionViewHandler.Mapper.AppendToMapping("KeyboardAccessibleCollectionView", (handler, view) =>
+    				{
+    					handler.PlatformView.SingleSelectionFollowsFocus = false;
+    				});
+
+#endif
+                })
+                .ConfigureFonts(fonts =>
+                {
+                    fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                    fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                    fonts.AddFont("SegoeUI-Semibold.ttf", "SegoeSemibold");
+                    fonts.AddFont("FluentSystemIcons-Regular.ttf", FluentUI.FontFamily);
+                });
+
+#if DEBUG
+    		builder.Logging.AddDebug();
+    		builder.Services.AddLogging(configure => configure.AddDebug());
+#endif
+
+            builder.Services.AddSingleton<ShopRepository>();
+            builder.Services.AddSingleton<CategoryRepository>();
+            builder.Services.AddSingleton<PaymentModeRepository>();
+            builder.Services.AddSingleton<BillTransactionRepository>();
+            builder.Services.AddSingleton<IncomeTransactionRepository>();
+            builder.Services.AddSingleton<SetUpKeyValueRepository>();
+            builder.Services.AddSingleton<EtlTextMapRepository>();
+            builder.Services.AddSingleton<EtlTextMappingService>();
+            builder.Services.AddSingleton<UserAccountRepository>();
+            builder.Services.AddSingleton<IAuthenticationService, LocalAuthenticationService>();
+#if ANDROID
+            builder.Services.AddSingleton<IBiometricAuthenticationService, Platforms.Android.AndroidBiometricAuthenticationService>();
+#else
+            builder.Services.AddSingleton<IBiometricAuthenticationService, DefaultBiometricAuthenticationService>();
+#endif
+            builder.Services.AddSingleton<IThemeService, ThemeService>();
+            builder.Services.AddSingleton<ICurrencyService, CurrencyService>();
+            builder.Services.AddSingleton<IExpenseStatementBuilder, ExpenseStatementBuilder>();
+            builder.Services.AddSingleton<IExpenseStatementDocumentService, ExpenseStatementDocumentService>();
+            builder.Services.AddSingleton<ShopBillAnalysisService>();
+            builder.Services.AddSingleton<ModalErrorHandler>();
+            builder.Services.AddSingleton<ICriticalOperationState, CriticalOperationState>();
+            builder.Services.AddSingleton<IBackupService, BackupService>();
+            builder.Services.AddSingleton<IReadOnlySqlAnalyzerService, ReadOnlySqlAnalyzerService>();
+            builder.Services.AddSingleton<ISqlSchemaMetadataService, SqlSchemaMetadataService>();
+            builder.Services.AddSingleton<SqlQueryBuilderService>();
+#if ANDROID
+            builder.Services.AddSingleton<IBackupFileExporter, Platforms.Android.AndroidBackupFileExporter>();
+#else
+            builder.Services.AddSingleton<IBackupFileExporter, DefaultBackupFileExporter>();
+#endif
+#if ANDROID
+            builder.Services.AddSingleton<IApplicationCloseService, Platforms.Android.AndroidApplicationCloseService>();
+#else
+            builder.Services.AddSingleton<IApplicationCloseService, DefaultApplicationCloseService>();
+#endif
+            builder.Services.AddSingleton<MainPageModel>();
+            builder.Services.AddTransient<ShopBillDetailsPageModel>();
+            builder.Services.AddTransient<MonthlyExpenseCalendarPageModel>();
+            builder.Services.AddTransient<DailyBillListPageModel>();
+            builder.Services.AddTransient<LandingDashboardPageModel>();
+            builder.Services.AddTransient<BillAnalysisPageModel>();
+            builder.Services.AddTransient<ShopTransactionDatesPageModel>();
+            builder.Services.AddTransient<DailyDashPageModel>();
+            builder.Services.AddTransient<PaymentModeBillListPageModel>();
+            builder.Services.AddSingleton<ExpenseListPageModel>();
+            builder.Services.AddTransient<ShopListPageModel>();
+            builder.Services.AddTransient<ShopEntryPageModel>();
+            builder.Services.AddTransient<CategoryListPageModel>();
+            builder.Services.AddTransient<CategoryEntryPageModel>();
+            builder.Services.AddTransient<SetupDataPageModel>();
+            builder.Services.AddTransient<ExpenseAnalysisPageModel>();
+            builder.Services.AddTransient<IncomeAnalysisPageModel>();
+            builder.Services.AddTransient<IncomeExpenseFlowPageModel>();
+            builder.Services.AddSingleton<IncomeExpenseFlowService>();
+            builder.Services.AddSingleton<ExpenseAnalysisService>();
+            builder.Services.AddSingleton<RecurringBillRepository>();
+            builder.Services.AddSingleton<MonthlyRecurringBillRegistrationService>();
+            builder.Services.AddTransient<RecurringBillsPageModel>();
+            builder.Services.AddTransient<RecurringBillEntryPageModel>();
+            builder.Services.AddTransient<ExpenseReportPageModel>();
+            builder.Services.AddTransient<MonthlyBudgetReportPageModel>();
+            builder.Services.AddTransient<ExpenseStatementPreviewPageModel>();
+            builder.Services.AddTransient<BudgetReportPreviewPageModel>();
+            builder.Services.AddTransient<PaymentModeListPageModel>();
+            builder.Services.AddTransient<PaymentModeEntryPageModel>();
+            builder.Services.AddTransient<BackupRestorePageModel>();
+            builder.Services.AddTransient<LoginPageModel>();
+            builder.Services.AddTransient<RegisterPageModel>();
+            builder.Services.AddTransient<PasswordResetPageModel>();
+            builder.Services.AddTransient<DatabaseToolsPageModel>();
+            builder.Services.AddTransient<MonthlyExpenseDataPageModel>();
+            builder.Services.AddTransient<SetupPageModel>();
+            builder.Services.AddTransient<ReadOnlySqlAnalyzerPageModel>();
+            builder.Services.AddSingleton<EtlPdfImportService>();
+            builder.Services.AddSingleton<MonthlyFinancialDeletionService>();
+            builder.Services.AddTransient<EtlDataPageModel>();
+            builder.Services.AddTransient<EtlDataManagePageModel>();
+            builder.Services.AddTransient<EtlTextMapPageModel>();
+
+            builder.Services.AddTransientWithShellRoute<BillEntryPage, BillEntryPageModel>("bill");
+            builder.Services.AddTransientWithShellRoute<ShopListPage, ShopListPageModel>("shops");
+            builder.Services.AddTransientWithShellRoute<ShopEntryPage, ShopEntryPageModel>("shop");
+            builder.Services.AddTransientWithShellRoute<CategoryListPage, CategoryListPageModel>("categories");
+            builder.Services.AddTransientWithShellRoute<CategoryEntryPage, CategoryEntryPageModel>("category");
+            builder.Services.AddTransientWithShellRoute<SetupDataPage, SetupDataPageModel>("setupdata");
+            builder.Services.AddTransientWithShellRoute<ExpenseAnalysisPage, ExpenseAnalysisPageModel>("expenseanalysis");
+            builder.Services.AddTransientWithShellRoute<ExpenseReportPage, ExpenseReportPageModel>("expensereport");
+            builder.Services.AddTransientWithShellRoute<RecurringBillsPage, RecurringBillsPageModel>("recurringbills");
+            builder.Services.AddTransientWithShellRoute<RecurringBillEntryPage, RecurringBillEntryPageModel>("recurringbill");
+            builder.Services.AddTransientWithShellRoute<MonthlyBudgetReportPage, MonthlyBudgetReportPageModel>("monthlybudget");
+            builder.Services.AddTransientWithShellRoute<ExpenseStatementPreviewPage, ExpenseStatementPreviewPageModel>("expensestatement");
+            builder.Services.AddTransientWithShellRoute<BudgetReportPreviewPage, BudgetReportPreviewPageModel>("budgetreport");
+            builder.Services.AddTransientWithShellRoute<PaymentModeListPage, PaymentModeListPageModel>("paymentmodes");
+            builder.Services.AddTransientWithShellRoute<PaymentModeEntryPage, PaymentModeEntryPageModel>("paymentmode");
+            builder.Services.AddTransientWithShellRoute<ShopBillDetailsPage, ShopBillDetailsPageModel>("shopbills");
+            builder.Services.AddTransientWithShellRoute<MonthlyExpenseCalendarPage, MonthlyExpenseCalendarPageModel>("monthlycalendar");
+            builder.Services.AddTransientWithShellRoute<DailyBillListPage, DailyBillListPageModel>("dailybills");
+            builder.Services.AddTransientWithShellRoute<BillAnalysisPage, BillAnalysisPageModel>("billanalysis");
+            builder.Services.AddTransientWithShellRoute<ShopTransactionDatesPage, ShopTransactionDatesPageModel>("shoptransactiondates");
+            builder.Services.AddTransientWithShellRoute<DailyDashPage, DailyDashPageModel>("dailydash");
+            builder.Services.AddTransientWithShellRoute<PaymentModeBillListPage, PaymentModeBillListPageModel>("paymentmodebills");
+            builder.Services.AddTransientWithShellRoute<BackupDataPage, BackupDataPageModel>("backup");
+            builder.Services.AddTransientWithShellRoute<RestoreDataPage, RestoreDataPageModel>("restore");
+            builder.Services.AddTransientWithShellRoute<LoginPage, LoginPageModel>("login");
+            builder.Services.AddTransientWithShellRoute<RegisterPage, RegisterPageModel>("register");
+            builder.Services.AddTransientWithShellRoute<PasswordResetPage, PasswordResetPageModel>("passwordreset");
+            builder.Services.AddTransientWithShellRoute<DatabaseToolsPage, DatabaseToolsPageModel>("databasetools");
+            builder.Services.AddTransientWithShellRoute<MonthlyExpenseDataPage, MonthlyExpenseDataPageModel>("monthlyexpensedata");
+            builder.Services.AddTransientWithShellRoute<BackupRestorePage, BackupRestorePageModel>("backuprestore");
+            builder.Services.AddTransientWithShellRoute<ReadOnlySqlAnalyzerPage, ReadOnlySqlAnalyzerPageModel>("sqlqa");
+            builder.Services.AddTransientWithShellRoute<EtlDataPage, EtlDataPageModel>("etldata");
+            builder.Services.AddTransientWithShellRoute<EtlDataManagePage, EtlDataManagePageModel>("etldatamanage");
+            builder.Services.AddTransientWithShellRoute<EtlTextMapPage, EtlTextMapPageModel>("etldatamapping");
+
+            return builder.Build();
+        }
+    }
+}

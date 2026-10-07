@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:pm="clr-namespace:FinTracker.PageModels"
+             xmlns:m="clr-namespace:FinTracker.Models"
+             xmlns:controls="clr-namespace:FinTracker.Pages.Controls"
+             xmlns:f="clr-namespace:Fonts"
+             x:Class="FinTracker.Pages.BudgetReportPreviewPage"
+             x:DataType="pm:BudgetReportPreviewPageModel"
+             Title="Budget Report">
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView>
+            <VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="10">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                    <Button Text="Back" Command="{Binding BackCommand}" />
+                    <Label Grid.Column="1" Text="Budget Report" Style="{StaticResource Title2}" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                    <ImageButton Grid.Column="2" Command="{Binding OpenPdfCommand}" BackgroundColor="Transparent" WidthRequest="48" HeightRequest="48" Padding="10" SemanticProperties.Description="View PDF and print budget report">
+                        <ImageButton.Source><FontImageSource Glyph="{x:Static f:FluentUI.document_print_24_regular}" FontFamily="{x:Static f:FluentUI.FontFamily}" Color="{DynamicResource Primary}" Size="24" /></ImageButton.Source>
+                    </ImageButton>
+                </Grid>
+                <Label Text="Expense Tracker – Budget Report" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" />
+                <Label Text="{Binding Report.PeriodTitle, StringFormat='Reporting Period: {0}'}" FontSize="17" FontAttributes="Bold" HorizontalOptions="Center" />
+                <Label Text="{Binding Report.CurrencyCode, StringFormat='Display currency: {0}'}" HorizontalOptions="Center" />
+
+                <Border Stroke="{DynamicResource Primary}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="14" Background="{DynamicResource SurfaceSecondary}">
+                    <VerticalStackLayout Spacing="7">
+                        <Label Text="BUDGET SUMMARY" FontAttributes="Bold" FontSize="18" />
+                        <Grid ColumnDefinitions="*,Auto"><Label Text="Monthly Income" /><Label Grid.Column="1" Text="{Binding Report.MonthlyIncomeText}" FontAttributes="Bold" /></Grid>
+                        <Grid ColumnDefinitions="*,Auto"><Label Text="Monthly Budget" /><Label Grid.Column="1" Text="{Binding Report.MonthlyBudgetText}" FontAttributes="Bold" /></Grid>
+                        <Grid ColumnDefinitions="*,Auto"><Label Text="Actual Expenses" /><Label Grid.Column="1" Text="{Binding Report.ActualExpenseText}" FontAttributes="Bold" /></Grid>
+                        <Grid ColumnDefinitions="*,Auto"><Label Text="Remaining Budget" /><Label Grid.Column="1" Text="{Binding Report.RemainingBudgetText}" FontAttributes="Bold" /></Grid>
+                        <Grid ColumnDefinitions="*,Auto"><Label Text="Budget Used" /><Label Grid.Column="1" Text="{Binding Report.BudgetUsedPercentText}" FontAttributes="Bold" /></Grid>
+                        <Grid ColumnDefinitions="*,Auto"><Label Text="Budget Health" /><Label Grid.Column="1" Text="{Binding Report.BudgetHealthText}" FontAttributes="Bold" /></Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Label Text="CATEGORY BREAKDOWN" FontAttributes="Bold" FontSize="18" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Report.Categories}" Spacing="6">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="m:BudgetReportCategory">
+                            <Border Stroke="{DynamicResource Primary}" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="10">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding CategoryName}" FontAttributes="Bold" />
+                                    <Grid ColumnDefinitions="*,Auto"><Label Text="Budgeted" /><Label Grid.Column="1" Text="{Binding BudgetedText}" /></Grid>
+                                    <Grid ColumnDefinitions="*,Auto"><Label Text="Actual" /><Label Grid.Column="1" Text="{Binding ActualExpenseText}" /></Grid>
+                                    <Grid ColumnDefinitions="*,Auto"><Label Text="Remaining" /><Label Grid.Column="1" Text="{Binding RemainingText}" /></Grid>
+                                    <Label Text="{Binding StatusText}" FontAttributes="Bold" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <Button Text="View PDF / Print" Command="{Binding OpenPdfCommand}" />
+                    <Button Grid.Column="1" Text="Share PDF" Command="{Binding ShareCommand}" />
+                </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
+        <controls:ProcessingOverlay Grid.RowSpan="2" IsBusy="{Binding IsOverlayBusy}" Message="{Binding ProcessingMessage}" SpinnerColor="#3B82F6" ShowProgress="False" />
+        <controls:BottomTaskBar Grid.Row="1" />
+    </Grid>
+</ContentPage>

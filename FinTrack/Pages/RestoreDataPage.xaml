@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:pageModels="clr-namespace:FinTracker.PageModels" xmlns:controls="clr-namespace:FinTracker.Pages.Controls" x:Class="FinTracker.Pages.RestoreDataPage" x:DataType="pageModels:RestoreDataPageModel" Title="Restore Data">
+ <Shell.BackButtonBehavior><BackButtonBehavior Command="{Binding BackCommand}" /></Shell.BackButtonBehavior>
+ <Grid RowDefinitions="*,Auto"><ScrollView Grid.Row="0"><VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
+  <Label Text="Restore Data" Style="{StaticResource Title2}" /><Label Text="Restore Household Expense Tracker data from a backup file." />
+  <Label Text="Restoring a complete backup replaces current application data. Selected-month restore replaces only the backed-up months." /><Label Text="A safety copy of your current data will be created before complete restoration." />
+  <Button Text="Select Backup File" Command="{Binding SelectBackupCommand}" />
+  <VerticalStackLayout IsVisible="{Binding HasValidBackup}" Spacing="8">
+   <Label Text="Selected Backup" FontAttributes="Bold" /><Label Text="{Binding BackupFileName}" /><Label Text="{Binding CreatedText, StringFormat='Created: {0}'}" />
+   <Label Text="{Binding Metadata.ApplicationVersion, StringFormat='Application Version: {0}'}" /><Label Text="{Binding Metadata.BackupFormatVersion, StringFormat='Backup Version: {0}'}" />
+   <Label Text="Selected months: {Binding SelectedMonthsText}" IsVisible="{Binding IsSelectedMonthsBackup}" />
+   <Label Text="Status: Backup Valid" TextColor="Green" /><Label Text="{Binding BackupData.ShopCount, StringFormat='Shops: {0}'}" /><Label Text="{Binding BackupData.PaymentModeCount, StringFormat='Payment Modes: {0}'}" /><Label Text="{Binding BackupData.BillCount, StringFormat='Bills: {0}'}" />
+   <Button Text="Choose Another File" Command="{Binding ChooseAnotherFileCommand}" /><Button Text="Restore This Backup" Command="{Binding RestoreCommand}" />
+  </VerticalStackLayout>
+  <VerticalStackLayout IsVisible="{Binding RestoreCompleted}" Spacing="8"><Label Text="Restore Completed Successfully" FontAttributes="Bold" /><Button Text="Return to Dashboard" Command="{Binding ReturnToDashboardCommand}" /></VerticalStackLayout>
+ </VerticalStackLayout></ScrollView><controls:ProcessingOverlay Grid.Row="0" IsBusy="{Binding IsBusy}" Message="{Binding ProcessingMessage}" Progress="{Binding Progress}" ProgressText="{Binding ProgressText}" /><controls:BottomTaskBar Grid.Row="1" /></Grid>
+</ContentPage>

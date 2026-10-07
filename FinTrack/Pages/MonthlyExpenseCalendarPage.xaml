@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:pageModels="clr-namespace:FinTracker.PageModels" xmlns:models="clr-namespace:FinTracker.Models" xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit" xmlns:local="clr-namespace:FinTracker.Utilities" xmlns:controls="clr-namespace:FinTracker.Pages.Controls" x:Class="FinTracker.Pages.MonthlyExpenseCalendarPage" x:Name="CalendarPage" x:DataType="pageModels:MonthlyExpenseCalendarPageModel" Title="Monthly Calendar">
+ <ContentPage.Behaviors><toolkit:EventToCommandBehavior BindingContext="{Binding BindingContext, Source={x:Reference CalendarPage}, x:DataType=ContentPage}" EventName="Appearing" Command="{Binding AppearingCommand}" /></ContentPage.Behaviors>
+ <ContentPage.Resources><ResourceDictionary><local:EuroCurrencyConverter x:Key="EuroCurrencyConverter" /><toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" /></ResourceDictionary></ContentPage.Resources>
+ <Grid RowDefinitions="*,Auto"><ScrollView Grid.Row="0"><VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
+  <Label Text="Period" FontAttributes="Bold" />
+  <Label Text="Monthly" FontAttributes="Bold" />
+  <BoxView HeightRequest="1" BackgroundColor="{DynamicResource Primary}" Opacity="0.45" />
+  <controls:PeriodNavigationControl PeriodText="{Binding CalendarPeriodText}" PreviousCommand="{Binding PreviousPeriodCommand}" NextCommand="{Binding NextPeriodCommand}" />
+  <Label Text="{Binding MonthTotalText}" FontAttributes="Bold" />
+  <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+  <Grid Margin="-8,0" MinimumWidthRequest="630" ColumnDefinitions="*,*,*,*,*,*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="2" RowSpacing="6" BindableLayout.ItemsSource="{Binding Days}">
+   <Label Text="Mo" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Center" FontAttributes="Bold" />
+      <Label Grid.Column="1" Text="Tu" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Center" FontAttributes="Bold" />
+      <Label Grid.Column="2" Text="We" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Center" FontAttributes="Bold" />
+      <Label Grid.Column="3" Text="Th" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Center" FontAttributes="Bold" />
+      <Label Grid.Column="4" Text="Fr" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Center" FontAttributes="Bold" />
+      <!--<Label Grid.Column="5" Text="Sa" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Center" FontAttributes="Bold" />-->
+      <Label Grid.Column="6" Text="Su" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Center" FontAttributes="Bold" />
+   <BindableLayout.ItemTemplate><DataTemplate x:DataType="models:DailyExpenseCalendarItem"><Border Grid.Row="{Binding GridRow}" Grid.Column="{Binding GridColumn}" IsVisible="{Binding IsPlaceholder, Converter={StaticResource InvertedBoolConverter}}" Stroke="{Binding BorderColor}" StrokeThickness="{Binding BorderThickness}" StrokeShape="RoundRectangle 8" Background="{AppThemeBinding Light={StaticResource LightSecondaryBackground}, Dark={StaticResource DarkSecondaryBackground}}" HorizontalOptions="Fill" VerticalOptions="Start" SizeChanged="OnTileSizeChanged" SemanticProperties.Description="{Binding TileDescription}"><Border.GestureRecognizers><TapGestureRecognizer Command="{Binding BindingContext.SelectDayCommand, Source={x:Reference CalendarPage}}" CommandParameter="{Binding .}" /></Border.GestureRecognizers><Grid Padding="0" HorizontalOptions="Fill" VerticalOptions="Fill" RowDefinitions="*,*,*" RowSpacing="0"><Label Text="{Binding DayNumber}" Grid.Row="0" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Center" FontAttributes="Bold" FontSize="18" /><Label Text="{Binding WeekdayShortName}" Grid.Row="1" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Center" FontSize="10" TextColor="Gray" /><Label Text="{Binding TotalValue, Converter={StaticResource EuroCurrencyConverter}}" TextColor="{Binding AmountColor}" Grid.Row="2" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Center" FontSize="{Binding AmountFontSize}" LineBreakMode="NoWrap" MaxLines="1" /></Grid></Border></DataTemplate></BindableLayout.ItemTemplate>
+  </Grid>
+  </ScrollView>
+   <Label Text="Red border = Highest total expense day" FontSize="12" IsVisible="{Binding HasExpenses}" />
+   <Label Text="Daily Expense Trend" Style="{StaticResource Title2}" Margin="0,12,0,0" />
+   <controls:DailyExpenseTrendChart ItemsSource="{Binding ChartDays}" DaySelected="OnTrendDaySelected" />
+   <Label Text="Expenses by Category" Style="{StaticResource Title2}" Margin="0,12,0,0" />
+   <Label Text="No category expenses in this month." IsVisible="{Binding HasCategoryExpenses, Converter={StaticResource InvertedBoolConverter}}" HorizontalOptions="Center" />
+   <controls:CategoryExpenseBarChart ItemsSource="{Binding CategoryChartData}" CategorySelected="OnCategorySelected" IsVisible="{Binding HasCategoryExpenses}" />
+  </VerticalStackLayout></ScrollView><controls:ProcessingOverlay Grid.RowSpan="2" IsBusy="{Binding IsBusy}" Message="Loading expense calendar..." SpinnerColor="#3B82F6" /><controls:BottomTaskBar Grid.Row="1" /></Grid>
+ </ContentPage>

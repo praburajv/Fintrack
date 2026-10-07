@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:pm="clr-namespace:FinTracker.PageModels"
+             xmlns:m="clr-namespace:FinTracker.Models"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:controls="clr-namespace:FinTracker.Pages.Controls"
+             x:Class="FinTracker.Pages.EtlTextMapPage"
+             x:Name="Page"
+             x:DataType="pm:EtlTextMapPageModel"
+             Title="ETL DATA MAPPING">
+  <ContentPage.Behaviors>
+    <toolkit:EventToCommandBehavior BindingContext="{Binding BindingContext, Source={x:Reference Page}, x:DataType=ContentPage}" EventName="Appearing" Command="{Binding AppearingCommand}" />
+  </ContentPage.Behaviors>
+  <Grid Padding="{StaticResource LayoutPadding}" RowDefinitions="*,Auto">
+    <ScrollView Grid.Row="0">
+      <VerticalStackLayout Spacing="{StaticResource LayoutSpacing}">
+        <Label Text="ETL DATA MAPPING" Style="{StaticResource Title2}" />
+        <Label Text="Match text from DESCRITIVO to an existing Shop." />
+        <Entry Placeholder="Lookup text" Text="{Binding LookupText}" MaxLength="225" />
+        <Picker Title="Shop" ItemsSource="{Binding Shops}" SelectedItem="{Binding SelectedShop}" ItemDisplayBinding="{Binding Name}" />
+        <HorizontalStackLayout Spacing="12">
+          <Button Text="SAVE" Command="{Binding SaveCommand}" />
+          <Button Text="CLEAR" Command="{Binding CancelCommand}" IsVisible="{Binding IsEdit}" />
+        </HorizontalStackLayout>
+        <BoxView HeightRequest="1" BackgroundColor="{DynamicResource Primary}" />
+        <Label Text="Configured mappings" FontAttributes="Bold" FontSize="18" />
+        <CollectionView ItemsSource="{Binding Items}" EmptyView="No ETL mappings configured.">
+          <CollectionView.ItemTemplate>
+            <DataTemplate x:DataType="m:EtlTextMap">
+              <Grid ColumnDefinitions="*,*,Auto,Auto" Padding="8" ColumnSpacing="8">
+                <Label Text="{Binding LookupText}" VerticalOptions="Center" />
+                <Label Grid.Column="1" Text="{Binding ShopName}" VerticalOptions="Center" />
+                <ImageButton Grid.Column="2" Source="edit.svg" Command="{Binding EditCommand, Source={RelativeSource AncestorType={x:Type pm:EtlTextMapPageModel}}}" CommandParameter="{Binding .}" WidthRequest="36" HeightRequest="36" Padding="8" BackgroundColor="Transparent" SemanticProperties.Description="Edit ETL mapping" />
+                <ImageButton Grid.Column="3" Source="delete.svg" Command="{Binding DeleteCommand, Source={RelativeSource AncestorType={x:Type pm:EtlTextMapPageModel}}}" CommandParameter="{Binding .}" WidthRequest="36" HeightRequest="36" Padding="8" BackgroundColor="Transparent" SemanticProperties.Description="Delete ETL mapping" />
+              </Grid>
+            </DataTemplate>
+          </CollectionView.ItemTemplate>
+        </CollectionView>
+      </VerticalStackLayout>
+    </ScrollView>
+    <controls:ProcessingOverlay Grid.RowSpan="2" IsBusy="{Binding IsBusy}" Message="Processing ETL mapping..." SpinnerColor="#3B82F6" ShowProgress="False" />
+    <controls:BottomTaskBar Grid.Row="1" />
+  </Grid>
+</ContentPage>

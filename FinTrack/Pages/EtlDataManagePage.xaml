@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:pm="clr-namespace:FinTracker.PageModels" xmlns:models="clr-namespace:FinTracker.Models" xmlns:controls="clr-namespace:FinTracker.Pages.Controls" xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit" xmlns:local="clr-namespace:FinTracker.Utilities" x:Class="FinTracker.Pages.EtlDataManagePage" x:Name="ManagePage" x:DataType="pm:EtlDataManagePageModel" Title="ETL Data Manage">
+  <ContentPage.Resources><ResourceDictionary><local:EuroCurrencyConverter x:Key="EuroCurrencyConverter" /><toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" /></ResourceDictionary></ContentPage.Resources>
+  <ContentPage.Behaviors><toolkit:EventToCommandBehavior BindingContext="{Binding BindingContext, Source={x:Reference ManagePage}}" EventName="Appearing" Command="{Binding AppearingCommand}" /></ContentPage.Behaviors>
+  <Grid RowDefinitions="*,Auto" Padding="{StaticResource LayoutPadding}">
+    <ScrollView Grid.Row="0"><VerticalStackLayout Spacing="{StaticResource LayoutSpacing}">
+      <Label Text="ETL Data Manage" Style="{StaticResource Title2}" SemanticProperties.HeadingLevel="Level1" />
+      <Label Text="Review and delete bills imported into the ETL_DT category." />
+      <Label Text="{Binding EmptyStateText}" IsVisible="{Binding HasBills, Converter={StaticResource InvertedBoolConverter}}" HorizontalOptions="Center" Margin="0,24" />
+      <Border IsVisible="{Binding HasGroup}" Background="{AppThemeBinding Light={StaticResource LightSecondaryBackground},Dark={StaticResource DarkSecondaryBackground}}" Padding="10">
+        <VerticalStackLayout Spacing="8">
+          <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto" ColumnSpacing="8">
+            <Button Text="{Binding Group.ExpandGlyph}" Command="{Binding ToggleCategoryCommand}" FontSize="18" Padding="0" WidthRequest="44" HeightRequest="44" BackgroundColor="Transparent" />
+            <Image Grid.Column="1" Source="{Binding Group.IconFileName}" WidthRequest="32" HeightRequest="32" VerticalOptions="Center" />
+            <Label Grid.Column="2" Text="{Binding Group.CategoryName}" FontAttributes="Bold" VerticalOptions="Center" />
+            <Label Grid.Column="3" Text="{Binding Group.TotalExpense, Converter={StaticResource EuroCurrencyConverter}}" FontAttributes="Bold" VerticalOptions="Center" />
+            <ImageButton Grid.Column="4" Source="remap.svg" Command="{Binding RemapCommand}" IsEnabled="{Binding HasBills}" WidthRequest="36" HeightRequest="36" Padding="8" BackgroundColor="Transparent" SemanticProperties.Description="Re-map ETL bills" />
+            <ImageButton Grid.Column="5" Source="delete.svg" Command="{Binding DeleteAllCommand}" IsEnabled="{Binding HasBills}" WidthRequest="36" HeightRequest="36" Padding="8" BackgroundColor="Transparent" SemanticProperties.Description="Delete all ETL bills" />
+          </Grid>
+          <VerticalStackLayout IsVisible="{Binding Group.IsExpanded}" Padding="44,0,0,4" Spacing="4" BindableLayout.ItemsSource="{Binding Group.Bills}">
+            <BindableLayout.ItemTemplate><DataTemplate x:DataType="models:BillTransaction">
+              <Grid ColumnDefinitions="24,36,*,Auto,Auto" ColumnSpacing="6" Padding="0,5">
+                <Label Text="{Binding DisplayNumber}" />
+                <Image Grid.Column="1" Source="{Binding ShopIconFileName}" WidthRequest="32" HeightRequest="32" VerticalOptions="Center" />
+                <VerticalStackLayout Grid.Column="2"><Label Text="{Binding BillDate, StringFormat='{0:dd/MM/yyyy}'}" /><Label Text="{Binding ShopName}" /><Label Text="{Binding PaymentModeName}" FontSize="12" /></VerticalStackLayout>
+                <Label Grid.Column="3" Text="{Binding BillValue, Converter={StaticResource EuroCurrencyConverter}}" VerticalOptions="Center" />
+                <ImageButton Grid.Column="4" Source="delete.svg" Command="{Binding BindingContext.DeleteBillCommand, Source={x:Reference ManagePage}}" CommandParameter="{Binding .}" WidthRequest="36" HeightRequest="36" Padding="8" BackgroundColor="Transparent" SemanticProperties.Description="Delete expense" />
+              </Grid>
+            </DataTemplate></BindableLayout.ItemTemplate>
+          </VerticalStackLayout>
+        </VerticalStackLayout>
+      </Border>
+    </VerticalStackLayout></ScrollView>
+    <controls:ProcessingOverlay Grid.RowSpan="2" IsBusy="{Binding IsBusy}" Message="Loading ETL bills..." ShowProgress="False" />
+    <controls:BottomTaskBar Grid.Row="1" />
+  </Grid>
+</ContentPage>

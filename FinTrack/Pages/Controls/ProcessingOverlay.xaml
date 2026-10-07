@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" x:Class="FinTracker.Pages.Controls.ProcessingOverlay" x:Name="Overlay" IsVisible="{Binding IsBusy, Source={x:Reference Overlay}}" InputTransparent="False" ZIndex="100" BackgroundColor="#CC000000">
+ <Grid HorizontalOptions="Fill" VerticalOptions="Fill"><VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="12">
+  <Image Source="appicon_runtime.svg" WidthRequest="72" HeightRequest="72" Aspect="AspectFit" />
+  <ActivityIndicator IsRunning="True" Color="{Binding SpinnerColor, Source={x:Reference Overlay}}" WidthRequest="48" HeightRequest="48" />
+  <Label Text="{Binding Message, Source={x:Reference Overlay}}" TextColor="White" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+  <ProgressBar Progress="{Binding Progress, Source={x:Reference Overlay}}" IsVisible="{Binding ShowProgress, Source={x:Reference Overlay}}" WidthRequest="220" ProgressColor="White" />
+  <Label Text="{Binding ProgressText, Source={x:Reference Overlay}}" IsVisible="{Binding ShowProgress, Source={x:Reference Overlay}}" TextColor="White" HorizontalTextAlignment="Center" />
+  <Label Text="Please wait." TextColor="White" HorizontalTextAlignment="Center" />
+  <Button Text="■  Stop" Command="{Binding StopCommand, Source={x:Reference Overlay}}" IsVisible="{Binding ShowStop, Source={x:Reference Overlay}}" IsEnabled="{Binding StopEnabled, Source={x:Reference Overlay}}" SemanticProperties.Description="Stop query execution" BackgroundColor="Transparent" TextColor="White" BorderColor="White" BorderWidth="1" />
+ </VerticalStackLayout></Grid>
+</ContentView>

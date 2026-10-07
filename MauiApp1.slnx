@@ -1,5 +1,0 @@
-<Solution>
-  <Project Path="MauiApp1/CrocHuntMPluto.csproj">
-    <Deploy Solution="Debug|*" />
-  </Project>
-</Solution>

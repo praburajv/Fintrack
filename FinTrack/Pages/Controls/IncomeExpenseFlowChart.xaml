@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Border xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:chart="clr-namespace:Syncfusion.Maui.Toolkit.Charts;assembly=Syncfusion.Maui.Toolkit" x:Class="FinTracker.Pages.Controls.IncomeExpenseFlowChart" x:Name="ChartContainer" HeightRequest="340" Style="{StaticResource CardStyle}">
+ <chart:SfCartesianChart HeightRequest="320" SemanticProperties.Description="Income and expense comparison chart">
+  <chart:SfCartesianChart.XAxes><chart:CategoryAxis /></chart:SfCartesianChart.XAxes>
+  <chart:SfCartesianChart.YAxes><chart:NumericalAxis /></chart:SfCartesianChart.YAxes>
+  <chart:ColumnSeries ItemsSource="{Binding ItemsSource, Source={x:Reference ChartContainer}}" XBindingPath="MonthName" YBindingPath="Income" ShowDataLabels="True" Label="Income" Fill="{DynamicResource Success}" />
+  <chart:ColumnSeries ItemsSource="{Binding ItemsSource, Source={x:Reference ChartContainer}}" XBindingPath="MonthName" YBindingPath="Expense" ShowDataLabels="True" Label="Expense" />
+ </chart:SfCartesianChart>
+</Border>
