@@ -9,6 +9,7 @@ public sealed record MonthlyDeletionRecord(FinancialTransactionType Type, int Id
 public sealed record MonthlyDeletionPlan(int Year, int Month, string? ImportId,
     IReadOnlyList<MonthlyDeletionRecord> Records)
 {
+    public int FinancialAccountId { get; init; }
     public IEnumerable<MonthlyDeletionRecord> Expenses => Records.Where(row => row.Type == FinancialTransactionType.Expense);
     public IEnumerable<MonthlyDeletionRecord> ImportedIncome => Records.Where(row => row.Type == FinancialTransactionType.Income && row.ImportId is not null);
     public IEnumerable<MonthlyDeletionRecord> UntrackedIncome => Records.Where(row => row.Type == FinancialTransactionType.Income && row.ImportId is null);

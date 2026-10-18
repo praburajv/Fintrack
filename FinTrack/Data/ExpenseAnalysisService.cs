@@ -95,6 +95,7 @@ public sealed class ExpenseAnalysisService(BillTransactionRepository bills, Inco
             group.Bills.Add(new BillTransaction
             {
                 Id = transaction.Id,
+                BillReferenceNo = transaction.BillReferenceNo,
                 BillDate = transaction.TransactionDate,
                 ShopId = transaction.ShopId,
                 PaymentModeId = transaction.PaymentModeId,

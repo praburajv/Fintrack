@@ -11,6 +11,19 @@ public sealed class SqlSchemaMetadataService : ISqlSchemaMetadataService
     private readonly Dictionary<string, IReadOnlyList<SqlColumnMetadata>> _columns = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, IReadOnlyList<SqlForeignKeyMetadata>> _foreignKeys = new(StringComparer.OrdinalIgnoreCase);
 
+    // Structure shortcuts include every actual table, including SQLite-maintained tables.
+    // Do not cache this list: restore and newly created tables must be reflected immediately.
+    public async Task<IReadOnlyList<string>> GetTableNamesAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name COLLATE NOCASE;";
+        var result = new List<string>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken)) result.Add(reader.GetString(0));
+        return result;
+    }
+
     public async Task<IReadOnlyList<SqlTableMetadata>> GetTablesAsync(CancellationToken cancellationToken = default)
     {
         if (_tables is not null) return _tables;

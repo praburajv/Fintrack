@@ -17,8 +17,11 @@ public partial class SetupPage : ContentPage
         };
     }
 
-    private async void OnLoginClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync("login?returnTo=setup");
+    private async void OnLoginClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync("//login?returnTo=setup");
     private async void OnRegisterClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync("register");
     private async void OnExpensesClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync("//myexpense");
-    private void OnLogoutClicked(object? sender, EventArgs e) => Handler?.MauiContext?.Services.GetService<IAuthenticationService>()?.Logout();
+    private async void OnLogoutClicked(object? sender, EventArgs e)
+    {
+        if (Shell.Current is AppShell shell) await shell.LogoutAsync();
+    }
 }

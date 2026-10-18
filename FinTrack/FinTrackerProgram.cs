@@ -31,19 +31,32 @@ namespace FinTracker
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                     fonts.AddFont("SegoeUI-Semibold.ttf", "SegoeSemibold");
                     fonts.AddFont("FluentSystemIcons-Regular.ttf", FluentUI.FontFamily);
+                    fonts.AddFont("Inter-Regular.ttf", InterfaceTypography.Regular);
+                    fonts.AddFont("Inter-Medium.ttf", InterfaceTypography.Medium);
+                    fonts.AddFont("Inter-SemiBold.ttf", InterfaceTypography.Semibold);
                 });
+
+            InterfaceTypography.Configure();
 
 #if DEBUG
     		builder.Logging.AddDebug();
     		builder.Services.AddLogging(configure => configure.AddDebug());
 #endif
 
+            builder.Services.AddSingleton<FinancialAccountContext>();
+            builder.Services.AddSingleton<FinancialAccountRepository>();
+            builder.Services.AddTransient<FinancialAccountCardsPage>();
+            builder.Services.AddTransient<CompanySelectionPage>();
+            builder.Services.AddTransient<DashboardSearchService>();
+            builder.Services.AddTransient<ReportsHubPage>();
+            builder.Services.AddTransient<AddHubPage>();
             builder.Services.AddSingleton<ShopRepository>();
             builder.Services.AddSingleton<CategoryRepository>();
             builder.Services.AddSingleton<PaymentModeRepository>();
             builder.Services.AddSingleton<BillTransactionRepository>();
             builder.Services.AddSingleton<IncomeTransactionRepository>();
             builder.Services.AddSingleton<SetUpKeyValueRepository>();
+            builder.Services.AddSingleton<MonthlyBudgetRepository>();
             builder.Services.AddSingleton<EtlTextMapRepository>();
             builder.Services.AddSingleton<EtlTextMappingService>();
             builder.Services.AddSingleton<UserAccountRepository>();
@@ -57,6 +70,10 @@ namespace FinTracker
             builder.Services.AddSingleton<ICurrencyService, CurrencyService>();
             builder.Services.AddSingleton<IExpenseStatementBuilder, ExpenseStatementBuilder>();
             builder.Services.AddSingleton<IExpenseStatementDocumentService, ExpenseStatementDocumentService>();
+            builder.Services.AddSingleton<IHistoryDocumentService, ExpenseStatementDocumentService>();
+            builder.Services.AddTransient<HistoryReportService>();
+            builder.Services.AddTransient<HistoryReportPage>();
+            Routing.RegisterRoute("history", typeof(HistoryReportPage));
             builder.Services.AddSingleton<ShopBillAnalysisService>();
             builder.Services.AddSingleton<ModalErrorHandler>();
             builder.Services.AddSingleton<ICriticalOperationState, CriticalOperationState>();
@@ -79,6 +96,7 @@ namespace FinTracker
             builder.Services.AddTransient<MonthlyExpenseCalendarPageModel>();
             builder.Services.AddTransient<DailyBillListPageModel>();
             builder.Services.AddTransient<LandingDashboardPageModel>();
+            builder.Services.AddTransient<FinancialDashboardPageModel>();
             builder.Services.AddTransient<BillAnalysisPageModel>();
             builder.Services.AddTransient<ShopTransactionDatesPageModel>();
             builder.Services.AddTransient<DailyDashPageModel>();
@@ -142,7 +160,9 @@ namespace FinTracker
             builder.Services.AddTransientWithShellRoute<PaymentModeBillListPage, PaymentModeBillListPageModel>("paymentmodebills");
             builder.Services.AddTransientWithShellRoute<BackupDataPage, BackupDataPageModel>("backup");
             builder.Services.AddTransientWithShellRoute<RestoreDataPage, RestoreDataPageModel>("restore");
-            builder.Services.AddTransientWithShellRoute<LoginPage, LoginPageModel>("login");
+            builder.Services.AddTransient<LoginPage>();
+            builder.Services.AddTransient<WelcomePage>();
+            Routing.RegisterRoute("introduction", typeof(WelcomePage));
             builder.Services.AddTransientWithShellRoute<RegisterPage, RegisterPageModel>("register");
             builder.Services.AddTransientWithShellRoute<PasswordResetPage, PasswordResetPageModel>("passwordreset");
             builder.Services.AddTransientWithShellRoute<DatabaseToolsPage, DatabaseToolsPageModel>("databasetools");

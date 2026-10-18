@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="FinTracker.Pages.WelcomePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Welcome"
+    Shell.NavBarIsVisible="False"
+    Shell.FlyoutBehavior="Disabled"
+    SafeAreaEdges="None"
+    BackgroundColor="#101B3D">
+    <Grid SafeAreaEdges="None">
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#D6E9FF" Offset="0" />
+                <GradientStop Color="#FFDFB9" Offset="1" />
+            </LinearGradientBrush>
+        </Grid.Background>
+        <Image x:Name="WelcomeArtwork"
+               Source="fintracker_en__w_s_no_slider_n1.png"
+               Aspect="AspectFill"
+               InputTransparent="True" />
+
+        <!-- The artwork is edge-to-edge; the controls stay inside the system safe area. -->
+        <Grid x:Name="WelcomeControls" SafeAreaEdges="Container" RowDefinitions="Auto,*,Auto" Padding="20,12,20,20">
+            <Button x:Name="LanguageButton"
+                    Grid.Row="0"
+                    Text="PT"
+                    Clicked="OnLanguageClicked"
+                    HorizontalOptions="End"
+                    WidthRequest="52"
+                    HeightRequest="44"
+                    CornerRadius="22"
+                    FontAttributes="Bold"
+                    BackgroundColor="#DFFFFFFF"
+                    TextColor="#0C235F" />
+
+            <VerticalStackLayout x:Name="SliderActions" Grid.Row="2" Spacing="8">
+                <Border x:Name="SliderTrack"
+                        HeightRequest="72"
+                        Stroke="#C9FFFFFF"
+                        StrokeThickness="2"
+                        BackgroundColor="#EDFFFFFF"
+                        StrokeShape="RoundRectangle 36"
+                        SemanticProperties.Description="Swipe right to start">
+                    <Border.GestureRecognizers>
+                        <PanGestureRecognizer PanUpdated="OnSliderPanUpdated" />
+                    </Border.GestureRecognizers>
+                    <Grid x:Name="SliderContent"
+                          HeightRequest="68"
+                          VerticalOptions="Center"
+                          IsClippedToBounds="True">
+                        <Border x:Name="SliderFill"
+                                WidthRequest="68"
+                                HorizontalOptions="Start"
+                                BackgroundColor="#8FD4FF"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 34"
+                                InputTransparent="True" />
+                        <Label x:Name="SliderText"
+                               Text="Swipe to start"
+                               FontSize="19"
+                               FontAttributes="Bold"
+                               TextColor="#0C235F"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               InputTransparent="True" />
+                        <Border x:Name="SliderThumb"
+                                WidthRequest="64"
+                                HeightRequest="64"
+                                Margin="4,0,0,0"
+                                HorizontalOptions="Start"
+                                VerticalOptions="Center"
+                                BackgroundColor="#0866E7"
+                                Stroke="White"
+                                StrokeThickness="2"
+                                InputTransparent="True">
+                            <Border.StrokeShape>
+                                <Ellipse />
+                            </Border.StrokeShape>
+                            <Path Data="M 3,14 L 25,14 M 17,6 L 25,14 L 17,22"
+                                  Stroke="White"
+                                  StrokeThickness="3"
+                                  StrokeLineCap="Round"
+                                  WidthRequest="28"
+                                  HeightRequest="28"
+                                  HorizontalOptions="Center"
+                                  VerticalOptions="Center"
+                                  InputTransparent="True" />
+                        </Border>
+                    </Grid>
+                </Border>
+                <Button x:Name="AccessibleContinueButton"
+                        Text="Tap to continue"
+                        Clicked="OnAccessibleContinueClicked"
+                        HeightRequest="44"
+                        FontSize="14"
+                        BackgroundColor="#DFFFFFFF"
+                        TextColor="#0C235F"
+                        CornerRadius="20"
+                        HorizontalOptions="Center"
+                        Padding="18,0" />
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+</ContentPage>

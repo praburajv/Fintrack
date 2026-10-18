@@ -15,4 +15,6 @@ public sealed class BackupMetadata
  public int? SelectedYear { get; set; }
  public List<int> SelectedMonths { get; set; } = [];
  public int SelectedMonthBillCount { get; set; }
+ public int? FinancialAccountId { get; set; }
+ public string? FinancialAccountName { get; set; }
 }

@@ -8,9 +8,12 @@ namespace FinTracker.Data;
 public sealed class RecurringBillRepository
 {
     private bool _initialized;
+    public void InvalidateAfterDatabaseRestore() => _initialized = false;
     private readonly SemaphoreSlim _initialization = new(1, 1);
     private readonly ICriticalOperationState _criticalOperations;
-    public RecurringBillRepository(ICriticalOperationState criticalOperations) => _criticalOperations = criticalOperations;
+    private readonly FinancialAccountContext _accounts;
+    public RecurringBillRepository(ICriticalOperationState criticalOperations, FinancialAccountContext accounts)
+    { _criticalOperations = criticalOperations; _accounts = accounts; }
 
     private async Task InitAsync()
     {
@@ -24,7 +27,7 @@ public sealed class RecurringBillRepository
             command.CommandText = @"CREATE TABLE IF NOT EXISTS Recurring_Bill (
  Id INTEGER PRIMARY KEY AUTOINCREMENT, Shop_Id INTEGER NOT NULL, Payment_Mode_Id INTEGER NOT NULL,
  Amount NUMERIC NOT NULL, Description TEXT, Start_Month TEXT NOT NULL, End_Month TEXT NULL,
- Is_Active INTEGER NOT NULL DEFAULT 1, Created_At TEXT NOT NULL, Updated_At TEXT NOT NULL,
+ Is_Active INTEGER NOT NULL DEFAULT 1, Created_At TEXT NOT NULL, Updated_At TEXT NOT NULL, FinancialAccountId INTEGER NOT NULL,
  FOREIGN KEY(Shop_Id) REFERENCES Shop(Id), FOREIGN KEY(Payment_Mode_Id) REFERENCES Payment_mode(Id));
 CREATE INDEX IF NOT EXISTS IX_Recurring_Bill_Active ON Recurring_Bill(Is_Active, Start_Month, End_Month);";
             await command.ExecuteNonQueryAsync();
@@ -37,7 +40,8 @@ CREATE INDEX IF NOT EXISTS IX_Recurring_Bill_Active ON Recurring_Bill(Is_Active,
     public async Task<List<RecurringBill>> ListAsync()
     {
         await InitAsync(); await using var c = new SqliteConnection(Constants.DatabasePath); await c.OpenAsync();
-        var cmd = c.CreateCommand(); cmd.CommandText = "SELECT r.Id,r.Shop_Id,r.Payment_Mode_Id,r.Amount,r.Description,r.Start_Month,r.End_Month,r.Is_Active,r.Created_At,r.Updated_At,s.Name,p.Name FROM Recurring_Bill r JOIN Shop s ON s.Id=r.Shop_Id JOIN Payment_mode p ON p.Id=r.Payment_Mode_Id ORDER BY s.Name";
+        var cmd = c.CreateCommand(); cmd.CommandText = "SELECT r.Id,r.Shop_Id,r.Payment_Mode_Id,r.Amount,r.Description,r.Start_Month,r.End_Month,r.Is_Active,r.Created_At,r.Updated_At,s.Name,p.Name FROM Recurring_Bill r JOIN Shop s ON s.Id=r.Shop_Id JOIN Payment_mode p ON p.Id=r.Payment_Mode_Id WHERE r.FinancialAccountId=@account ORDER BY s.Name";
+        cmd.Parameters.AddWithValue("@account", _accounts.RequireId());
         var result = new List<RecurringBill>(); await using var reader = await cmd.ExecuteReaderAsync(); while (await reader.ReadAsync()) result.Add(Read(reader)); return result;
     }
 
@@ -52,15 +56,25 @@ CREATE INDEX IF NOT EXISTS IX_Recurring_Bill_Active ON Recurring_Bill(Is_Active,
         await using var c = new SqliteConnection(Constants.DatabasePath); await c.OpenAsync();
         var now = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture);
         var cmd = c.CreateCommand(); cmd.Parameters.AddWithValue("@shop", bill.ShopId); cmd.Parameters.AddWithValue("@mode", bill.PaymentModeId); cmd.Parameters.AddWithValue("@amount", bill.Amount); cmd.Parameters.AddWithValue("@description", bill.Description.Trim()); cmd.Parameters.AddWithValue("@start", MonthValue(bill.StartMonth)); cmd.Parameters.AddWithValue("@end", bill.EndMonth is null ? DBNull.Value : MonthValue(bill.EndMonth.Value)); cmd.Parameters.AddWithValue("@active", bill.IsActive ? 1 : 0); cmd.Parameters.AddWithValue("@updated", now);
-        if (bill.Id == 0) { cmd.CommandText = "INSERT INTO Recurring_Bill(Shop_Id,Payment_Mode_Id,Amount,Description,Start_Month,End_Month,Is_Active,Created_At,Updated_At) VALUES(@shop,@mode,@amount,@description,@start,@end,@active,@updated,@updated); SELECT last_insert_rowid();"; bill.Id = Convert.ToInt32(await cmd.ExecuteScalarAsync()); }
-        else { cmd.CommandText = "UPDATE Recurring_Bill SET Shop_Id=@shop,Payment_Mode_Id=@mode,Amount=@amount,Description=@description,Start_Month=@start,End_Month=@end,Is_Active=@active,Updated_At=@updated WHERE Id=@id"; cmd.Parameters.AddWithValue("@id", bill.Id); await cmd.ExecuteNonQueryAsync(); }
+        cmd.Parameters.AddWithValue("@account", _accounts.RequireId());
+        if (bill.Id == 0) { cmd.CommandText = @"INSERT INTO Recurring_Bill(Shop_Id,Payment_Mode_Id,Amount,Description,Start_Month,End_Month,Is_Active,Created_At,Updated_At,FinancialAccountId)
+SELECT @shop,@mode,@amount,@description,@start,@end,@active,@updated,@updated,@account
+WHERE EXISTS(SELECT 1 FROM Shop WHERE Id=@shop AND FinancialAccountId=@account)
+AND EXISTS(SELECT 1 FROM Payment_mode WHERE Id=@mode AND FinancialAccountId=@account);
+SELECT CASE WHEN changes()=1 THEN last_insert_rowid() ELSE NULL END;";
+            var inserted = await cmd.ExecuteScalarAsync();
+            if (inserted is null or DBNull) throw new InvalidOperationException("The shop or payment mode is not in the active company.");
+            bill.Id = Convert.ToInt32(inserted); }
+        else { cmd.CommandText = @"UPDATE Recurring_Bill SET Shop_Id=@shop,Payment_Mode_Id=@mode,Amount=@amount,Description=@description,Start_Month=@start,End_Month=@end,Is_Active=@active,Updated_At=@updated
+WHERE Id=@id AND FinancialAccountId=@account AND EXISTS(SELECT 1 FROM Shop WHERE Id=@shop AND FinancialAccountId=@account)
+AND EXISTS(SELECT 1 FROM Payment_mode WHERE Id=@mode AND FinancialAccountId=@account)"; cmd.Parameters.AddWithValue("@id", bill.Id); if(await cmd.ExecuteNonQueryAsync()!=1) throw new InvalidOperationException("The recurring bill is not in the active company."); }
     }
 
     public async Task DeleteAsync(int id)
     {
         using var operation = _criticalOperations.Begin(); await InitAsync(); await using var c = new SqliteConnection(Constants.DatabasePath); await c.OpenAsync();
-        var check = c.CreateCommand(); check.CommandText = "SELECT COUNT(*) FROM Bill_transcation WHERE Recurring_Bill_Id=@id"; check.Parameters.AddWithValue("@id", id); if (Convert.ToInt32(await check.ExecuteScalarAsync()) > 0) throw new InvalidOperationException("This recurring bill has historical transactions. Disable it instead of deleting it.");
-        var cmd = c.CreateCommand(); cmd.CommandText = "DELETE FROM Recurring_Bill WHERE Id=@id"; cmd.Parameters.AddWithValue("@id", id); await cmd.ExecuteNonQueryAsync();
+        var check = c.CreateCommand(); check.CommandText = "SELECT COUNT(*) FROM Bill_transcation WHERE Recurring_Bill_Id=@id AND FinancialAccountId=@account"; check.Parameters.AddWithValue("@id", id); check.Parameters.AddWithValue("@account", _accounts.RequireId()); if (Convert.ToInt32(await check.ExecuteScalarAsync()) > 0) throw new InvalidOperationException("This recurring bill has historical transactions. Disable it instead of deleting it.");
+        var cmd = c.CreateCommand(); cmd.CommandText = "DELETE FROM Recurring_Bill WHERE Id=@id AND FinancialAccountId=@account"; cmd.Parameters.AddWithValue("@id", id); cmd.Parameters.AddWithValue("@account", _accounts.RequireId()); await cmd.ExecuteNonQueryAsync();
     }
 
     public async Task ToggleAsync(RecurringBill bill) { bill.IsActive = !bill.IsActive; await SaveAsync(bill); }

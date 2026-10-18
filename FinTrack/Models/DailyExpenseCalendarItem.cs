@@ -33,7 +33,7 @@ public class DailyExpenseCalendarItem
     };
     public bool IsPlaceholder { get; init; }
     public bool IsHighestExpenseDay { get; init; }
-    public string TileDescription => IsPlaceholder ? string.Empty : $"{Date:dd/MM/yyyy}, {WeekdayShortName}, total expenses {EuroFormatter.Format(TotalValue)}";
+    public string TileDescription => IsPlaceholder ? string.Empty : $"{Date:dd/MM/yyyy}, {WeekdayShortName}, total {(IsIncome ? "income" : "expenses")} {EuroFormatter.Format(TotalValue)}";
     public Color BorderColor => IsHighestExpenseDay
         ? (Application.Current?.Resources["Danger"] as Color ?? Colors.Red)
         : Colors.Transparent;

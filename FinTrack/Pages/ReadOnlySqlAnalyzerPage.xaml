@@ -35,8 +35,10 @@
    <HorizontalStackLayout Spacing="8"><Button Text="Execute Query" Command="{Binding ExecuteQueryCommand}" /><Button Text="Clear" Command="{Binding ClearCommand}" /></HorizontalStackLayout>
    <Label Text="Quick Queries" Style="{StaticResource Title3}" />
    <FlexLayout Direction="Row" Wrap="Wrap">
-    <Button Text="Tables" Command="{Binding TablesQueryCommand}" Margin="0,0,8,8" /><Button Text="Shop Schema" Command="{Binding ShopSchemaQueryCommand}" Margin="0,0,8,8" /><Button Text="Bill Schema" Command="{Binding BillSchemaQueryCommand}" Margin="0,0,8,8" /><Button Text="Counts" Command="{Binding CountsQueryCommand}" Margin="0,0,8,8" />
+    <Button Text="Tables" Command="{Binding TablesQueryCommand}" Margin="0,0,8,8" /><Button Text="Counts" Command="{Binding CountsQueryCommand}" Margin="0,0,8,8" />
    </FlexLayout>
+   <Picker Title="Select table structure" ItemsSource="{Binding TableStructureQueries}" SelectedItem="{Binding SelectedTableStructureQuery}" IsEnabled="{Binding CanSelectTableStructure}" />
+   <ActivityIndicator IsRunning="{Binding IsTableStructureBusy}" IsVisible="{Binding IsTableStructureBusy}" />
    <Label Text="{Binding Status}" FontAttributes="Bold" />
    <Label Text="{Binding Error}" TextColor="{DynamicResource Danger}" IsVisible="{Binding HasError}" />
    <Label Text="Results" Style="{StaticResource Title3}" />

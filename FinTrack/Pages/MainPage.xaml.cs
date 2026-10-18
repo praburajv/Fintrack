@@ -64,7 +64,7 @@ namespace FinTracker.Pages
         {
             try
             {
-                await DisplayAlertAsync("Category", category.CategoryName, "OK");
+                await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Category", category.CategoryName, "OK");
             }
             catch (Exception ex)
             {

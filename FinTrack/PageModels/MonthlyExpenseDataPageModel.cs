@@ -168,7 +168,7 @@ public partial class MonthlyExpenseDataPageModel(BillTransactionRepository bills
             var incomeCount = plan.ImportedIncome.Count() + reviewed.Count;
             if (expenseCount + incomeCount == 0)
             {
-                await Shell.Current.DisplayAlertAsync("Nothing selected for deletion", "No expense bills or imported/reviewed Income records were selected. Untracked Income was kept. Nothing was deleted.", "OK");
+                await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Nothing selected for deletion", "No expense bills or imported/reviewed Income records were selected. Untracked Income was kept. Nothing was deleted.", "OK");
                 return;
             }
             var protectedCount = plan.UntrackedIncome.Count() - reviewed.Count;
@@ -187,7 +187,7 @@ public partial class MonthlyExpenseDataPageModel(BillTransactionRepository bills
             var changedMonth = new DateTime(month.Year, month.MonthNumber, 1);
             WeakReferenceMessenger.Default.Send(new BillChangedMessage(new BillChanged(changedMonth, changedMonth, true)));
             await LoadAsync(keepBusyAfterLoad: true);
-            await Shell.Current.DisplayAlertAsync("Monthly Data Removed",
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Monthly Data Removed",
                 $"Deleted {result.ExpenseCount} expenses and {result.IncomeCount} Income records.\n{result.ProtectedIncomeCount} untracked Income records were kept. Other months/imports were not removed.", "OK");
         }
         catch (Exception ex) { errors.HandleError(ex); }

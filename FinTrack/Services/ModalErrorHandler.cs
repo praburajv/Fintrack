@@ -55,8 +55,8 @@ namespace FinTracker.Services
                 if (AppShell.IsClosing)
                     return;
 
-                if (Shell.Current is Shell shell)
-                    await shell.DisplayAlertAsync("Error", ex.Message, "OK");
+                if (Shell.Current is not null)
+                    await FinTracker.Pages.Controls.ThemeDialog.AlertAsync("Error", ex.Message);
             }
             catch (ObjectDisposedException)
             {

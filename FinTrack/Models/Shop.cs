@@ -3,6 +3,7 @@ namespace FinTracker.Models;
 public class Shop
 {
     public int Id { get; set; }
+    public int FinancialAccountId { get; set; }
     public string Name { get; set; } = string.Empty;
     public ShopCategory Category { get; set; } = ShopCategory.DefaultShop;
     public int CategoryId { get; set; }

@@ -155,7 +155,7 @@ public partial class ExpenseListPageModel : ObservableObject
             }
             var incomeNumber = 1;
             foreach (var item in income)
-                month.IncomeBills.Add(new BillTransaction { Id = item.Id, BillDate = item.TransactionDate, ShopId = item.ShopId, PaymentModeId = item.PaymentModeId, BillValue = item.Amount, Note = item.Note, ShopName = item.ShopName, PaymentModeName = item.PaymentModeName, ShopCategoryId = item.CategoryId, ShopCategoryName = item.CategoryName, ShopCategoryIconKey = item.CategoryIconKey, DisplayNumber = incomeNumber++, TransactionType = FinancialTransactionType.Income });
+                month.IncomeBills.Add(new BillTransaction { Id = item.Id, BillReferenceNo = item.BillReferenceNo, BillDate = item.TransactionDate, ShopId = item.ShopId, PaymentModeId = item.PaymentModeId, BillValue = item.Amount, Note = item.Note, ShopName = item.ShopName, PaymentModeName = item.PaymentModeName, ShopCategoryId = item.CategoryId, ShopCategoryName = item.CategoryName, ShopCategoryIconKey = item.CategoryIconKey, DisplayNumber = incomeNumber++, TransactionType = FinancialTransactionType.Income });
             foreach (var categoryBills in month.IncomeBills.GroupBy(b => string.IsNullOrWhiteSpace(b.ShopCategoryName) ? "Credits" : b.ShopCategoryName).OrderByDescending(g => g.Sum(b => b.BillValue)).ThenBy(g => g.Key))
             {
                 var first = categoryBills.First();
@@ -248,7 +248,7 @@ public partial class ExpenseListPageModel : ObservableObject
     {
         if (AppShell.IsClosing) return false;
         if (_authentication.IsAuthenticated) return true;
-        await Shell.Current.DisplayAlertAsync("Authentication Required", "Please login to add or modify expenses.", "OK");
+        await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Authentication Required", "Please login to add or modify expenses.", "OK");
         return false;
     }
     [RelayCommand] private Task ManageShops()=>Shell.Current.GoToAsync("shops");

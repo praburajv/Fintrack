@@ -7,7 +7,14 @@
   <Label Text="Monthly" FontAttributes="Bold" />
   <BoxView HeightRequest="1" BackgroundColor="{DynamicResource Primary}" Opacity="0.45" />
   <controls:PeriodNavigationControl PeriodText="{Binding CalendarPeriodText}" PreviousCommand="{Binding PreviousPeriodCommand}" NextCommand="{Binding NextPeriodCommand}" />
-  <Label Text="{Binding MonthTotalText}" FontAttributes="Bold" />
+  <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,4,0,4">
+   <Border Stroke="{DynamicResource Primary}" StrokeThickness="1" StrokeShape="RoundRectangle 12" Background="{DynamicResource SurfaceSecondary}" Padding="10,8">
+    <VerticalStackLayout Spacing="4"><Label Text="Total Expenses" FontAttributes="Bold" FontSize="13" /><Label Text="{Binding ExpenseMonthTotalText}" FontAttributes="Bold" FontSize="20" LineBreakMode="WordWrap" MaxLines="2" /></VerticalStackLayout>
+   </Border>
+   <Border Grid.Column="1" Stroke="{DynamicResource Success}" StrokeThickness="1" StrokeShape="RoundRectangle 12" Background="{DynamicResource SurfaceSecondary}" Padding="10,8">
+    <VerticalStackLayout Spacing="4"><Label Text="Total Income" FontAttributes="Bold" FontSize="13" TextColor="{DynamicResource Success}" /><Label Text="{Binding IncomeMonthTotalText}" FontAttributes="Bold" FontSize="20" LineBreakMode="WordWrap" MaxLines="2" TextColor="{DynamicResource Success}" /></VerticalStackLayout>
+   </Border>
+  </Grid>
   <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
   <Grid Margin="-8,0" MinimumWidthRequest="630" ColumnDefinitions="*,*,*,*,*,*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="2" RowSpacing="6" BindableLayout.ItemsSource="{Binding Days}">
    <Label Text="Mo" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Center" FontAttributes="Bold" />
@@ -20,11 +27,14 @@
    <BindableLayout.ItemTemplate><DataTemplate x:DataType="models:DailyExpenseCalendarItem"><Border Grid.Row="{Binding GridRow}" Grid.Column="{Binding GridColumn}" IsVisible="{Binding IsPlaceholder, Converter={StaticResource InvertedBoolConverter}}" Stroke="{Binding BorderColor}" StrokeThickness="{Binding BorderThickness}" StrokeShape="RoundRectangle 8" Background="{AppThemeBinding Light={StaticResource LightSecondaryBackground}, Dark={StaticResource DarkSecondaryBackground}}" HorizontalOptions="Fill" VerticalOptions="Start" SizeChanged="OnTileSizeChanged" SemanticProperties.Description="{Binding TileDescription}"><Border.GestureRecognizers><TapGestureRecognizer Command="{Binding BindingContext.SelectDayCommand, Source={x:Reference CalendarPage}}" CommandParameter="{Binding .}" /></Border.GestureRecognizers><Grid Padding="0" HorizontalOptions="Fill" VerticalOptions="Fill" RowDefinitions="*,*,*" RowSpacing="0"><Label Text="{Binding DayNumber}" Grid.Row="0" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Center" FontAttributes="Bold" FontSize="18" /><Label Text="{Binding WeekdayShortName}" Grid.Row="1" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Center" FontSize="10" TextColor="Gray" /><Label Text="{Binding TotalValue, Converter={StaticResource EuroCurrencyConverter}}" TextColor="{Binding AmountColor}" Grid.Row="2" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Center" FontSize="{Binding AmountFontSize}" LineBreakMode="NoWrap" MaxLines="1" /></Grid></Border></DataTemplate></BindableLayout.ItemTemplate>
   </Grid>
   </ScrollView>
-   <Label Text="Red border = Highest total expense day" FontSize="12" IsVisible="{Binding HasExpenses}" />
-   <Label Text="Daily Expense Trend" Style="{StaticResource Title2}" Margin="0,12,0,0" />
-   <controls:DailyExpenseTrendChart ItemsSource="{Binding ChartDays}" DaySelected="OnTrendDaySelected" />
+   <Label Text="{Binding HighestDayCaption}" FontSize="12" IsVisible="{Binding HasExpenses}" />
+   <Label Text="{Binding DailyTrendTitle}" Style="{StaticResource Title2}" Margin="0,12,0,0" />
+   <controls:DailyExpenseTrendChart ItemsSource="{Binding ChartDays}" IsIncomeChart="{Binding IsIncomeMode}" DaySelected="OnTrendDaySelected" />
    <Label Text="Expenses by Category" Style="{StaticResource Title2}" Margin="0,12,0,0" />
    <Label Text="No category expenses in this month." IsVisible="{Binding HasCategoryExpenses, Converter={StaticResource InvertedBoolConverter}}" HorizontalOptions="Center" />
-   <controls:CategoryExpenseBarChart ItemsSource="{Binding CategoryChartData}" CategorySelected="OnCategorySelected" IsVisible="{Binding HasCategoryExpenses}" />
-  </VerticalStackLayout></ScrollView><controls:ProcessingOverlay Grid.RowSpan="2" IsBusy="{Binding IsBusy}" Message="Loading expense calendar..." SpinnerColor="#3B82F6" /><controls:BottomTaskBar Grid.Row="1" /></Grid>
+   <controls:CategoryExpenseBarChart ItemsSource="{Binding CategoryChartData}" CategorySelected="OnExpenseCategorySelected" IsVisible="{Binding HasCategoryExpenses}" />
+   <Label Text="Income by Category" Style="{StaticResource Title2}" Margin="0,12,0,0" />
+   <Label Text="No category income in this month." IsVisible="{Binding HasCategoryIncome, Converter={StaticResource InvertedBoolConverter}}" HorizontalOptions="Center" />
+   <controls:CategoryExpenseBarChart ItemsSource="{Binding IncomeCategoryChartData}" IsIncomeChart="True" CategorySelected="OnIncomeCategorySelected" IsVisible="{Binding HasCategoryIncome}" />
+  </VerticalStackLayout></ScrollView><controls:ProcessingOverlay Grid.RowSpan="2" IsBusy="{Binding IsBusy}" Message="Loading calendar..." SpinnerColor="#3B82F6" /><controls:BottomTaskBar Grid.Row="1" /></Grid>
  </ContentPage>

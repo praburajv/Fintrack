@@ -7,7 +7,10 @@ using Microsoft.Data.Sqlite;
 
 namespace FinTracker.Services;
 
-public sealed class BackupService(ICriticalOperationState criticalOperations) : IBackupService
+public sealed class BackupService(ICriticalOperationState criticalOperations, FinancialAccountContext accounts,
+    FinancialAccountRepository financialAccounts, BillTransactionRepository bills, IncomeTransactionRepository income,
+    CategoryRepository categories, ShopRepository shops, PaymentModeRepository modes,
+    EtlTextMapRepository mappings, RecurringBillRepository recurring, MonthlyBudgetRepository budgets) : IBackupService
 {
     private const int FormatVersion = 1;
     private const string MetadataName = "metadata.json";
@@ -30,6 +33,7 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
             Report(progress, 0);
             var counts = await GetCurrentSummaryAsync(token);
             Report(progress, 10);
+            await using (var liveDb = await OpenAsync(DatabasePath, token)) await BillReferenceSchema.EnsureAsync(liveDb, token);
             await CopyDatabaseAsync(tempDb, token);
             Report(progress, 55);
             await RemoveAuthenticationDataAsync(tempDb, token);
@@ -112,6 +116,11 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
             replacing = true;
             await EnsureIncomeCompatibilitySchemaAsync(token);
             await RestoreAuthenticationAccountAsync(DatabasePath, localAccount, token);
+            financialAccounts.InvalidateAfterDatabaseRestore();
+            await financialAccounts.InitializeAsync();
+            await using (var restoredDb = await OpenAsync(DatabasePath, token)) await BillReferenceSchema.EnsureAsync(restoredDb, token);
+            InvalidateSchemaCaches();
+            accounts.Clear();
             Report(progress, 90);
             var live = await ValidateDatabaseAsync(DatabasePath, token);
             if (!live.IsValid) throw new InvalidDataException(live.Error);
@@ -124,6 +133,8 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
             if (replacing)
             {
                 await ReplaceDatabaseContentsAsync(safety, DatabasePath, CancellationToken.None);
+                financialAccounts.InvalidateAfterDatabaseRestore();
+                InvalidateSchemaCaches();
                 var rollback = await ValidateDatabaseAsync(DatabasePath, CancellationToken.None);
                 if (!rollback.IsValid) throw new InvalidOperationException("Restore failed and rollback validation also failed. The safety backup was preserved at " + safety);
             }
@@ -131,8 +142,21 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
         }
     }
 
+    private void InvalidateSchemaCaches()
+    {
+        bills.InvalidateAfterDatabaseRestore();
+        income.InvalidateAfterDatabaseRestore();
+        categories.InvalidateAfterDatabaseRestore();
+        shops.InvalidateAfterDatabaseRestore();
+        modes.InvalidateAfterDatabaseRestore();
+        mappings.InvalidateAfterDatabaseRestore();
+        recurring.InvalidateAfterDatabaseRestore();
+        budgets.InvalidateAfterDatabaseRestore();
+    }
+
     public async Task<(string Path, BackupMetadata Metadata)> CreateSelectedMonthsBackupAsync(int year, IReadOnlyCollection<int> months, CancellationToken token = default, IProgress<double>? progress = null)
     {
+        var accountId = accounts.RequireId();
         var selectedMonths = months.Distinct().Where(month => month is >= 1 and <= 12).OrderBy(month => month).ToArray();
         if (selectedMonths.Length == 0) throw new ArgumentException("Select at least one month.", nameof(months));
         using var lease = criticalOperations.Begin();
@@ -140,7 +164,7 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
         try
         {
             Report(progress, 0);
-            var document = await ReadSelectedDataAsync(year, selectedMonths, token);
+            var document = await ReadSelectedDataAsync(year, selectedMonths, accountId, token);
             Report(progress, 20);
             var metadata = new BackupMetadata
             {
@@ -150,6 +174,8 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
                 SelectedYear = year,
                 SelectedMonths = selectedMonths.ToList(),
                 SelectedMonthBillCount = document.Bills.Count,
+                FinancialAccountId = accountId,
+                FinancialAccountName = accounts.Current?.Name,
                 BillCount = document.Bills.Count
             };
             await using (var output = File.Create(path))
@@ -171,10 +197,21 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
 
     public async Task<SelectedMonthsRestoreResult> RestoreSelectedMonthsBackupAsync(string backupPath, CancellationToken token = default, IProgress<double>? progress = null)
     {
+        var accountId = accounts.RequireId();
         using var lease = criticalOperations.Begin();
         Report(progress, 0);
         var document = await ReadSelectedBackupAsync(backupPath, token);
         var data = document.Data;
+        if (document.Metadata.FinancialAccountId is int storedAccountId)
+        {
+            if (storedAccountId != accountId)
+                throw new InvalidDataException("This selected-month backup belongs to a different company.");
+        }
+        else if (accounts.Current?.IsDefault != true)
+        {
+            // Archives created before companies existed belong to the migrated default account.
+            throw new InvalidDataException("This legacy selected-month backup can only be restored to the default company.");
+        }
         if (document.Metadata.SelectedYear is null || document.Metadata.SelectedMonths.Count == 0)
             throw new InvalidDataException("The selected-month backup does not contain valid month information.");
         if (data.Year != document.Metadata.SelectedYear.Value || !data.Months.SequenceEqual(document.Metadata.SelectedMonths.OrderBy(x => x)))
@@ -191,32 +228,35 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
             await using (var delete = connection.CreateCommand())
             {
                 delete.Transaction = transaction;
-                delete.CommandText = "DELETE FROM Bill_transcation WHERE Bill_date >= @from AND Bill_date < @to";
+                delete.CommandText = "DELETE FROM Bill_transcation WHERE FinancialAccountId=@account AND Bill_date >= @from AND Bill_date < @to";
                 foreach (var month in data.Months)
                 {
                     var from = new DateTime(data.Year, month, 1);
                     delete.Parameters.Clear();
                     delete.Parameters.AddWithValue("@from", from.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
                     delete.Parameters.AddWithValue("@to", from.AddMonths(1).ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+                    delete.Parameters.AddWithValue("@account", accountId);
                     await delete.ExecuteNonQueryAsync(token);
                 }
             }
             Report(progress, 20);
             var shops = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             foreach (var shop in data.Shops.Values)
-                shops[shop.Name] = await ResolveShopAsync(connection, transaction, shop, token);
+                shops[shop.Name] = await ResolveShopAsync(connection, transaction, shop, accountId, token);
             var paymentModes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             foreach (var mode in data.PaymentModes.Values)
-                paymentModes[mode.Name] = await ResolvePaymentModeAsync(connection, transaction, mode.Name, token);
+                paymentModes[mode.Name] = await ResolvePaymentModeAsync(connection, transaction, mode.Name, accountId, token);
 
             await using var insert = connection.CreateCommand();
             insert.Transaction = transaction;
-            insert.CommandText = "INSERT INTO Bill_transcation(Bill_date,Shop_Id,Payment_Mode_Id,Bill_value,Note,EtlImportId) VALUES(@date,@shop,@mode,@value,@note,@import)";
+            insert.CommandText = "INSERT INTO Bill_transcation(Bill_date,Shop_Id,Payment_Mode_Id,Bill_value,Note,EtlImportId,FinancialAccountId,bill_reference_no) VALUES(@date,@shop,@mode,@value,@note,@import,@account,@reference)";
+            insert.Parameters.AddWithValue("@account", accountId);
             var date = insert.Parameters.Add("@date", SqliteType.Text);
             var shopId = insert.Parameters.Add("@shop", SqliteType.Integer);
             var modeId = insert.Parameters.Add("@mode", SqliteType.Integer);
             var value = insert.Parameters.Add("@value", SqliteType.Text);
             var note = insert.Parameters.Add("@note", SqliteType.Text);
+            var reference = insert.Parameters.Add("@reference", SqliteType.Text);
             var importId = insert.Parameters.Add("@import", SqliteType.Text);
             for (var index = 0; index < data.Bills.Count; index++)
             {
@@ -227,6 +267,7 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
                 shopId.Value = resolvedShop;
                 modeId.Value = resolvedMode;
                 value.Value = bill.BillValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                reference.Value = (object?)bill.BillReferenceNo ?? DBNull.Value;
                 note.Value = string.IsNullOrWhiteSpace(bill.Note) ? DBNull.Value : bill.Note;
                 importId.Value = (object?)bill.EtlImportId ?? DBNull.Value;
                 await insert.ExecuteNonQueryAsync(token);
@@ -243,15 +284,17 @@ public sealed class BackupService(ICriticalOperationState criticalOperations) : 
         }
     }
 
-    private static async Task<SelectedBackupDocument> ReadSelectedDataAsync(int year, IReadOnlyList<int> months, CancellationToken token)
+    private static async Task<SelectedBackupDocument> ReadSelectedDataAsync(int year, IReadOnlyList<int> months, int accountId, CancellationToken token)
     {
         await using var connection = await OpenAsync(DatabasePath, token);
         await EtlImportSchema.EnsureAsync(connection);
+        await BillReferenceSchema.EnsureAsync(connection, token);
         var document = new SelectedBackupDocument { Year = year, Months = months.ToList() };
         await using var command = connection.CreateCommand();
-        command.CommandText = @"SELECT b.Bill_date,b.Bill_value,b.Note,s.Name,p.Name,COALESCE(c.Name,s.Category,'Default Shop'),COALESCE(c.IconKey,'default_shop'),b.EtlImportId
+        command.CommandText = @"SELECT b.Bill_date,b.Bill_value,b.Note,s.Name,p.Name,COALESCE(c.Name,s.Category,'Default Shop'),COALESCE(c.IconKey,'default_shop'),b.EtlImportId,b.bill_reference_no
 FROM Bill_transcation b JOIN Shop s ON s.Id=b.Shop_Id JOIN Payment_mode p ON p.Id=b.Payment_Mode_Id
-LEFT JOIN Category c ON c.Id=s.Category_Id WHERE b.Bill_date >= @from AND b.Bill_date < @to ORDER BY b.Bill_date,b.Id";
+LEFT JOIN Category c ON c.Id=s.Category_Id WHERE b.FinancialAccountId=@account AND b.Bill_date >= @from AND b.Bill_date < @to ORDER BY b.Bill_date,b.Id";
+        command.Parameters.AddWithValue("@account", accountId);
         command.Parameters.AddWithValue("@from", new DateTime(year, 1, 1).ToString("O", System.Globalization.CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("@to", new DateTime(year + 1, 1, 1).ToString("O", System.Globalization.CultureInfo.InvariantCulture));
         var selected = months.ToHashSet();
@@ -264,7 +307,7 @@ LEFT JOIN Category c ON c.Id=s.Category_Id WHERE b.Bill_date >= @from AND b.Bill
             var modeName = reader.GetString(4);
             document.Shops.TryAdd(shopName, new SelectedBackupShop { Name = shopName, CategoryName = reader.IsDBNull(5) ? "Default Shop" : reader.GetString(5), CategoryIconKey = reader.IsDBNull(6) ? "default_shop" : reader.GetString(6) });
             document.PaymentModes.TryAdd(modeName, new SelectedBackupPaymentMode { Name = modeName });
-            document.Bills.Add(new SelectedBackupBill { BillDate = date, BillValue = ParseDecimal(reader.GetValue(1)), Note = reader.IsDBNull(2) ? string.Empty : reader.GetString(2), ShopName = shopName, PaymentModeName = modeName, EtlImportId = reader.IsDBNull(7) ? null : reader.GetString(7) });
+            document.Bills.Add(new SelectedBackupBill { BillReferenceNo = reader.IsDBNull(8) ? null : reader.GetString(8), BillDate = date, BillValue = ParseDecimal(reader.GetValue(1)), Note = reader.IsDBNull(2) ? string.Empty : reader.GetString(2), ShopName = shopName, PaymentModeName = modeName, EtlImportId = reader.IsDBNull(7) ? null : reader.GetString(7) });
         }
         return document;
     }
@@ -280,6 +323,8 @@ LEFT JOIN Category c ON c.Id=s.Category_Id WHERE b.Bill_date >= @from AND b.Bill
         if (!string.Equals(metadata.BackupType, "SelectedMonths", StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("This is not a selected-month backup.");
         await using var dataStream = dataEntry.Open();
         var data = await JsonSerializer.DeserializeAsync<SelectedBackupDocument>(dataStream, cancellationToken: token) ?? throw new InvalidDataException("The selected-month data is invalid.");
+        if (data.Bills.Any(bill => !FinTracker.Utilities.TransactionInput.IsReference(bill.BillReferenceNo)))
+            throw new InvalidDataException("The backup contains an invalid Reference No.");
         return (metadata, data);
     }
 
@@ -294,26 +339,27 @@ CREATE TABLE IF NOT EXISTS Shop (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name VARC
 CREATE TABLE IF NOT EXISTS Bill_transcation (Id INTEGER PRIMARY KEY AUTOINCREMENT, Bill_date DATETIME NOT NULL, Shop_Id INTEGER NOT NULL, Payment_Mode_Id INTEGER NOT NULL, Bill_value NUMERIC NOT NULL, Note VARCHAR(1000), FOREIGN KEY(Shop_Id) REFERENCES Shop(Id), FOREIGN KEY(Payment_Mode_Id) REFERENCES Payment_mode(Id));";
         await command.ExecuteNonQueryAsync(token);
         await EtlImportSchema.EnsureAsync(connection);
+        await BillReferenceSchema.EnsureAsync(connection, token);
     }
 
-    private static async Task<int> ResolvePaymentModeAsync(SqliteConnection connection, SqliteTransaction transaction, string name, CancellationToken token)
+    private static async Task<int> ResolvePaymentModeAsync(SqliteConnection connection, SqliteTransaction transaction, string name, int accountId, CancellationToken token)
     {
-        await using var find = connection.CreateCommand(); find.Transaction = transaction; find.CommandText = "SELECT Id FROM Payment_mode WHERE Name=@name COLLATE NOCASE"; find.Parameters.AddWithValue("@name", name);
+        await using var find = connection.CreateCommand(); find.Transaction = transaction; find.CommandText = "SELECT Id FROM Payment_mode WHERE Name=@name COLLATE NOCASE AND FinancialAccountId=@account"; find.Parameters.AddWithValue("@name", name); find.Parameters.AddWithValue("@account", accountId);
         var existing = await find.ExecuteScalarAsync(token); if (existing is not null) return Convert.ToInt32(existing);
-        await using var insert = connection.CreateCommand(); insert.Transaction = transaction; insert.CommandText = "INSERT INTO Payment_mode(Name) VALUES(@name); SELECT last_insert_rowid();"; insert.Parameters.AddWithValue("@name", name); return Convert.ToInt32(await insert.ExecuteScalarAsync(token));
+        await using var insert = connection.CreateCommand(); insert.Transaction = transaction; insert.CommandText = "INSERT INTO Payment_mode(Name,FinancialAccountId) VALUES(@name,@account); SELECT last_insert_rowid();"; insert.Parameters.AddWithValue("@name", name); insert.Parameters.AddWithValue("@account", accountId); return Convert.ToInt32(await insert.ExecuteScalarAsync(token));
     }
 
-    private static async Task<int> ResolveShopAsync(SqliteConnection connection, SqliteTransaction transaction, SelectedBackupShop shop, CancellationToken token)
+    private static async Task<int> ResolveShopAsync(SqliteConnection connection, SqliteTransaction transaction, SelectedBackupShop shop, int accountId, CancellationToken token)
     {
-        await using var find = connection.CreateCommand(); find.Transaction = transaction; find.CommandText = "SELECT Id FROM Shop WHERE Name=@name COLLATE NOCASE"; find.Parameters.AddWithValue("@name", shop.Name);
+        await using var find = connection.CreateCommand(); find.Transaction = transaction; find.CommandText = "SELECT Id FROM Shop WHERE Name=@name COLLATE NOCASE AND FinancialAccountId=@account"; find.Parameters.AddWithValue("@name", shop.Name); find.Parameters.AddWithValue("@account", accountId);
         var existing = await find.ExecuteScalarAsync(token); if (existing is not null) return Convert.ToInt32(existing);
-        await using var category = connection.CreateCommand(); category.Transaction = transaction; category.CommandText = "SELECT Id FROM Category WHERE Name=@name COLLATE NOCASE"; category.Parameters.AddWithValue("@name", shop.CategoryName);
+        await using var category = connection.CreateCommand(); category.Transaction = transaction; category.CommandText = "SELECT Id FROM Category WHERE Name=@name COLLATE NOCASE AND FinancialAccountId=@account"; category.Parameters.AddWithValue("@name", shop.CategoryName); category.Parameters.AddWithValue("@account", accountId);
         var categoryId = await category.ExecuteScalarAsync(token);
         if (categoryId is null)
         {
-            await using var createCategory = connection.CreateCommand(); createCategory.Transaction = transaction; createCategory.CommandText = "INSERT INTO Category(Name,IconKey,Budgeted) VALUES(@name,@icon,0); SELECT last_insert_rowid();"; createCategory.Parameters.AddWithValue("@name", shop.CategoryName); createCategory.Parameters.AddWithValue("@icon", shop.CategoryIconKey); categoryId = await createCategory.ExecuteScalarAsync(token);
+            await using var createCategory = connection.CreateCommand(); createCategory.Transaction = transaction; createCategory.CommandText = "INSERT INTO Category(Name,IconKey,Budgeted,FinancialAccountId) VALUES(@name,@icon,0,@account); SELECT last_insert_rowid();"; createCategory.Parameters.AddWithValue("@name", shop.CategoryName); createCategory.Parameters.AddWithValue("@icon", shop.CategoryIconKey); createCategory.Parameters.AddWithValue("@account", accountId); categoryId = await createCategory.ExecuteScalarAsync(token);
         }
-        await using var insert = connection.CreateCommand(); insert.Transaction = transaction; insert.CommandText = "INSERT INTO Shop(Name,Category,Category_Id) VALUES(@name,@category,@categoryId); SELECT last_insert_rowid();"; insert.Parameters.AddWithValue("@name", shop.Name); insert.Parameters.AddWithValue("@category", shop.CategoryName); insert.Parameters.AddWithValue("@categoryId", Convert.ToInt32(categoryId)); return Convert.ToInt32(await insert.ExecuteScalarAsync(token));
+        await using var insert = connection.CreateCommand(); insert.Transaction = transaction; insert.CommandText = "INSERT INTO Shop(Name,Category,Category_Id,FinancialAccountId) VALUES(@name,@category,@categoryId,@account); SELECT last_insert_rowid();"; insert.Parameters.AddWithValue("@name", shop.Name); insert.Parameters.AddWithValue("@category", shop.CategoryName); insert.Parameters.AddWithValue("@categoryId", Convert.ToInt32(categoryId)); insert.Parameters.AddWithValue("@account", accountId); return Convert.ToInt32(await insert.ExecuteScalarAsync(token));
     }
 
     private static async Task CopyDatabaseAsync(string destination, CancellationToken token)
@@ -348,10 +394,10 @@ CREATE TABLE IF NOT EXISTS income_transaction (
 CREATE INDEX IF NOT EXISTS IX_income_transaction_Transaction_date ON income_transaction(Transaction_date);
 CREATE INDEX IF NOT EXISTS IX_income_transaction_Shop_Id ON income_transaction(Shop_Id);
 CREATE INDEX IF NOT EXISTS IX_income_transaction_Payment_Mode_Id ON income_transaction(Payment_Mode_Id);
-CREATE TABLE IF NOT EXISTS Category (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL COLLATE NOCASE UNIQUE, IconKey TEXT NOT NULL DEFAULT 'default_shop', Budgeted REAL NOT NULL DEFAULT 0);
-INSERT OR IGNORE INTO Category(Name,IconKey,Budgeted) VALUES('Credits','default_shop',0);";
+";
         await command.ExecuteNonQueryAsync(token);
         await EtlImportSchema.EnsureAsync(connection);
+        await BillReferenceSchema.EnsureAsync(connection, token);
     }
 
     private static async Task RemoveAuthenticationDataAsync(string path, CancellationToken token)
@@ -440,6 +486,7 @@ VALUES (@id, @name, @username, @hash, @salt, @created);";
             while (await reader.ReadAsync(token)) tables.Add(reader.GetString(0));
         }
         if (new[] { "Shop", "Payment_mode", "Bill_transcation" }.Any(x => !tables.Contains(x))) return (false, "The backup database is missing required application tables.");
+        await BillReferenceSchema.ValidateAsync(c, token);
         await using var integrity = c.CreateCommand(); integrity.CommandText = "PRAGMA integrity_check;";
         if (!string.Equals(Convert.ToString(await integrity.ExecuteScalarAsync(token)), "ok", StringComparison.OrdinalIgnoreCase)) return (false, "SQLite integrity validation failed.");
         await using var fk = c.CreateCommand(); fk.CommandText = "PRAGMA foreign_key_check;";
@@ -485,6 +532,7 @@ VALUES (@id, @name, @username, @hash, @salt, @created);";
 
     private sealed class SelectedBackupBill
     {
+        public string? BillReferenceNo { get; set; }
         public string? EtlImportId { get; set; }
         public DateTime BillDate { get; set; }
         public string ShopName { get; set; } = string.Empty;

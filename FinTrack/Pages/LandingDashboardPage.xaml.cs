@@ -5,6 +5,7 @@ public partial class LandingDashboardPage : ContentPage
 {
     private bool _navigationInProgress;
     private bool _loginRedirectInProgress;
+    public void FocusShopSearch() => ShopSearchEntry.Focus();
     public LandingDashboardPage(LandingDashboardPageModel model)
     {
         InitializeComponent();
@@ -71,6 +72,8 @@ public partial class LandingDashboardPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        if (AppShell.IsStartupRouting)
+            return;
         _navigationInProgress = false;
         var authentication = Handler?.MauiContext?.Services.GetService<IAuthenticationService>();
         if (authentication is not null && !authentication.IsAuthenticated && !_loginRedirectInProgress)

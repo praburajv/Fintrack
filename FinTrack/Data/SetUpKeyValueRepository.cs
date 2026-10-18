@@ -5,7 +5,7 @@ using Microsoft.Data.Sqlite;
 
 namespace FinTracker.Data;
 
-public sealed class SetUpKeyValueRepository(ICriticalOperationState criticalOperations)
+public sealed class SetUpKeyValueRepository(ICriticalOperationState criticalOperations, FinancialAccountContext accounts)
 {
     public const string MonthlyIncomeKey = "Monthly Income";
     public const string MonthlyBudgetKey = "Monthly Budget";
@@ -19,7 +19,8 @@ public sealed class SetUpKeyValueRepository(ICriticalOperationState criticalOper
         await using var connection = new SqliteConnection(Constants.DatabasePath);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT \"Key\", Value FROM SetUpKeyValue WHERE \"Key\" IN (@incomeKey, @budgetKey)";
+        command.CommandText = "SELECT \"Key\", Value FROM SetUpKeyValue WHERE FinancialAccountId=@account AND \"Key\" IN (@incomeKey, @budgetKey)";
+        command.Parameters.AddWithValue("@account", accounts.RequireId());
         command.Parameters.AddWithValue("@incomeKey", MonthlyIncomeKey);
         command.Parameters.AddWithValue("@budgetKey", MonthlyBudgetKey);
 
@@ -53,12 +54,14 @@ public sealed class SetUpKeyValueRepository(ICriticalOperationState criticalOper
                 await using (var create = connection.CreateCommand())
                 {
                     create.Transaction = transaction;
-                    create.CommandText = "CREATE TABLE IF NOT EXISTS SetUpKeyValue (Id INTEGER PRIMARY KEY AUTOINCREMENT, \"Key\" TEXT NOT NULL COLLATE NOCASE UNIQUE, Value TEXT NOT NULL);";
+                    create.CommandText = "CREATE TABLE IF NOT EXISTS SetUpKeyValue (Id INTEGER PRIMARY KEY AUTOINCREMENT, FinancialAccountId INTEGER NOT NULL, \"Key\" TEXT NOT NULL COLLATE NOCASE, Value TEXT NOT NULL, UNIQUE(FinancialAccountId,\"Key\"));";
                     await create.ExecuteNonQueryAsync();
                 }
 
-                await InsertDefaultAsync(connection, transaction, MonthlyIncomeKey, DefaultMonthlyIncome);
-                await InsertDefaultAsync(connection, transaction, MonthlyBudgetKey, DefaultMonthlyBudget);
+                var initialIncome = accounts.Current?.IsDefault == true ? DefaultMonthlyIncome : 0m;
+                var initialBudget = accounts.Current?.IsDefault == true ? DefaultMonthlyBudget : 0m;
+                await InsertDefaultAsync(connection, transaction, accounts.RequireId(), MonthlyIncomeKey, initialIncome);
+                await InsertDefaultAsync(connection, transaction, accounts.RequireId(), MonthlyBudgetKey, initialBudget);
                 await transaction.CommitAsync();
             }
             catch
@@ -81,18 +84,20 @@ public sealed class SetUpKeyValueRepository(ICriticalOperationState criticalOper
         await using var connection = new SqliteConnection(Constants.DatabasePath);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE SetUpKeyValue SET Value=@value WHERE \"Key\"=@key COLLATE NOCASE";
+        command.CommandText = "UPDATE SetUpKeyValue SET Value=@value WHERE FinancialAccountId=@account AND \"Key\"=@key COLLATE NOCASE";
+        command.Parameters.AddWithValue("@account", accounts.RequireId());
         command.Parameters.AddWithValue("@value", value.ToString("0.00############################", CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("@key", key);
         if (await command.ExecuteNonQueryAsync() != 1)
             throw new InvalidOperationException($"The required setting '{key}' could not be updated.");
     }
 
-    private static async Task InsertDefaultAsync(SqliteConnection connection, SqliteTransaction transaction, string key, decimal value)
+    private static async Task InsertDefaultAsync(SqliteConnection connection, SqliteTransaction transaction, int accountId, string key, decimal value)
     {
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
-        command.CommandText = "INSERT OR IGNORE INTO SetUpKeyValue(\"Key\", Value) VALUES(@key, @value)";
+        command.CommandText = "INSERT OR IGNORE INTO SetUpKeyValue(FinancialAccountId,\"Key\", Value) VALUES(@account,@key, @value)";
+        command.Parameters.AddWithValue("@account", accountId);
         command.Parameters.AddWithValue("@key", key);
         command.Parameters.AddWithValue("@value", value.ToString("0.00", CultureInfo.InvariantCulture));
         await command.ExecuteNonQueryAsync();

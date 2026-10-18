@@ -21,26 +21,26 @@ public partial class RegisterPageModel(IAuthenticationService authentication, Mo
     {
         if (Shell.Current.Navigation.NavigationStack.Count > 1)
             await Shell.Current.Navigation.PopAsync(false);
-        await Shell.Current.GoToAsync("login");
+        await Shell.Current.GoToAsync("//login");
     }
 
     [RelayCommand]
     private async Task Register()
     {
         if (IsBusy) return;
-        if (string.IsNullOrWhiteSpace(Name) || string.IsNullOrWhiteSpace(Username)) { await Shell.Current.DisplayAlertAsync("Create Account", "Name and username are required.", "OK"); return; }
-        if (Password.Length < LocalAuthenticationService.MinimumPasswordLength) { await Shell.Current.DisplayAlertAsync("Create Account", $"Password must be at least {LocalAuthenticationService.MinimumPasswordLength} characters.", "OK"); return; }
-        if (Password != ConfirmPassword) { await Shell.Current.DisplayAlertAsync("Create Account", "Passwords do not match.", "OK"); return; }
+        if (string.IsNullOrWhiteSpace(Name) || string.IsNullOrWhiteSpace(Username)) { await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Create Account", "Name and username are required.", "OK"); return; }
+        if (Password.Length < LocalAuthenticationService.MinimumPasswordLength) { await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Create Account", $"Password must be at least {LocalAuthenticationService.MinimumPasswordLength} characters.", "OK"); return; }
+        if (Password != ConfirmPassword) { await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Create Account", "Passwords do not match.", "OK"); return; }
         IsBusy = true;
         try
         {
             var result = await authentication.RegisterAsync(Name, Username, Password);
-            if (!result.Succeeded) { await Shell.Current.DisplayAlertAsync("Create Account", result.Message, "OK"); return; }
+            if (!result.Succeeded) { await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Create Account", result.Message, "OK"); return; }
             Password = string.Empty; ConfirmPassword = string.Empty;
-            await Shell.Current.DisplayAlertAsync("Account created", result.Message, "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Account created", result.Message, "OK");
             if (Shell.Current.Navigation.NavigationStack.Count > 1)
                 await Shell.Current.Navigation.PopAsync(false);
-            await Shell.Current.GoToAsync("login");
+            await Shell.Current.GoToAsync("//login");
         }
         catch (Exception ex) { errors.HandleError(ex); }
         finally { IsBusy = false; }

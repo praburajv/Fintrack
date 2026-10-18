@@ -24,13 +24,13 @@ public partial class DatabaseToolsPageModel(UserAccountRepository accounts, IAut
         await RefreshUsersAsync();
         if (Users.Count == 0)
         {
-            await Shell.Current.DisplayAlertAsync("Local Users", "There are no registered local users.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Local Users", "There are no registered local users.", "OK");
             return;
         }
 
         var details = string.Join(Environment.NewLine + Environment.NewLine, Users.Select(user =>
             $"ID: {user.Id}{Environment.NewLine}Name: {user.Name}{Environment.NewLine}Username: {user.Username}{Environment.NewLine}Created: {user.CreatedAt:G}"));
-        await Shell.Current.DisplayAlertAsync("Local Users", details, "OK");
+        await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Local Users", details, "OK");
     }
 
     [RelayCommand]
@@ -40,11 +40,11 @@ public partial class DatabaseToolsPageModel(UserAccountRepository accounts, IAut
         await RefreshUsersAsync();
         if (Users.Count == 0)
         {
-            await Shell.Current.DisplayAlertAsync("Local Users", "There are no local users to delete.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Local Users", "There are no local users to delete.", "OK");
             return;
         }
 
-        var confirmed = await Shell.Current.DisplayAlertAsync(
+        var confirmed = await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync(
             "Delete All Local Users?",
             "This will permanently remove all locally registered login accounts from this device.\n\nYour Bills, Shops, Payment Modes and expense history will NOT be deleted.\n\nYou will need to register a new local account before logging in again.",
             "Delete All Users",
@@ -61,14 +61,14 @@ public partial class DatabaseToolsPageModel(UserAccountRepository accounts, IAut
             OnPropertyChanged(nameof(ProgressText));
             if (deletedCount <= 0)
             {
-                await Shell.Current.DisplayAlertAsync("Unable to Delete Local Users", "No local user account was deleted.", "OK");
+                await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Unable to Delete Local Users", "No local user account was deleted.", "OK");
                 return;
             }
 
             authentication.Logout();
             Users = [];
             OnPropertyChanged(nameof(UserCount));
-            await Shell.Current.DisplayAlertAsync(
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync(
                 "Local Users Deleted",
                 $"{deletedCount} local user account(s) were removed.\n\nAll locally registered users have been removed. Your Bills, Shops, Payment Modes and expense history were preserved. You can now register a new local account.",
                 "OK");
@@ -76,7 +76,7 @@ public partial class DatabaseToolsPageModel(UserAccountRepository accounts, IAut
         catch (Exception ex)
         {
             errors.HandleError(ex);
-            await Shell.Current.DisplayAlertAsync("Unable to Delete Local Users", "No changes were completed.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Unable to Delete Local Users", "No changes were completed.", "OK");
         }
         finally { IsBusy = false; }
     }
@@ -85,7 +85,7 @@ public partial class DatabaseToolsPageModel(UserAccountRepository accounts, IAut
     private async Task DeleteUser(LocalUserSummary? user)
     {
         if (user is null || IsBusy) return;
-        var confirmed = await Shell.Current.DisplayAlertAsync(
+        var confirmed = await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync(
             "Delete Local User?",
             $"Delete the local user '{user.Name}' ({user.Username})?\n\nThis removes only this login account. Bills and expense history are preserved.",
             "Delete", "Cancel");
@@ -101,7 +101,7 @@ public partial class DatabaseToolsPageModel(UserAccountRepository accounts, IAut
             OnPropertyChanged(nameof(ProgressText));
             if (deleted == 0)
             {
-                await Shell.Current.DisplayAlertAsync("User Not Found", "The selected user no longer exists.", "OK");
+                await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("User Not Found", "The selected user no longer exists.", "OK");
                 return;
             }
 
@@ -109,12 +109,12 @@ public partial class DatabaseToolsPageModel(UserAccountRepository accounts, IAut
                 authentication.Logout();
             Users = (await accounts.ListUserSummariesAsync()).ToList();
             OnPropertyChanged(nameof(UserCount));
-            await Shell.Current.DisplayAlertAsync("User Deleted", $"Local user '{user.Name}' was deleted.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("User Deleted", $"Local user '{user.Name}' was deleted.", "OK");
         }
         catch (Exception ex)
         {
             errors.HandleError(ex);
-            await Shell.Current.DisplayAlertAsync("Unable to Delete User", "No changes were completed.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Unable to Delete User", "No changes were completed.", "OK");
         }
         finally { IsBusy = false; }
     }

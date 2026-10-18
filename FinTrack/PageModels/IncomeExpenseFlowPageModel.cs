@@ -60,7 +60,7 @@ public partial class IncomeExpenseFlowPageModel(IncomeExpenseFlowService flow, B
                 groups = rows.GroupBy(item => new { item.CategoryId, item.CategoryName, item.CategoryIconKey }).Select(group =>
                 {
                     var category = new CategoryExpenseGroup { CategoryId = group.Key.CategoryId, CategoryName = group.Key.CategoryName, IconFileName = CategoryIconCatalog.FileNameFor(group.Key.CategoryIconKey), IsIncome = true };
-                    foreach (var item in group) category.Bills.Add(new BillTransaction { Id = item.Id, BillDate = item.TransactionDate, BillValue = item.Amount, ShopName = item.ShopName, PaymentModeName = item.PaymentModeName, TransactionType = FinancialTransactionType.Income });
+                    foreach (var item in group) category.Bills.Add(new BillTransaction { Id = item.Id, BillReferenceNo = item.BillReferenceNo, BillDate = item.TransactionDate, BillValue = item.Amount, ShopName = item.ShopName, PaymentModeName = item.PaymentModeName, TransactionType = FinancialTransactionType.Income });
                     return category;
                 }).ToList();
             }

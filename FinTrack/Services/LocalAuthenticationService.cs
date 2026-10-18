@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using FinTracker.Data;
 using FinTracker.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Storage;
 
 namespace FinTracker.Services;
 
@@ -11,6 +12,7 @@ public sealed class LocalAuthenticationService(UserAccountRepository accounts, I
     private const int SaltSize = 16;
     private const int HashSize = 32;
     private const int Iterations = 120_000;
+    private const string SessionUserIdKey = "fintracker_session_user_id";
     private readonly WeakEventManager _authenticationStateChanged = new();
     private UserAccount? _currentUser;
 
@@ -47,8 +49,34 @@ public sealed class LocalAuthenticationService(UserAccountRepository accounts, I
         logger.LogDebug("Local login password verification result = {Verified}", verified);
         if (!verified) return new(false, "Invalid username or password.");
         _currentUser = user;
+        await SaveSessionAsync(user.Id);
         _authenticationStateChanged.HandleEvent(this, EventArgs.Empty, nameof(AuthenticationStateChanged));
         return new(true, "", user);
+    }
+
+    public async Task RestoreSessionAsync()
+    {
+        try
+        {
+            var storedUserId = await SecureStorage.Default.GetAsync(SessionUserIdKey);
+            if (!int.TryParse(storedUserId, out var userId) || userId <= 0)
+                return;
+
+            var user = await accounts.GetByIdAsync(userId);
+            if (user is null)
+            {
+                RemoveSavedSession();
+                return;
+            }
+
+            _currentUser = user;
+            _authenticationStateChanged.HandleEvent(this, EventArgs.Empty, nameof(AuthenticationStateChanged));
+        }
+        catch (Exception ex)
+        {
+            logger.LogDebug(ex, "Saved local authentication session could not be restored.");
+            RemoveSavedSession();
+        }
     }
 
     public async Task<AuthenticationResult> AuthenticateLocalUserAfterBiometricAsync(int userId)
@@ -58,6 +86,7 @@ public sealed class LocalAuthenticationService(UserAccountRepository accounts, I
         if (user is null) return new(false, "The biometric account was not found.");
 
         _currentUser = user;
+        await SaveSessionAsync(user.Id);
         _authenticationStateChanged.HandleEvent(this, EventArgs.Empty, nameof(AuthenticationStateChanged));
         return new(true, "", user);
     }
@@ -98,9 +127,29 @@ public sealed class LocalAuthenticationService(UserAccountRepository accounts, I
 
     public void Logout()
     {
-        if (_currentUser is null) return;
+        if (_currentUser is null)
+        {
+            RemoveSavedSession();
+            return;
+        }
+
         _currentUser = null;
+        RemoveSavedSession();
         _authenticationStateChanged.HandleEvent(this, EventArgs.Empty, nameof(AuthenticationStateChanged));
+    }
+
+    private static Task SaveSessionAsync(int userId) => SecureStorage.Default.SetAsync(SessionUserIdKey, userId.ToString());
+
+    private void RemoveSavedSession()
+    {
+        try
+        {
+            SecureStorage.Default.Remove(SessionUserIdKey);
+        }
+        catch (Exception ex)
+        {
+            logger.LogDebug(ex, "Saved local authentication session could not be removed.");
+        }
     }
 
     private static byte[] Derive(string password, byte[] salt) => Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, HashAlgorithmName.SHA256, HashSize);

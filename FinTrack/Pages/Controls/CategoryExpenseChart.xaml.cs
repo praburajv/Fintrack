@@ -8,6 +8,10 @@ public partial class CategoryExpenseChart : Border
     public event EventHandler<CategoryExpenseChartData>? CategorySelected;
     public event EventHandler<CategoryExpenseChartData>? CategoryLegendTapped;
     public bool IsCurrentMonth { get; set; }
+    public static readonly BindableProperty ChartHeightProperty = BindableProperty.Create(nameof(ChartHeight), typeof(double), typeof(CategoryExpenseChart), 300d);
+    public static readonly BindableProperty ShowLegendProperty = BindableProperty.Create(nameof(ShowLegend), typeof(bool), typeof(CategoryExpenseChart), true);
+    public double ChartHeight { get => (double)GetValue(ChartHeightProperty); set => SetValue(ChartHeightProperty, value); }
+    public bool ShowLegend { get => (bool)GetValue(ShowLegendProperty); set => SetValue(ShowLegendProperty, value); }
     public static readonly BindableProperty ItemsSourceProperty = BindableProperty.Create(nameof(ItemsSource), typeof(IEnumerable<CategoryExpenseChartData>), typeof(CategoryExpenseChart), propertyChanged: OnItemsSourceChanged);
     public IEnumerable<CategoryExpenseChartData>? ItemsSource { get => (IEnumerable<CategoryExpenseChartData>?)GetValue(ItemsSourceProperty); set => SetValue(ItemsSourceProperty, value); }
     public IList<Brush> PaletteBrushes { get; private set; } = [];

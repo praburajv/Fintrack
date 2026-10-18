@@ -9,9 +9,13 @@ public sealed class IncomeTransactionRepository
 {
     private readonly SemaphoreSlim _initialization = new(1, 1);
     private readonly ICriticalOperationState _criticalOperations;
+    private readonly FinancialAccountContext _accounts;
     private bool _initialized;
+    public Task EnsureInitializedAsync() => InitAsync();
+    public void InvalidateAfterDatabaseRestore() => _initialized = false;
 
-    public IncomeTransactionRepository(ICriticalOperationState criticalOperations) => _criticalOperations = criticalOperations;
+    public IncomeTransactionRepository(ICriticalOperationState criticalOperations, FinancialAccountContext accounts)
+    { _criticalOperations = criticalOperations; _accounts = accounts; }
 
     private async Task InitAsync()
     {
@@ -33,12 +37,24 @@ CREATE TABLE IF NOT EXISTS income_transaction (
  Payment_Mode_Id INTEGER NOT NULL,
  Amount NUMERIC NOT NULL CHECK(Amount > 0),
  Note VARCHAR(1000),
+ FinancialAccountId INTEGER NOT NULL,
  FOREIGN KEY(Shop_Id) REFERENCES Shop(Id),
  FOREIGN KEY(Payment_Mode_Id) REFERENCES Payment_mode(Id));
 CREATE INDEX IF NOT EXISTS IX_income_transaction_Transaction_date ON income_transaction(Transaction_date);
 CREATE INDEX IF NOT EXISTS IX_income_transaction_Shop_Id ON income_transaction(Shop_Id);
 CREATE INDEX IF NOT EXISTS IX_income_transaction_Payment_Mode_Id ON income_transaction(Payment_Mode_Id);";
+            command.CommandText += @"
+CREATE TRIGGER IF NOT EXISTS TR_IncomeAccountInsert BEFORE INSERT ON income_transaction
+WHEN NEW.FinancialAccountId IS NULL OR NOT EXISTS(SELECT 1 FROM FinancialAccount WHERE Id=NEW.FinancialAccountId AND IsActive=1)
+ OR NOT EXISTS(SELECT 1 FROM Shop WHERE Id=NEW.Shop_Id AND FinancialAccountId=NEW.FinancialAccountId)
+ OR NOT EXISTS(SELECT 1 FROM Payment_mode WHERE Id=NEW.Payment_Mode_Id AND FinancialAccountId=NEW.FinancialAccountId)
+BEGIN SELECT RAISE(ABORT,'Income account, shop or payment mode mismatch'); END;
+CREATE TRIGGER IF NOT EXISTS TR_IncomeAccountUpdate BEFORE UPDATE ON income_transaction
+WHEN NEW.FinancialAccountId IS NULL OR NOT EXISTS(SELECT 1 FROM Shop WHERE Id=NEW.Shop_Id AND FinancialAccountId=NEW.FinancialAccountId)
+ OR NOT EXISTS(SELECT 1 FROM Payment_mode WHERE Id=NEW.Payment_Mode_Id AND FinancialAccountId=NEW.FinancialAccountId)
+BEGIN SELECT RAISE(ABORT,'Income account, shop or payment mode mismatch'); END;";
             await command.ExecuteNonQueryAsync();
+            await BillReferenceSchema.EnsureAsync(connection);
             await ShopRepository.EnsureCategoryColumnAsync(connection);
             await CategoryRepository.EnsureSchemaAndSeedAsync(connection);
             await ShopRepository.EnsureCategoryIdColumnAndMigrationAsync(connection);
@@ -48,20 +64,26 @@ CREATE INDEX IF NOT EXISTS IX_income_transaction_Payment_Mode_Id ON income_trans
         finally { _initialization.Release(); }
     }
 
-    public async Task<List<IncomeTransaction>> ListAsync(DateTime from, DateTime to)
+    public async Task<List<IncomeTransaction>> ListAsync(DateTime from, DateTime to, int? shopId = null)
     {
         await InitAsync();
         await using var connection = new SqliteConnection(Constants.DatabasePath);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = @"SELECT i.Id,i.Transaction_date,i.Shop_Id,i.Payment_Mode_Id,i.Amount,i.Note,
-s.Name,p.Name,COALESCE(c.Id,0),COALESCE(c.Name,s.Category,'Credits'),COALESCE(c.IconKey,'default_shop')
+s.Name,p.Name,COALESCE(c.Id,0),COALESCE(c.Name,s.Category,'Credits'),COALESCE(c.IconKey,'default_shop'),i.bill_reference_no
 FROM income_transaction i
 LEFT JOIN Shop s ON s.Id=i.Shop_Id
 LEFT JOIN Payment_mode p ON p.Id=i.Payment_Mode_Id
 LEFT JOIN Category c ON c.Id=s.Category_Id
-WHERE i.Transaction_date >= @from AND i.Transaction_date < @to
-ORDER BY i.Transaction_date,i.Id";
+WHERE i.FinancialAccountId=@account AND i.Transaction_date >= @from AND i.Transaction_date < @to";
+        if (shopId.HasValue)
+        {
+            command.CommandText += " AND i.Shop_Id=@shop";
+            command.Parameters.AddWithValue("@shop", shopId.Value);
+        }
+        command.CommandText += " ORDER BY i.Transaction_date,i.Id";
+        command.Parameters.AddWithValue("@account", _accounts.RequireId());
         command.Parameters.AddWithValue("@from", from.ToString("O", CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("@to", to.ToString("O", CultureInfo.InvariantCulture));
         var result = new List<IncomeTransaction>();
@@ -83,8 +105,9 @@ ORDER BY i.Transaction_date,i.Id";
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = @"SELECT substr(Transaction_date,1,7), SUM(CAST(Amount AS NUMERIC))
-FROM income_transaction WHERE Transaction_date >= @from AND Transaction_date < @to
+FROM income_transaction WHERE FinancialAccountId=@account AND Transaction_date >= @from AND Transaction_date < @to
 GROUP BY substr(Transaction_date,1,7)";
+        command.Parameters.AddWithValue("@account", _accounts.RequireId());
         command.Parameters.AddWithValue("@from", from.ToString("O", CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("@to", to.ToString("O", CultureInfo.InvariantCulture));
         var result = new Dictionary<(int Year, int Month), decimal>();
@@ -131,23 +154,35 @@ GROUP BY substr(Transaction_date,1,7)";
         await InitAsync();
         await using var connection = new SqliteConnection(Constants.DatabasePath);
         await connection.OpenAsync();
+        if (etlImportId is null) await TransactionWriteValidation.ValidateNoteAsync(connection, "income_transaction", item.Id, _accounts.RequireId(), item.Note);
         await using var command = connection.CreateCommand();
+        command.Parameters.AddWithValue("@reference", (object?)FinTracker.Utilities.TransactionInput.NormalizeReference(item.BillReferenceNo) ?? DBNull.Value);
         command.Parameters.AddWithValue("@date", item.TransactionDate.ToString("O", CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("@shop", item.ShopId);
         command.Parameters.AddWithValue("@mode", item.PaymentModeId);
         command.Parameters.AddWithValue("@amount", item.Amount.ToString(CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("@note", string.IsNullOrWhiteSpace(item.Note) ? DBNull.Value : item.Note.Trim());
+        command.Parameters.AddWithValue("@account", _accounts.RequireId());
         if (item.Id == 0)
         {
-            command.CommandText = "INSERT INTO income_transaction(Transaction_date,Shop_Id,Payment_Mode_Id,Amount,Note,EtlImportId) VALUES(@date,@shop,@mode,@amount,@note,@import); SELECT last_insert_rowid();";
+            command.CommandText = @"INSERT INTO income_transaction(Transaction_date,Shop_Id,Payment_Mode_Id,Amount,Note,EtlImportId,FinancialAccountId,bill_reference_no)
+SELECT @date,@shop,@mode,@amount,@note,@import,@account,@reference
+WHERE EXISTS(SELECT 1 FROM Shop WHERE Id=@shop AND FinancialAccountId=@account)
+AND EXISTS(SELECT 1 FROM Payment_mode WHERE Id=@mode AND FinancialAccountId=@account);
+SELECT CASE WHEN changes()=1 THEN last_insert_rowid() ELSE NULL END;";
             command.Parameters.AddWithValue("@import", (object?)etlImportId ?? DBNull.Value);
-            item.Id = Convert.ToInt32(await command.ExecuteScalarAsync());
+            var inserted = await command.ExecuteScalarAsync();
+            if (inserted is null or DBNull) throw new InvalidOperationException("The shop or payment mode is not in the active company.");
+            item.Id = Convert.ToInt32(inserted);
         }
         else
         {
-            command.CommandText = "UPDATE income_transaction SET Transaction_date=@date,Shop_Id=@shop,Payment_Mode_Id=@mode,Amount=@amount,Note=@note WHERE Id=@id";
+            command.CommandText = @"UPDATE income_transaction SET Transaction_date=@date,Shop_Id=@shop,Payment_Mode_Id=@mode,Amount=@amount,Note=@note,bill_reference_no=@reference
+WHERE Id=@id AND FinancialAccountId=@account
+AND EXISTS(SELECT 1 FROM Shop WHERE Id=@shop AND FinancialAccountId=@account)
+AND EXISTS(SELECT 1 FROM Payment_mode WHERE Id=@mode AND FinancialAccountId=@account)";
             command.Parameters.AddWithValue("@id", item.Id);
-            await command.ExecuteNonQueryAsync();
+            if (await command.ExecuteNonQueryAsync() != 1) throw new InvalidOperationException("The income, shop, or payment mode is not in the active company.");
         }
         return item.Id;
     }
@@ -159,8 +194,9 @@ GROUP BY substr(Transaction_date,1,7)";
         await using var connection = new SqliteConnection(Constants.DatabasePath);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = "DELETE FROM income_transaction WHERE Id=@id";
+        command.CommandText = "DELETE FROM income_transaction WHERE Id=@id AND FinancialAccountId=@account";
         command.Parameters.AddWithValue("@id", id);
+        command.Parameters.AddWithValue("@account", _accounts.RequireId());
         return await command.ExecuteNonQueryAsync();
     }
 
@@ -172,7 +208,8 @@ GROUP BY substr(Transaction_date,1,7)";
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         var from = new DateTime(year, month, 1);
-        command.CommandText = "DELETE FROM income_transaction WHERE Transaction_date >= @from AND Transaction_date < @to";
+        command.CommandText = "DELETE FROM income_transaction WHERE FinancialAccountId=@account AND Transaction_date >= @from AND Transaction_date < @to";
+        command.Parameters.AddWithValue("@account", _accounts.RequireId());
         command.Parameters.AddWithValue("@from", from.ToString("O", CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("@to", from.AddMonths(1).ToString("O", CultureInfo.InvariantCulture));
         return await command.ExecuteNonQueryAsync();
@@ -184,13 +221,15 @@ GROUP BY substr(Transaction_date,1,7)";
         await using var connection = new SqliteConnection(Constants.DatabasePath);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = "DELETE FROM income_transaction WHERE Shop_Id=@shop";
+        command.CommandText = "DELETE FROM income_transaction WHERE Shop_Id=@shop AND FinancialAccountId=@account";
         command.Parameters.AddWithValue("@shop", shopId);
+        command.Parameters.AddWithValue("@account", _accounts.RequireId());
         return await command.ExecuteNonQueryAsync();
     }
 
     private static IncomeTransaction Read(SqliteDataReader reader) => new()
     {
+        BillReferenceNo = reader.IsDBNull(11) ? null : reader.GetString(11),
         Id = reader.GetInt32(0),
         TransactionDate = DateTime.Parse(reader.GetString(1), CultureInfo.InvariantCulture),
         ShopId = reader.GetInt32(2),

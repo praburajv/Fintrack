@@ -2,6 +2,9 @@ namespace FinTracker.Models;
 
 public class BillTransaction
 {
+    public string? BillReferenceNo { get; set; }
+    public bool HasReference => !string.IsNullOrEmpty(BillReferenceNo);
+    public string ReferenceText => $"Reference No.: {BillReferenceNo}";
     public int Id { get; set; }
     public DateTime BillDate { get; set; } = DateTime.Today;
     public int ShopId { get; set; }
@@ -21,5 +24,6 @@ public class BillTransaction
     public string? RecurringPeriod { get; set; }
     public FinancialTransactionType TransactionType { get; set; } = FinancialTransactionType.Expense;
     public bool IsIncome => TransactionType == FinancialTransactionType.Income;
+    public string AmountText => FinTracker.Utilities.EuroFormatter.Format(BillValue);
     public Color AmountTextColor => IsIncome ? (Application.Current?.Resources["Success"] as Color ?? Colors.Green) : (Application.Current?.Resources["TextPrimary"] as Color ?? Colors.Black);
 }

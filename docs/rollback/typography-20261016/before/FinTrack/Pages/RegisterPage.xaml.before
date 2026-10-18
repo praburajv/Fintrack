@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:FinTracker.PageModels" xmlns:controls="clr-namespace:FinTracker.Pages.Controls" x:Class="FinTracker.Pages.RegisterPage" x:DataType="vm:RegisterPageModel" Title="Register">
+ <Grid><ScrollView><VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
+  <Label Text="Create Account" Style="{StaticResource Title1}" /><Entry Placeholder="Name" Text="{Binding Name}" /><Entry Placeholder="Username" Text="{Binding Username}" ClearButtonVisibility="WhileEditing" /><Entry Placeholder="Password" Text="{Binding Password}" IsPassword="{Binding IsPassword}" /><Entry Placeholder="Confirm Password" Text="{Binding ConfirmPassword}" IsPassword="{Binding IsPassword}" />
+  <Button Text="{Binding PasswordToggleText}" Command="{Binding TogglePasswordCommand}" HorizontalOptions="Start" /><Button Text="Register" Command="{Binding RegisterCommand}" />
+  <HorizontalStackLayout HorizontalOptions="Center" Spacing="6"><Label Text="Already have an account?" /><Button Text="Login" Command="{Binding LoginCommand}" Padding="0" /></HorizontalStackLayout>
+ </VerticalStackLayout></ScrollView><controls:ProcessingOverlay IsBusy="{Binding IsBusy}" Message="Creating account..." /></Grid>
+</ContentPage>

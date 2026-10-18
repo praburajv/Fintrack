@@ -693,3 +693,9 @@ Prioritize:
 7. Safe future updates
 8. No committed signing secrets
 9. No unrelated application changes
+
+
+
+
+
+https://play.google.com/store/apps/details?id=com.companyname.fintracker    

@@ -4,7 +4,7 @@ using FinTracker.Models;
 
 namespace FinTracker.Services;
 
-public sealed class ExpenseStatementDocumentService : IExpenseStatementDocumentService
+public sealed partial class ExpenseStatementDocumentService : IExpenseStatementDocumentService
 {
     private const double PageWidth = 595;
     private const double PageHeight = 842;

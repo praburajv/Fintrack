@@ -15,8 +15,7 @@ public partial class LoginPageModel(IAuthenticationService authentication, IBiom
     public string PasswordToggleText => IsPassword ? "Show password" : "Hide password";
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        if (query.TryGetValue("returnTo", out var route))
-            _returnRoute = route?.ToString();
+        _returnRoute = query.TryGetValue("returnTo", out var route) ? route?.ToString() : null;
     }
 
     public async Task OnAppearingAsync()
@@ -52,19 +51,18 @@ public partial class LoginPageModel(IAuthenticationService authentication, IBiom
     private async Task Login()
     {
         if (IsBusy) return;
-        if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrEmpty(Password)) { await Shell.Current.DisplayAlertAsync("Login", "Enter your username and password.", "OK"); return; }
+        if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrEmpty(Password)) { await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Login", "Enter your username and password.", "OK"); return; }
         IsBusy = true;
         try
         {
             var result = await authentication.LoginAsync(Username, Password);
-            if (!result.Succeeded) { await Shell.Current.DisplayAlertAsync("Login", result.Message, "OK"); return; }
+            if (!result.Succeeded) { await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Login", result.Message, "OK"); return; }
             Password = string.Empty;
-            if (string.Equals(_returnRoute, "myexpense", StringComparison.OrdinalIgnoreCase))
-                await Shell.Current.GoToAsync("//myexpense");
-            else if (string.Equals(_returnRoute, "setup", StringComparison.OrdinalIgnoreCase))
-                await Shell.Current.GoToAsync("..");
-            else
-                await AppShell.NavigateToDashboardAsync();
+            var returnRoute = _returnRoute;
+            _returnRoute = null;
+            if (Shell.Current is AppShell shell && returnRoute is "myexpense" or "setup")
+                shell.PendingDestinationAfterCompanySelection = returnRoute;
+            await AppShell.NavigateToDashboardAsync();
         }
         catch (Exception ex) { errors.HandleError(ex); }
         finally { IsBusy = false; }
@@ -90,9 +88,9 @@ public partial class LoginPageModel(IAuthenticationService authentication, IBiom
             if (result.Status != BiometricAuthenticationStatus.Success)
             {
                 if (result.Status == BiometricAuthenticationStatus.Unavailable && showUnavailableMessage && !string.IsNullOrWhiteSpace(result.Message))
-                    await Shell.Current.DisplayAlertAsync("Fingerprint Login", result.Message, "OK");
+                    await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Fingerprint Login", result.Message, "OK");
                 else if (result.Status == BiometricAuthenticationStatus.LockedOut && showUnavailableMessage)
-                    await Shell.Current.DisplayAlertAsync("Fingerprint Login", result.Message, "OK");
+                    await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Fingerprint Login", result.Message, "OK");
                 return;
             }
 
@@ -101,14 +99,15 @@ public partial class LoginPageModel(IAuthenticationService authentication, IBiom
             {
                 await biometric.ClearConfigurationAsync();
                 IsBiometricAvailable = false;
-                await Shell.Current.DisplayAlertAsync("Fingerprint Login", "The configured local account no longer exists. Please login or register.", "OK");
+                await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Fingerprint Login", "The configured local account no longer exists. Please login or register.", "OK");
                 return;
             }
 
-            if (string.Equals(_returnRoute, "myexpense", StringComparison.OrdinalIgnoreCase))
-                await Shell.Current.GoToAsync("//myexpense");
-            else
-                await AppShell.NavigateToDashboardAsync();
+            var returnRoute = _returnRoute;
+            _returnRoute = null;
+            if (Shell.Current is AppShell shell && returnRoute is "myexpense" or "setup")
+                shell.PendingDestinationAfterCompanySelection = returnRoute;
+            await AppShell.NavigateToDashboardAsync();
         }
         catch (Exception ex) { errors.HandleError(ex); }
         finally { IsBusy = false; }

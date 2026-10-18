@@ -36,6 +36,7 @@
     </DataTemplate>
    </CollectionView.ItemTemplate>
   </CollectionView>
+  <controls:BottomTaskBar Grid.Row="2" />
   <controls:ProcessingOverlay Grid.RowSpan="3" IsBusy="{Binding IsProcessing}" Message="{Binding ProcessingMessage}"
                               ShowProgress="{Binding IsDeletingData}" Progress="{Binding ProgressFraction}" ProgressText="{Binding ProgressText}" />
   <!-- A blocking review layer has explicit buttons, not an Android action

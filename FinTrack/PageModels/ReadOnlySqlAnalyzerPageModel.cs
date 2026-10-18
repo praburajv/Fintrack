@@ -7,8 +7,6 @@ namespace FinTracker.PageModels;
 public partial class ReadOnlySqlAnalyzerPageModel(IReadOnlySqlAnalyzerService analyzer, ISqlSchemaMetadataService schema, SqlQueryBuilderService builder) : ObservableObject
 {
     public const string TablesSql = "SELECT name, type FROM sqlite_master WHERE type IN ('table', 'view') ORDER BY type, name;";
-    public const string ShopSchemaSql = "PRAGMA table_info(Shop);";
-    public const string BillSchemaSql = "PRAGMA table_info(Bill_transcation);";
     public const string CountsSql = "SELECT (SELECT COUNT(*) FROM Bill_transcation) AS Bills, (SELECT COUNT(*) FROM Shop) AS Shops, (SELECT COUNT(*) FROM Payment_mode) AS PaymentModes, (SELECT COUNT(*) FROM UserAccount) AS Users;";
 
     [ObservableProperty] private string _sqlText = "SELECT * FROM Shop LIMIT 20;";
@@ -24,6 +22,38 @@ public partial class ReadOnlySqlAnalyzerPageModel(IReadOnlySqlAnalyzerService an
     [ObservableProperty] private bool _isStopping;
 
     private CancellationTokenSource? _executionCts;
+
+    public System.Collections.ObjectModel.ObservableCollection<string> TableStructureQueries { get; } = [];
+    [ObservableProperty] private string? _selectedTableStructureQuery;
+    [ObservableProperty] private bool _isTableStructureBusy;
+    public bool CanSelectTableStructure => !IsBusy && !IsTableStructureBusy;
+    partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(CanSelectTableStructure));
+    partial void OnIsTableStructureBusyChanged(bool value) => OnPropertyChanged(nameof(CanSelectTableStructure));
+    partial void OnSelectedTableStructureQueryChanged(string? value)
+    {
+        if (value is not null && TableStructureQueries.Contains(value)) SqlText = value;
+    }
+
+    public async Task RefreshTableStructuresAsync()
+    {
+        if (IsTableStructureBusy || IsBusy) return;
+        IsTableStructureBusy = true;
+        try
+        {
+            schema.Invalidate();
+            var names = await schema.GetTableNamesAsync();
+            SelectedTableStructureQuery = null;
+            TableStructureQueries.Clear();
+            foreach (var name in names)
+            {
+                var identifier = System.Text.RegularExpressions.Regex.IsMatch(name, @"\A[A-Za-z_][A-Za-z0-9_]*\z")
+                    ? name : $"\"{name.Replace("\"", "\"\"")}\"";
+                TableStructureQueries.Add($"PRAGMA table_info({identifier})");
+            }
+        }
+        catch (Exception ex) { Error = $"Unable to load table structures: {ex.Message}"; OnPropertyChanged(nameof(HasError)); }
+        finally { IsTableStructureBusy = false; }
+    }
 
     public string DatabaseFilename => Data.Constants.DatabaseFilename;
     public string DatabasePath => Path.Combine(FileSystem.AppDataDirectory, Data.Constants.DatabaseFilename);
@@ -91,8 +121,6 @@ public partial class ReadOnlySqlAnalyzerPageModel(IReadOnlySqlAnalyzerService an
     }
 
     [RelayCommand] private void TablesQuery() => SqlText = TablesSql;
-    [RelayCommand] private void ShopSchemaQuery() => SqlText = ShopSchemaSql;
-    [RelayCommand] private void BillSchemaQuery() => SqlText = BillSchemaSql;
     [RelayCommand] private void CountsQuery() => SqlText = CountsSql;
 
     private void NotifyResultProperties()

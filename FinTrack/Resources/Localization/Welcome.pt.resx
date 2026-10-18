@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="SwipeToStart" xml:space="preserve"><value>Deslize para começar</value></data>
+  <data name="SwipeToReturn" xml:space="preserve"><value>Deslize para voltar</value></data>
+  <data name="TapToContinue" xml:space="preserve"><value>Toque para continuar</value></data>
+  <data name="TapToReturn" xml:space="preserve"><value>Toque para voltar</value></data>
+  <data name="SwipeDescription" xml:space="preserve"><value>Deslize a seta para a direita para continuar</value></data>
+  <data name="LanguageDescription" xml:space="preserve"><value>Mudar para inglês</value></data>
+  <data name="NavigationError" xml:space="preserve"><value>Não foi possível continuar. Tente novamente.</value></data>
+</root>

@@ -1,0 +1,76 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NuGetAudit>false</NuGetAudit>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="8.0.8" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.10" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <Compile Include="../../FinTrack/Data/Constants.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Data/FinancialAccountRepository.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Data/CategoryRepository.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Data/ShopRepository.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Data/PaymentModeRepository.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Data/BillTransactionRepository.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Data/IncomeTransactionRepository.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Data/TransactionWriteValidation.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Data/BillReferenceSchema.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Data/EtlImportSchema.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Data/EtlTextMapRepository.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Data/RecurringBillRepository.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Data/MonthlyBudgetRepository.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/FinancialAccount.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/Category.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/Shop.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/PaymentMode.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/ShopCategory.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/CategoryIconCatalog.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/DisplayCurrency.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/BillTransaction.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/IncomeTransaction.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/FinancialTransactionType.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/DashboardSearchResult.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/RecurringBill.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/EtlTextMap.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/ShopBillAnalysisResult.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/MonthlyExpenseChartData.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/WeeklyExpenseChartData.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/DailyExpenseCalendarItem.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/CategoryExpenseChartData.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/ShopExpenseChartData.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/PaymentModeExpenseChartData.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/BackupMetadata.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/BackupRecordSummary.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/BackupValidationResult.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/SelectedMonthsRestoreResult.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/UserAccount.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Services/FinancialAccountContext.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Services/ICurrencyService.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Services/ICriticalOperationState.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Services/CriticalOperationState.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Services/DashboardSearchService.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Services/ShopBillAnalysisService.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Services/BackupService.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Services/IBackupService.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Utilities/ShopNameAbbreviator.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Utilities/TransactionInput.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Utilities/EuroFormatter.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Utilities/ChartColorPalette.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/PageModels/LandingDashboardPageModel.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/PageModels/BillAnalysisPageModel.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/PageModels/IncomeAnalysisPageModel.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/CategoryExpenseGroup.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/ExpensePeriodRange.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/ExpensePeriodType.cs" Link="App/%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../FinTrack/Models/HistoryReport.cs;../../FinTrack/Models/ExpenseStatementSnapshot.cs;../../FinTrack/Models/BudgetReportSnapshot.cs" Link="History/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Utilities/SelectionSearch.cs;../../FinTrack/Utilities/HistoryGrouping.cs" Link="History/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Services/HistoryReportService.cs;../../FinTrack/Services/HistoryDocumentService.cs;../../FinTrack/Services/ExpenseStatementDocumentService.cs;../../FinTrack/Services/IExpenseStatementDocumentService.cs" Link="History/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

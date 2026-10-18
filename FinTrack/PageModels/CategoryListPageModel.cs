@@ -23,9 +23,9 @@ public partial class CategoryListPageModel : ObservableObject
     [RelayCommand] private Task Edit(Category item) => Shell.Current.GoToAsync($"category?id={item.Id}");
     [RelayCommand] private async Task Delete(Category item)
     {
-        if (item.Name.Equals("Default Shop", StringComparison.OrdinalIgnoreCase)) { await Shell.Current.DisplayAlertAsync("Category", "Default Shop cannot be deleted.", "OK"); return; }
-        if (await _repo.GetShopUsageCountAsync(item.Id) > 0) { await Shell.Current.DisplayAlertAsync("Category in use", "This category is assigned to one or more shops.", "OK"); return; }
-        if (!await Shell.Current.DisplayAlertAsync("Delete category?", item.Name, "Delete", "Cancel")) return;
+        if (item.Name.Equals("Default Shop", StringComparison.OrdinalIgnoreCase)) { await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Category", "Default Shop cannot be deleted.", "OK"); return; }
+        if (await _repo.GetShopUsageCountAsync(item.Id) > 0) { await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Category in use", "This category is assigned to one or more shops.", "OK"); return; }
+        if (!await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Delete category?", item.Name, "Delete", "Cancel")) return;
         try { await _repo.DeleteAsync(item); _allItems = await _repo.ListAsync(); ApplyFilter(); } catch (Exception ex) { _errors.HandleError(ex); }
     }
 }

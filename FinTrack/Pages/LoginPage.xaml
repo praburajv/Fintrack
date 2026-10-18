@@ -5,9 +5,9 @@
   <Entry Placeholder="Username" Text="{Binding Username}" ClearButtonVisibility="WhileEditing" Margin="0,12,0,0" />
   <Entry Placeholder="Password" Text="{Binding Password}" IsPassword="{Binding IsPassword}" />
   <Button Text="{Binding PasswordToggleText}" Command="{Binding TogglePasswordCommand}" HorizontalOptions="Start" Padding="12,6" Margin="0,-4,0,4" />
-  <Button Text="Login" Command="{Binding LoginCommand}" HeightRequest="52" FontSize="18" Margin="0,4,0,0" />
-  <Button Text="🔒  Login with Fingerprint" Command="{Binding LoginWithBiometricCommand}" IsVisible="{Binding IsBiometricAvailable}" HeightRequest="48" />
+  <Button Text="Login" Command="{Binding LoginCommand}" MinimumHeightRequest="52" FontSize="18" Margin="0,4,0,0" />
+  <Button Text="🔒  Login with Fingerprint" Command="{Binding LoginWithBiometricCommand}" IsVisible="{Binding IsBiometricAvailable}" MinimumHeightRequest="48" />
   <Button Text="Forgot Password?" Command="{Binding ForgotPasswordCommand}" HorizontalOptions="Center" Padding="8,4" BackgroundColor="Transparent" TextColor="{StaticResource Primary}" FontAttributes="Bold" />
-  <HorizontalStackLayout HorizontalOptions="Center" Spacing="4" Margin="0,4,0,0"><Label Text="Don't have an account?" VerticalOptions="Center" /><Button Text="Register" Command="{Binding RegisterCommand}" Padding="4,2" BackgroundColor="Transparent" TextColor="{StaticResource Primary}" FontAttributes="Bold" /></HorizontalStackLayout>
+  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" Margin="0,4,0,0"><Label Text="Don't have an account?" VerticalOptions="Center" HorizontalTextAlignment="Center" LineBreakMode="WordWrap" /><Button Grid.Column="1" Text="Register" Command="{Binding RegisterCommand}" Padding="4,2" BackgroundColor="Transparent" TextColor="{StaticResource Primary}" FontAttributes="Bold" VerticalOptions="Center" /></Grid>
  </VerticalStackLayout></ScrollView><controls:ProcessingOverlay IsBusy="{Binding IsBusy}" Message="Authenticating..." /></Grid>
 </ContentPage>

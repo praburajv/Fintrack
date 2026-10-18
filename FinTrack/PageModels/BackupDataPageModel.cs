@@ -36,7 +36,7 @@ public partial class BackupDataPageModel(IBackupService backupService, ModalErro
         var selected = Months.Where(month => month.IsSelected).Select(month => month.MonthNumber).ToArray();
         if (selected.Length == 0)
         {
-            await Shell.Current.DisplayAlertAsync("Select Months", "Select at least one month to back up.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Select Months", "Select at least one month to back up.", "OK");
             return;
         }
         Progress = 0; OnPropertyChanged(nameof(ProgressText)); IsBusy = true; ProcessingMessage = "Creating selected-month backup...";

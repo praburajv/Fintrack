@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net10.0-android</TargetFrameworks>
@@ -40,16 +40,16 @@
 		-->
     
     <!-- Display name -->
-		<ApplicationTitle>Household Expense Tracker</ApplicationTitle>
+		<ApplicationTitle>Fin Tracker</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.mauiapp1</ApplicationId>
+		<ApplicationId>com.companyname.fintracker</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0.19</ApplicationDisplayVersion>
-		<ApplicationVersion>20</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0.2</ApplicationDisplayVersion>
+		<ApplicationVersion>1</ApplicationVersion>
 		<!-- Keep NuGet's package version stable across all target frameworks during restore. -->
-		<PackageVersion>1.0.19</PackageVersion>
+		<PackageVersion>1.0.2</PackageVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
@@ -63,7 +63,7 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#17171a" />
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" Color="#17171a" />
 		<MauiImage Include="Resources\AppIcon\appicon.svg" Link="Resources\Images\appicon_runtime.svg" />
 
 		<!-- Splash Screen -->
@@ -71,6 +71,8 @@
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\**\*" />
+		<!-- Retain unused design references, whose names are not valid Android resource names. -->
+		<MauiImage Remove="Resources\Images\FinTracker_pt__w_s_no_slider.png" />
 		<MauiImage Include="Resources\AppIcon\household_expense_tracker.png" />
 		<!-- Custom Fonts -->
 		<MauiFont Include="Resources\Fonts\*.ttf" />

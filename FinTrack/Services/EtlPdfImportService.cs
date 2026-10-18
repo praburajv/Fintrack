@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using FinTracker.Data;
 using FinTracker.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Data.Sqlite;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 
@@ -15,6 +16,8 @@ public sealed class EtlPdfImportService(
     ShopRepository shops,
     CategoryRepository categories,
     PaymentModeRepository paymentModes,
+    FinancialAccountContext accounts,
+    ICriticalOperationState criticalOperations,
     EtlTextMapRepository textMaps,
     EtlTextMappingService mappingService,
     ILogger<EtlPdfImportService> logger)
@@ -25,18 +28,44 @@ public sealed class EtlPdfImportService(
     private static readonly Regex MoneyPattern = new(@"^-?\d{1,3}(?:[.]\d{3})*(?:[,]\d{2})$|^-?\d+(?:[.,]\d{2})$", RegexOptions.Compiled);
     private static readonly string[] NoiseWords = ["DATA", "MOVIMENTO", "DESCRITIVO", "DEBITO", "CREDITO", "SALDO", "PAGINA", "PAG", "EXTRATO", "CONTA"];
 
-    public async Task<EtlImportResult> ImportAsync(FileResult file, IProgress<string>? progress = null, CancellationToken cancellationToken = default)
+    private static readonly SemaphoreSlim ImportGate = new(1, 1);
+
+    public async Task<EtlImportResult> ImportAsync(FileResult file, int expensePaymentModeId, int incomePaymentModeId, IProgress<string>? progress = null, CancellationToken cancellationToken = default)
     {
         if (file is null || !Path.GetExtension(file.FileName).Equals(".pdf", StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("Please select a PDF bank statement.");
+        var accountId = accounts.RequireId();
+        using var operation = criticalOperations.Begin();
+        progress?.Report("Waiting to import...");
+        await ImportGate.WaitAsync(cancellationToken);
+        try
+        {
+            // PdfPig and Microsoft.Data.Sqlite perform synchronous work. Own the PDF and
+            // database connections on a worker so the UI can draw and animate its overlay.
+            return await Task.Run(() => ImportCoreAsync(file, expensePaymentModeId, incomePaymentModeId, accountId, progress, cancellationToken), cancellationToken);
+        }
+        finally { ImportGate.Release(); }
+    }
 
+    private async Task<EtlImportResult> ImportCoreAsync(FileResult file, int expensePaymentModeId, int incomePaymentModeId, int accountId, IProgress<string>? progress, CancellationToken cancellationToken)
+    {
+        void CheckCompany()
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (accounts.Current?.Id != accountId) throw new InvalidOperationException("The active company changed during import. Import stopped.");
+        }
+        CheckCompany();
+        progress?.Report("Preparing import...");
         var shop = (await shops.ListAsync()).FirstOrDefault(x => x.Name.Equals("ETL_DATA_VAULT", StringComparison.OrdinalIgnoreCase))
             ?? throw new InvalidOperationException("The shop ETL_DATA_VAULT was not found. Create it before importing.");
         var paymentModesList = await paymentModes.ListAsync();
-        var mode = paymentModesList.FirstOrDefault(x => x.Name.Equals("Debit Card", StringComparison.OrdinalIgnoreCase))
-            ?? throw new InvalidOperationException("The payment mode Debit Card was not found. Create it before importing.");
+        var expenseMode = paymentModesList.FirstOrDefault(x => x.Id == expensePaymentModeId)
+            ?? throw new InvalidOperationException("Select an expense payment mode for the active company before importing.");
+        var incomeMode = paymentModesList.FirstOrDefault(x => x.Id == incomePaymentModeId)
+            ?? throw new InvalidOperationException("Select an income payment mode for the active company before importing.");
         var etlCategory = (await categories.ListAsync()).FirstOrDefault(x => x.Name.Equals("ETL_DT", StringComparison.OrdinalIgnoreCase))
             ?? throw new InvalidOperationException("The category ETL_DT was not found. Create it before importing.");
+        CheckCompany();
         if (shop.CategoryId != etlCategory.Id)
         {
             shop.CategoryId = etlCategory.Id;
@@ -44,73 +73,123 @@ public sealed class EtlPdfImportService(
         }
         var mappings = await textMaps.ListAsync();
         var availableShops = (await shops.ListAsync()).ToDictionary(x => x.Id);
+        var availableShopIds = availableShops.Keys.ToHashSet();
+        CheckCompany();
 
-        await using var stream = await file.OpenReadAsync();
-        using var document = PdfDocument.Open(stream);
-        var lines = GetTransactionLines(document);
-        if (lines.Count == 0)
-            throw new InvalidDataException("The PDF does not contain an EXTRATO DE to SALDO FINAL transaction section.");
-
-        var year = FindYear(lines, document);
-        var rows = ExtractRows(lines, year, progress, cancellationToken);
-        var incomeModeId = rows.Any(x => x.IgnoredReason is null && x.Transaction?.IsIncome == true)
-            ? await paymentModes.EnsureEtlIncomeModeAsync()
-            : (int?)null;
-        var duplicateCounts = (await bills.ListAsync()).GroupBy(Key).ToDictionary(g => g.Key, g => g.Count());
-        var incomeDuplicateCounts = (await income.ListAsync(DateTime.MinValue, DateTime.MaxValue)).GroupBy(item => Key(item)).ToDictionary(g => g.Key, g => g.Count());
-        // Provenance is written with each new row; duplicate/manual rows are never relabelled.
+        progress?.Report("Reading PDF...");
+        List<ParsedRow> rows;
+        await using (var stream = await file.OpenReadAsync())
+        using (var document = PdfDocument.Open(stream))
+        {
+            var lines = GetTransactionLines(document, progress, cancellationToken);
+            if (lines.Count == 0)
+                throw new InvalidDataException("The PDF does not contain an EXTRATO DE to SALDO FINAL transaction section.");
+            progress?.Report("Parsing transactions...");
+            var year = FindYear(lines, document, cancellationToken);
+            rows = ExtractRows(lines, year, progress, cancellationToken);
+        }
+        var transactions = rows.Where(x => x.IgnoredReason is null).Select(x => x.Transaction!).ToArray();
+        var expensesSeen = new HashSet<string>(StringComparer.Ordinal);
+        var incomeSeen = new HashSet<string>(StringComparer.Ordinal);
+        CheckCompany();
+        progress?.Report("Checking duplicates...");
+        if (transactions.Length > 0)
+        {
+            var from = transactions.Min(x => x.BillDate).Date;
+            var to = transactions.Max(x => x.BillDate).Date.AddDays(1);
+            await LoadExistingKeysAsync(from, to, accountId, expensesSeen, incomeSeen, cancellationToken);
+        }
+        CheckCompany();
+        // Provenance is written only with a new row; existing rows remain untouched.
         var importId = $"{file.FileName} — {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC — {Guid.NewGuid():N}";
         var imported = 0;
         var incomeImported = 0;
         var duplicates = 0;
         var errors = rows.Count(x => x.IgnoredReason is not null);
-
-        foreach (var transaction in rows.Where(x => x.IgnoredReason is null).Select(x => x.Transaction!))
+        var processed = 0;
+        foreach (var transaction in transactions)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            CheckCompany();
+            processed++;
+            if (processed == 1 || processed % 25 == 0 || processed == transactions.Length)
+                progress?.Report($"Saving transactions {processed}/{transactions.Length}...");
             var key = Key(transaction);
-            var duplicatesForType = transaction.IsIncome ? incomeDuplicateCounts : duplicateCounts;
-            if (duplicatesForType.TryGetValue(key, out var count) && count > 0)
+            var seen = transaction.IsIncome ? incomeSeen : expensesSeen;
+            if (seen.Contains(key))
             {
-                duplicatesForType[key] = count - 1;
                 duplicates++;
                 logger.LogDebug("ETL transaction ignored: duplicate source transaction on {Date} for {Amount}.", transaction.BillDate, transaction.IsIncome ? transaction.CreditAmount : transaction.DebitAmount);
                 continue;
             }
-
             try
             {
                 if (transaction.IsIncome)
                 {
-                    await income.SaveAsync(new IncomeTransaction { TransactionDate = transaction.BillDate, ShopId = shop.Id, PaymentModeId = incomeModeId ?? throw new InvalidOperationException("The ETL_INCOME payment mode was not prepared for this credit record."), Amount = transaction.CreditAmount, Note = transaction.Description }, importId);
+                    await income.SaveAsync(new IncomeTransaction { TransactionDate = transaction.BillDate, ShopId = shop.Id, PaymentModeId = incomeMode.Id, Amount = transaction.CreditAmount, Note = transaction.Description }, importId);
                     incomeImported++;
                 }
                 else
                 {
-                    var mappedShopId = mappingService.FindMappedShopId(transaction.Description, mappings, availableShops.Keys.ToHashSet()) ?? shop.Id;
-                    await bills.SaveItemAsync(new BillTransaction { BillDate = transaction.BillDate, ShopId = mappedShopId, PaymentModeId = mode.Id, BillValue = transaction.DebitAmount, Note = transaction.Description }, importId);
+                    var mappedShopId = mappingService.FindMappedShopId(transaction.Description, mappings, availableShopIds) ?? shop.Id;
+                    await bills.SaveItemAsync(new BillTransaction { BillDate = transaction.BillDate, ShopId = mappedShopId, PaymentModeId = expenseMode.Id, BillValue = transaction.DebitAmount, Note = transaction.Description }, importId);
                     imported++;
                 }
+                // Only successful saves become duplicate candidates, including within this PDF.
+                seen.Add(key);
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
             catch (Exception ex)
             {
                 errors++;
                 logger.LogError(ex, "ETL transaction could not be saved for {Date}.", transaction.BillDate);
             }
         }
-
         return new EtlImportResult(rows.Count, rows.Count(x => x.Transaction?.DebitAmount > 0), rows.Count(x => x.Transaction?.CreditAmount > 0), imported, incomeImported, duplicates, errors);
     }
 
-
-    private List<PdfLine> GetTransactionLines(PdfDocument document)
+    private async Task LoadExistingKeysAsync(DateTime from, DateTime to, int accountId, HashSet<string> expenses, HashSet<string> credits, CancellationToken token)
     {
-        var lines = document.GetPages().SelectMany(page => GroupRows(page.GetWords().ToList()).Select(words => new PdfLine(page.Number, words))).OrderBy(line => line.Page).ThenByDescending(line => line.Words[0].BoundingBox.Top).ToList();
+        await bills.EnsureInitializedAsync();
+        await income.EnsureInitializedAsync();
+        await using var connection = new SqliteConnection(Constants.DatabasePath);
+        await connection.OpenAsync(token);
+        // Read only duplicate-identity columns. Date-only bounds also include legacy
+        // timestamps using a space, or no time component, instead of the ISO 'T'.
+        foreach (var source in new[] { (Table: "Bill_transcation", Date: "Bill_date", Amount: "Bill_value", Keys: expenses), (Table: "income_transaction", Date: "Transaction_date", Amount: "Amount", Keys: credits) })
+        {
+            token.ThrowIfCancellationRequested();
+            await using var command = connection.CreateCommand();
+            command.CommandText = $"SELECT {source.Date},{source.Amount},Note FROM {source.Table} WHERE FinancialAccountId=@account AND {source.Date}>=@from AND {source.Date}<@to";
+            command.Parameters.AddWithValue("@account", accountId);
+            command.Parameters.AddWithValue("@from", from.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            command.Parameters.AddWithValue("@to", to.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            await using var reader = await command.ExecuteReaderAsync(token);
+            while (await reader.ReadAsync(token))
+            {
+                token.ThrowIfCancellationRequested();
+                source.Keys.Add(BuildKey(DateTime.Parse(reader.GetString(0), CultureInfo.InvariantCulture), Convert.ToDecimal(reader.GetValue(1), CultureInfo.InvariantCulture), reader.IsDBNull(2) ? string.Empty : reader.GetString(2)));
+            }
+        }
+    }
+
+    private List<PdfLine> GetTransactionLines(PdfDocument document, IProgress<string>? progress, CancellationToken token)
+    {
+        var lines = new List<PdfLine>();
+        foreach (var page in document.GetPages())
+        {
+            token.ThrowIfCancellationRequested();
+            if (page.Number == 1 || page.Number % 5 == 0 || page.Number == document.NumberOfPages)
+                progress?.Report($"Reading PDF page {page.Number}/{document.NumberOfPages}...");
+            lines.AddRange(GroupRows(page.GetWords().ToList()).Select(words => new PdfLine(page.Number, words)));
+        }
+        token.ThrowIfCancellationRequested();
+        lines = lines.OrderBy(line => line.Page).ThenByDescending(line => line.Words[0].BoundingBox.Top).ToList();
         var result = new List<PdfLine>();
         var started = false;
         var ended = false;
         foreach (var line in lines)
         {
+            token.ThrowIfCancellationRequested();
             if (!started)
             {
                 if (!HasMarker(line.Words, "EXTRATO", "DE")) continue;
@@ -135,11 +214,14 @@ public sealed class EtlPdfImportService(
         return result;
     }
 
-    private static int FindYear(IEnumerable<PdfLine> lines, PdfDocument document)
+    private static int FindYear(IEnumerable<PdfLine> lines, PdfDocument document, CancellationToken token)
     {
         foreach (var page in document.GetPages())
+        {
+            token.ThrowIfCancellationRequested();
             foreach (var word in page.GetWords())
                 if (int.TryParse(YearPattern.Match(word.Text).Groups["year"].Value, out var year)) return year;
+        }
         foreach (var word in lines.SelectMany(x => x.Words))
             if (int.TryParse(YearPattern.Match(word.Text).Groups["year"].Value, out var year)) return year;
         throw new InvalidDataException("The transaction section does not contain a statement year.");
@@ -209,11 +291,7 @@ public sealed class EtlPdfImportService(
         {
             pending.Description = description;
             var transaction = pending.ToTransaction();
-            // Repeated date/amount/description values are legitimate separate
-            // bank rows. Fragment continuation lines cannot become candidates
-            // because they have no DATA LANC./DATA VALOR pair, so row identity
-            // is supplied by the reconstructed PDF row itself rather than a
-            // value-based de-duplication key.
+            // Reconstruct all candidates first; normalized duplicate filtering runs before insertion.
             logger.LogDebug("ETL transaction accepted: {Date}, debit {Debit}, credit {Credit}, description length {DescriptionLength}.", transaction.BillDate, transaction.DebitAmount, transaction.CreditAmount, description.Length);
             result.Add(ParsedRow.Accepted(transaction));
         }
@@ -346,11 +424,9 @@ public sealed class EtlPdfImportService(
     private static string JoinDescription(string current, IEnumerable<string> continuation) => NormalizeDescription($"{current} {string.Join(" ", continuation)}");
     private static bool TryMoney(string value, out decimal amount) { var normalized = value.Contains(',') ? value.Replace(".", string.Empty).Replace(',', '.') : value; return decimal.TryParse(normalized, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out amount); }
     private static string Key(EtlBankTransaction x) => BuildKey(x.BillDate, x.IsIncome ? x.CreditAmount : x.DebitAmount, x.Description);
-    private static string Key(BillTransaction x) => BuildKey(x.BillDate, x.BillValue, x.Note);
-    private static string Key(IncomeTransaction x) => BuildKey(x.TransactionDate, x.Amount, x.Note);
     // SQLite can return 600 where the PDF supplied 600.00; monetary scale must
-    // not change duplicate identity. Counts still preserve repeated bank rows.
-    private static string BuildKey(DateTime date, decimal amount, string description) => $"{date:O}|{amount.ToString("F2", CultureInfo.InvariantCulture)}|{NormalizeDescription(description).ToUpperInvariant()}";
+    // not change duplicate identity. Calendar dates also ignore stored time-of-day.
+    private static string BuildKey(DateTime date, decimal amount, string description) => $"{date:yyyy-MM-dd}|{amount.ToString("F2", CultureInfo.InvariantCulture)}|{NormalizeDescription(description).ToUpperInvariant()}";
 
     private readonly record struct AmountColumn(double Start, double End, double Right);
     private readonly record struct ColumnLayout(double DebitX, double CreditX, AmountColumn Debit, AmountColumn Credit);

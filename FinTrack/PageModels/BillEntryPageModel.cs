@@ -14,6 +14,8 @@ public partial class BillEntryPageModel : ObservableObject, IQueryAttributable
     private readonly PaymentModeRepository _modes;
     private readonly ModalErrorHandler _errors;
     private readonly IAuthenticationService _authentication;
+    private readonly FinancialAccountContext _accounts;
+    private int? _entryAccountId;
 
     [ObservableProperty] private DateTime _billDate = DateTime.Today;
     [ObservableProperty] private List<Shop> _shopOptions = [];
@@ -21,6 +23,7 @@ public partial class BillEntryPageModel : ObservableObject, IQueryAttributable
     [ObservableProperty] private List<PaymentMode> _paymentModeOptions = [];
     [ObservableProperty] private PaymentMode? _paymentMode;
     [ObservableProperty] private decimal _billValue;
+    [ObservableProperty] private string _billReferenceNo = string.Empty;
     [ObservableProperty] private string _note = string.Empty;
     [ObservableProperty] private FinancialTransactionType _transactionType = FinancialTransactionType.Expense;
     [ObservableProperty] private bool _isBusy;
@@ -34,9 +37,9 @@ public partial class BillEntryPageModel : ObservableObject, IQueryAttributable
     public IReadOnlyList<FinancialTransactionType> TransactionTypes { get; } = Enum.GetValues<FinancialTransactionType>();
     public bool IsTransactionTypeEditable => !IsEdit;
 
-    public BillEntryPageModel(BillTransactionRepository bills, IncomeTransactionRepository income, ShopRepository shops, PaymentModeRepository modes, ModalErrorHandler errors, IAuthenticationService authentication)
+    public BillEntryPageModel(BillTransactionRepository bills, IncomeTransactionRepository income, ShopRepository shops, PaymentModeRepository modes, ModalErrorHandler errors, IAuthenticationService authentication, FinancialAccountContext accounts)
     {
-        _bills = bills; _income = income; _shops = shops; _modes = modes; _errors = errors; _authentication = authentication;
+        _bills = bills; _income = income; _shops = shops; _modes = modes; _errors = errors; _authentication = authentication; _accounts = accounts;
         CanMaintainExpenses = authentication.IsAuthenticated;
         _authentication.AuthenticationStateChanged += OnAuthenticationStateChanged;
     }
@@ -50,8 +53,28 @@ public partial class BillEntryPageModel : ObservableObject, IQueryAttributable
 
     public async Task EnsureAuthenticatedAsync()
     {
-        if (_authentication.IsAuthenticated || AppShell.IsClosing) return;
-        await Shell.Current.DisplayAlertAsync("Authentication Required", "Please login to add or modify expenses.", "OK");
+        if (AppShell.IsClosing) return;
+        if (_authentication.IsAuthenticated)
+        {
+            if (_entryAccountId.HasValue && _entryAccountId != _accounts.Current?.Id)
+            {
+                Shop = null; ShopOptions = []; PaymentMode = null; PaymentModeOptions = [];
+                await Shell.Current.GoToAsync(".."); return;
+            }
+            if (_entryAccountId.HasValue && !IsBusy)
+            {
+                try
+                {
+                    var shopId = Shop?.Id; var modeId = PaymentMode?.Id;
+                    await LoadMastersAsync();
+                    Shop = ShopOptions.FirstOrDefault(x => x.Id == shopId);
+                    PaymentMode = PaymentModeOptions.FirstOrDefault(x => x.Id == modeId);
+                }
+                catch (Exception ex) { _errors.HandleError(ex); }
+            }
+            return;
+        }
+        await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Authentication Required", "Please login to add or modify expenses.", "OK");
         if (!AppShell.IsClosing) await Shell.Current.GoToAsync("..");
     }
 
@@ -60,10 +83,20 @@ public partial class BillEntryPageModel : ObservableObject, IQueryAttributable
         if (query.TryGetValue("id", out var value) && int.TryParse(value?.ToString(), out var id))
             LoadAsync(id, query.TryGetValue("type", out var type) && Enum.TryParse<FinancialTransactionType>(type?.ToString(), true, out var parsed) ? parsed : FinancialTransactionType.Expense).FireAndForgetSafeAsync(_errors);
         else
+        {
+            TransactionType = query.TryGetValue("type", out var newType) && Enum.TryParse<FinancialTransactionType>(newType?.ToString(), true, out var selectedType)
+                ? selectedType : FinancialTransactionType.Expense;
             LoadMastersAsync().FireAndForgetSafeAsync(_errors);
+        }
     }
 
-    private async Task LoadMastersAsync() { ShopOptions = await _shops.ListAsync(); PaymentModeOptions = await _modes.ListAsync(); }
+    private async Task LoadMastersAsync()
+    {
+        var account = _accounts.RequireId();
+        var shops = await _shops.ListAsync(); var modes = await _modes.ListAsync();
+        if (_accounts.Current?.Id != account) throw new OperationCanceledException("Company changed while loading entry choices.");
+        ShopOptions = shops; PaymentModeOptions = modes; _entryAccountId = account;
+    }
 
     private async Task LoadAsync(int id, FinancialTransactionType type)
     {
@@ -74,14 +107,14 @@ public partial class BillEntryPageModel : ObservableObject, IQueryAttributable
             if (type == FinancialTransactionType.Income)
             {
                 var income = await _income.GetAsync(id) ?? throw new InvalidOperationException("Income transaction not found.");
-                _bill = new BillTransaction { Id = income.Id, BillDate = income.TransactionDate, ShopId = income.ShopId, PaymentModeId = income.PaymentModeId, BillValue = income.Amount, Note = income.Note, ShopName = income.ShopName, PaymentModeName = income.PaymentModeName, ShopCategoryId = income.CategoryId, ShopCategoryName = income.CategoryName, ShopCategoryIconKey = income.CategoryIconKey, TransactionType = FinancialTransactionType.Income };
+                _bill = new BillTransaction { Id = income.Id, BillDate = income.TransactionDate, ShopId = income.ShopId, PaymentModeId = income.PaymentModeId, BillValue = income.Amount, Note = income.Note, BillReferenceNo = income.BillReferenceNo, ShopName = income.ShopName, PaymentModeName = income.PaymentModeName, ShopCategoryId = income.CategoryId, ShopCategoryName = income.CategoryName, ShopCategoryIconKey = income.CategoryIconKey, TransactionType = FinancialTransactionType.Income };
             }
             else
                 _bill = await _bills.GetAsync(id) ?? throw new InvalidOperationException("Bill not found.");
             TransactionType = _bill.TransactionType;
             BillDate = _bill.BillDate; Shop = ShopOptions.FirstOrDefault(x => x.Id == _bill.ShopId);
             PaymentMode = PaymentModeOptions.FirstOrDefault(x => x.Id == _bill.PaymentModeId);
-            BillValue = _bill.BillValue; Note = _bill.Note;
+            BillValue = _bill.BillValue; Note = _bill.Note; BillReferenceNo = _bill.BillReferenceNo ?? string.Empty;
             OnPropertyChanged(nameof(IsEdit)); OnPropertyChanged(nameof(IsTransactionTypeEditable)); OnPropertyChanged(nameof(CanDelete)); DeleteCommand.NotifyCanExecuteChanged();
         }
         catch (Exception ex) { _errors.HandleError(ex); }
@@ -90,11 +123,15 @@ public partial class BillEntryPageModel : ObservableObject, IQueryAttributable
 
     private string? Validate()
     {
+        if (_entryAccountId != _accounts.Current?.Id) return "The selected company changed. Reopen this entry.";
         if (BillDate == default) return "Bill date is required.";
         if (Shop is null) return "Select a shop.";
         if (PaymentMode is null) return "Select a payment mode.";
         if (BillValue <= 0) return "Bill value must be greater than zero.";
-        if (Note.Length > 1000) return "Note cannot exceed 1000 characters.";
+        try { FinTracker.Utilities.TransactionInput.NormalizeReference(BillReferenceNo); }
+        catch (ArgumentException ex) { return ex.Message; }
+        var noteError = FinTracker.Utilities.TransactionInput.ValidateManualNote(Note, IsEdit ? _bill.Note : null);
+        if (noteError is not null) return noteError;
         return null;
     }
 
@@ -103,7 +140,7 @@ public partial class BillEntryPageModel : ObservableObject, IQueryAttributable
     {
         if (IsBusy) return;
         var error = Validate();
-        if (error is not null) { await Shell.Current.DisplayAlertAsync("Validation", error, "OK"); return; }
+        if (error is not null) { await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Validation", error, "OK"); return; }
         if (!await RequireAuthenticationAsync()) return;
         IsBusy = true;
         try
@@ -112,8 +149,9 @@ public partial class BillEntryPageModel : ObservableObject, IQueryAttributable
             var previousDate = IsEdit ? _bill.BillDate : (DateTime?)null;
             _bill.BillDate = BillDate; _bill.ShopId = Shop!.Id; _bill.PaymentModeId = PaymentMode!.Id;
             _bill.BillValue = decimal.Round(BillValue, 2); _bill.Note = Note.Trim();
+            _bill.BillReferenceNo = FinTracker.Utilities.TransactionInput.NormalizeReference(BillReferenceNo);
             if (TransactionType == FinancialTransactionType.Income)
-                await _income.SaveAsync(new IncomeTransaction { Id = _bill.Id, TransactionDate = _bill.BillDate, ShopId = _bill.ShopId, PaymentModeId = _bill.PaymentModeId, Amount = _bill.BillValue, Note = _bill.Note });
+                await _income.SaveAsync(new IncomeTransaction { Id = _bill.Id, TransactionDate = _bill.BillDate, ShopId = _bill.ShopId, PaymentModeId = _bill.PaymentModeId, Amount = _bill.BillValue, Note = _bill.Note, BillReferenceNo = _bill.BillReferenceNo });
             else
                 await _bills.SaveItemAsync(_bill);
             WeakReferenceMessenger.Default.Send(new BillChangedMessage(new BillChanged(previousDate, _bill.BillDate, false)));
@@ -132,7 +170,7 @@ public partial class BillEntryPageModel : ObservableObject, IQueryAttributable
     {
         if (IsBusy) return;
         if (!await RequireAuthenticationAsync()) return;
-        if (!await Shell.Current.DisplayAlertAsync("Delete this bill?", "This action cannot be undone.", "Delete", "Cancel")) return;
+        if (!await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Delete this bill?", "This action cannot be undone.", "Delete", "Cancel")) return;
         IsBusy = true;
         try
         {
@@ -153,7 +191,7 @@ public partial class BillEntryPageModel : ObservableObject, IQueryAttributable
     {
         if (AppShell.IsClosing) return false;
         if (_authentication.IsAuthenticated) return true;
-        await Shell.Current.DisplayAlertAsync("Authentication Required", "Please login to add or modify expenses.", "OK");
+        await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Authentication Required", "Please login to add or modify expenses.", "OK");
         return false;
     }
 }

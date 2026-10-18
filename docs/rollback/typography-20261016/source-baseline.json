@@ -1,0 +1,1226 @@
+[
+  {
+    "Path": "FinTrack\\Utilities\\ZeroCountConverter.cs",
+    "Sha256": "E9C4FADCEBFACDF852FA628E277E9A16E29CF2DBE94FA4755EAE001DD0AB38F7"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\WelcomeFlow.cs",
+    "Sha256": "8D1FD367D62401BBCD8CCA445A509C17D715F9D6D72901BE3BDDDF6004507A01"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\TransactionInput.cs",
+    "Sha256": "5E9B3FE1F74C72D8928D52A5203F03E5526E11C05094681AAA08F3EACD35F6CB"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\TaskUtilities.cs",
+    "Sha256": "3B1F49FFBA7E424CDB45C53EC58607C88F12D51EBC17DEB2B58EBAB86ABC7B28"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\ShopVisitOrdering.cs",
+    "Sha256": "857F913A11837434A0860AF63B243EF5BA76E9FA92157FD6F9F8A46B453BCB25"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\ShopNameAbbreviator.cs",
+    "Sha256": "DFD3DAE487D6EEE9E1767356368DD21429A23DCA735422A8C93D5287A4D8F1CB"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\ShopBillNavigation.cs",
+    "Sha256": "68E53B4CAF2EF4F0E1389EB5B10B23A87496E0D71D6D9BB645AA3DF4DDB9377E"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\SetupSearchFilter.cs",
+    "Sha256": "C923E2BC591C16D5114803B060742FB61592AECEF7032251CEB9C9B401A758A0"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\ReportBillOrdering.cs",
+    "Sha256": "AED210BA3BC6DED806F4A4B13EF8129CB88351FCF7DD32A8B8027F5544164FE2"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\NavigationRoutes.cs",
+    "Sha256": "3C36D2CB377545594563B77D2073867C654BB7EF3400E69F2937811F8C2FCE8A"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\FinancialDashboardPeriod.cs",
+    "Sha256": "0B30F77D6A683D02E33EA1F56CC63C5AC9A94686FC3BAA8474B742A07357690F"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\ExpandIconConverter.cs",
+    "Sha256": "9598BC4F8EC0D869C96D97DDB261CC3A509902780DDF42D0F2E5E76B56DB91D5"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\EuroFormatter.cs",
+    "Sha256": "BAB2B34076A3F3397C95C56660CB9580D097DF686EBB38E168F853D467E8A742"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\EuroCurrencyConverter.cs",
+    "Sha256": "1C3F83DAA7C6D8FF9D11BD11A07C2A32F9D5416C4DA4E9BDCF30091596E9ED88"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\EuroCompactConverter.cs",
+    "Sha256": "4EE883D909FB3E73DD52882ED705A1CA942FAB091E20D8A8F51182E384AC058D"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\ChartColorPalette.cs",
+    "Sha256": "1B9A1EE2988D7D9FA2EFEFE6632D9473013E9F8A37B1AF14510E6CF64F5BA626"
+  },
+  {
+    "Path": "FinTrack\\Utilities\\CategoryExpenseGrouping.cs",
+    "Sha256": "BE5FB909425A3EA521297B38D5C908B9C53322183583CB7A8974329811A558A2"
+  },
+  {
+    "Path": "FinTrack\\GlobalUsings.cs",
+    "Sha256": "272C8275A470FD99068FFED93BBFC9CAE3654588A4108AF6144DC012DC01456D"
+  },
+  {
+    "Path": "FinTrack\\FinTrackerProgram.cs",
+    "Sha256": "86AB7A2D571FEA552FCA527A42C96DAF96DE16BCC085EA890CDB8121AFDC8F76"
+  },
+  {
+    "Path": "FinTrack\\FinTracker.csproj",
+    "Sha256": "A045204062FA9A90A3C162E4ABD8011C43DBE829322EEB8032ECD722C25FDEAE"
+  },
+  {
+    "Path": "FinTrack\\App.xaml.cs",
+    "Sha256": "DD593DF0916F4E6528385190BCB9A21E3AF16CB76FFF5E3B0A13420C26746663"
+  },
+  {
+    "Path": "FinTrack\\AppShell.xaml",
+    "Sha256": "826A741BD40A3FC427EBFE115455336AB79F37418E2B7B612D5A95D95D5C0A7D"
+  },
+  {
+    "Path": "FinTrack\\App.xaml",
+    "Sha256": "B37561B3F35BE4B0680B507E228633E8C15F246AB72A53AA3C12355E59397C32"
+  },
+  {
+    "Path": "FinTrack\\AppShell.xaml.cs",
+    "Sha256": "AEBFED3C6F9705B5D927D29A7B1ED673C260B0139A0C650771AC3780E1D221AC"
+  },
+  {
+    "Path": "FinTrack\\Data\\UserAccountRepository.cs",
+    "Sha256": "DC98D350412B8C9CEBF9EE541D3B648CE8AC608790C17DC7A65D20B4D5C506C6"
+  },
+  {
+    "Path": "FinTrack\\Data\\TransactionWriteValidation.cs",
+    "Sha256": "FE880285309AD04ACAC3C02F84614918E6A8986669900178853D061E29878FBA"
+  },
+  {
+    "Path": "FinTrack\\Data\\ShopRepository.cs",
+    "Sha256": "0B1E787FF77535325A4DFDCB8AA0A3F1E1B5FFCBD9B13773DE063432EFF05030"
+  },
+  {
+    "Path": "FinTrack\\Data\\SetUpKeyValueRepository.cs",
+    "Sha256": "A432B3EEFB558C5A7943F97A7772A53E2DA9690A820541B59920365784014971"
+  },
+  {
+    "Path": "FinTrack\\Data\\RecurringBillRepository.cs",
+    "Sha256": "21CCAB7DAB9A2826133E8C6561AE37BB3DFADB89F7FD2316E12DF79424238BB6"
+  },
+  {
+    "Path": "FinTrack\\Data\\PaymentModeRepository.cs",
+    "Sha256": "F64997087AA76E79AADFAB5DD6E46840115EC18F47AE84029F86A6AF761C393A"
+  },
+  {
+    "Path": "FinTrack\\Data\\MonthlyBudgetRepository.cs",
+    "Sha256": "A00611B4788A5BF20F5C39B8E3697AF68848511F86B0C3D4AAD195A220C2B55D"
+  },
+  {
+    "Path": "FinTrack\\Data\\IncomeTransactionRepository.cs",
+    "Sha256": "A1A2C0A087DE67A0F0B63B311729975CC1D91867A2F2C75F6198A09EE8C6DECF"
+  },
+  {
+    "Path": "FinTrack\\Data\\IncomeExpenseFlowService.cs",
+    "Sha256": "AA3780B72FCA4258BBD2618B777698101D965ABEA51018C60098DDBCE2F2328C"
+  },
+  {
+    "Path": "FinTrack\\Data\\FinancialAccountRepository.cs",
+    "Sha256": "508D293E178A7316E55D119B48ECF45402F2C7FE370544B66E958F55A876F096"
+  },
+  {
+    "Path": "FinTrack\\Data\\ExpenseAnalysisService.cs",
+    "Sha256": "A763EABAD20113347438955F681EACF680B9960BEB6E5E9733B26765879C1BDE"
+  },
+  {
+    "Path": "FinTrack\\Data\\EtlTextMapRepository.cs",
+    "Sha256": "7B12EBA585446D41B12F821AEAFFFDB9EBE2B1005F339E115E5D75AA796DFA60"
+  },
+  {
+    "Path": "FinTrack\\Data\\EtlImportSchema.cs",
+    "Sha256": "B0B2337560378493C712BA048E7AF910B99191C602D8B4DBEA22564A20455B22"
+  },
+  {
+    "Path": "FinTrack\\Data\\Constants.cs",
+    "Sha256": "91622D4E4B8050A12BF9051F31CFB84CE0EBDDD609C1397C67DF26BA70B50EEC"
+  },
+  {
+    "Path": "FinTrack\\Data\\CategoryRepository.cs",
+    "Sha256": "DFDB992BB272449F3D4EAFE71460272AEAB3D33DE3CAA2E63B3037AE5B12E50A"
+  },
+  {
+    "Path": "FinTrack\\Data\\BillTransactionRepository.cs",
+    "Sha256": "526A1F0E556E4DEF404EDA74712679CAD62EC464C56BBBB6E8031CACF1A0B0EA"
+  },
+  {
+    "Path": "FinTrack\\Data\\BillReferenceSchema.cs",
+    "Sha256": "2C9D906E2DA9545D1F2BCF8D01AABF2A7061C9B15981A680D0D082E30FEF2EDF"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\EtlDataManagePageModel.cs",
+    "Sha256": "161232079A54B6158525A50ADADE41F1D6F16C4E08AEE9DDC7F50D2106476191"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\DatabaseToolsPageModel.cs",
+    "Sha256": "50AC6FA924F0DE198159BF41B203F03C6A26392AF09DB4CA8BA33AEB2FC127F1"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\DailyDashPageModel.cs",
+    "Sha256": "9C1E71377AF441D1CB2FEC1406B570D6D46D9711D48154CD3A5B985B8EB96C60"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\DailyBillListPageModel.cs",
+    "Sha256": "F8A9A415E8AC4567CAC25BEA16AA4C7CE8D74413A92E6DFCFA18C69273FF2803"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\CategoryListPageModel.cs",
+    "Sha256": "22191BBE7311664CD39A1ECFE889BCCBFBD3D2841F454E3CE54C9A133704B132"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\CategoryEntryPageModel.cs",
+    "Sha256": "6ADC91E307B8B30226CCF3E2CD6156A8FF15C9292BF991C89F795FA174DBAE07"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\BudgetReportPreviewPageModel.cs",
+    "Sha256": "878EB02210B3BDB758C643CB6CD2782FF2CEA2AAA192CE2E93AC6E340BC893C5"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\BillEntryPageModel.cs",
+    "Sha256": "FB5BD4C31FD78AA69DCF3A4EE857E148E5B6EC1AEAFAA190AC7AC2917971CD17"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\BillAnalysisPageModel.cs",
+    "Sha256": "9A3A1003D8EEFDA5E4DC1C4A0ECB2400B7FE51696ECDF6B2304DA5BA474340A9"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\BackupRestorePageModel.cs",
+    "Sha256": "1F0F037981C2DAA74038D3AD2D70718E28C6910E4549FCC2EE86DB73EBE96462"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\BackupDataPageModel.cs",
+    "Sha256": "593C16CD1CC2B9AC8842522BD269C17968D558FADFD455A75C4D3A00D276817B"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\GlobalDisplaySettingsPageModel.cs",
+    "Sha256": "8AE3D9E7248473D5692F5ABFC45C6FB10745103BF991496CCDD1E8225FE3B349"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\FinancialDashboardPageModel.cs",
+    "Sha256": "9D6886005E63347E40A7BFE0DD24CB6A89E278799D644EC1B4341143128CAB0F"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\ExpenseStatementPreviewPageModel.cs",
+    "Sha256": "76803F1BE8B75E46B8A505E6CA18F85675FC28ACD15E66BED2FE6232F95C711E"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\ExpenseReportPageModel.cs",
+    "Sha256": "AAEEFBF0D958C506CA2D54B2095ACCFB2614CA55156AC5C2A71FA267E252397D"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\ExpenseListPageModel.cs",
+    "Sha256": "2340F7B0BF41DC459782F7548C33593F7E173DC6C6CE4E2A8E57699A84258B99"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\ExpenseAnalysisPageModel.cs",
+    "Sha256": "810E57537E56C4630A262E53AF02A29E40603E2B6B1091522E949AD403A901AB"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\EtlTextMapPageModel.cs",
+    "Sha256": "3E7690B544EDB252DFED9314598F6AE57FEEC9424111218E51EF9810CBDEE48B"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\EtlDataPageModel.cs",
+    "Sha256": "1DCA48EFBCAACA7E8D1C24CBD034C303CDE67A5934DCE7E8C4D9B732BD174251"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\LoginPageModel.cs",
+    "Sha256": "E5B73A2E05A064C6CF3CB325153C5E2159E4F6EDEF833863A24AA1968F064E07"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\LandingDashboardPageModel.cs",
+    "Sha256": "FC4926AC4CDC07A47E9E7F68D1A6B105B03B20C140C22FB728BC0A8CF7E3BEC1"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\IncomeExpenseFlowPageModel.cs",
+    "Sha256": "F81FDDE244A80187D9AE1234C900423527A9FF9E66341E25E186AF5E5471799B"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\IncomeAnalysisPageModel.cs",
+    "Sha256": "783B577E0215E7E0822EF11F71D845B22D0FA284AFDC9F4EED7F82E389A33B26"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\MonthlyExpenseCalendarPageModel.cs",
+    "Sha256": "06D83FFA66C94C42F2C31FED0E6CADEA32FAE9F3BA3D510C1B182A5327D7F2D2"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\MonthlyBudgetReportPageModel.cs",
+    "Sha256": "A74C7725091E528516DB5E9DA0CBDCB6BE6B3F9D71E104E700DF07E92D4603DC"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\MainPageModel.cs",
+    "Sha256": "BAA9462292E937B8CE9B9025357F9A1FFAD0A02FCBF44350A03EB8F45F64003D"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\PasswordResetPageModel.cs",
+    "Sha256": "D06AF62DC6A354495799DEAE525FC5F2AD0B46D0AA9461223410787D7E253FBF"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\MonthlyExpenseDataPageModel.cs",
+    "Sha256": "09DA4D88C43CC15F035F5FF9B8AA86FC36C2701DA056F2BA1D06FCEF68227A80"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\PaymentModeBillListPageModel.cs",
+    "Sha256": "6716E33423504ECDBA1D5FD4BC22C76F4960406174F36E36CC9D3665AC31E7D6"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\PaymentModeEntryPageModel.cs",
+    "Sha256": "314E21B193A9344C6C5288853DEFAB04E53A928014D95DDF36EAB04F8E36C323"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\PaymentModeListPageModel.cs",
+    "Sha256": "C6CA171017851BA04FF7BF4418D9C8D075AAE90B01CA9A8FD6E6387263CA17FB"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\ShopTransactionDatesPageModel.cs",
+    "Sha256": "1FF7C6C7E5FFEBF79CBC3C7854C0D69E128A8B9698C23720D13813C9F7243E21"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\ShopListPageModel.cs",
+    "Sha256": "949DA96880D8D42AC3A4F861301C311C4AD4C245F5EB6B58E25AEC307AE6736C"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\ShopEntryPageModel.cs",
+    "Sha256": "679813C81E065CEE97FB72A2C6A004BA7CF43478ED8AB79A8F1D9185493E92BE"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\ShopBillDetailsPageModel.cs",
+    "Sha256": "DA3933A3FCDA26FDB98606BB8D5D06B11A7CCF34E9FD927C5CFC1F20449B956C"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\SetupPageModel.cs",
+    "Sha256": "093C6CA80BC61F0816073CF6879ED167F36077AAD56F626A43D047B0305AB401"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\SetupDataPageModel.cs",
+    "Sha256": "08E7CDA893EDB1EA9ECB0EB8C7CC1CC1D32917D90DD865B383E3B183516C7F8B"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\RestoreDataPageModel.cs",
+    "Sha256": "79E599363A1735E82845B522E88F17225EACEB6193CF120D93390558B5F2DCD8"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\RegisterPageModel.cs",
+    "Sha256": "3A1C309E7701C43834E5D53C53797C5406AB51EF7FB502C40F5E78895E913A63"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\RecurringBillsPageModel.cs",
+    "Sha256": "3BD56EA6A2F254C38134E88E77BEEAFF9E71675EB318359B972AE3E68B36618C"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\RecurringBillEntryPageModel.cs",
+    "Sha256": "D6DB0516974F5F29573332C34A72A947A9D4BD2DD628CD314046A8E9A7EE6579"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\ReadOnlySqlAnalyzerPageModel.cs",
+    "Sha256": "F3799BEFBE82F94E50DA9DA6205596FF5C91E3441865823CEA3E2D8354B68F5E"
+  },
+  {
+    "Path": "FinTrack\\PageModels\\ReadOnlySqlAnalyzerPageModel.Builder.cs",
+    "Sha256": "9E4818C14DCDB120333F068328F002D3C6996C7B4DA8D53112FCA348B6005437"
+  },
+  {
+    "Path": "FinTrack\\Services\\BackupService.cs",
+    "Sha256": "D75C7B96445B7CA6DEA7968BF9210132C892B17690D0D69435C49E7D80597744"
+  },
+  {
+    "Path": "FinTrack\\Services\\BiometricAuthentication.cs",
+    "Sha256": "ADA6508EF90BC2E187885115F562B9796AE9025ED18ED0E9D45964D6D0EAEF86"
+  },
+  {
+    "Path": "FinTrack\\Services\\CriticalOperationState.cs",
+    "Sha256": "4347894A927DE4328986256B0EAC0FAED87206F927E11069DF0726D75B22607B"
+  },
+  {
+    "Path": "FinTrack\\Services\\ThemeService.cs",
+    "Sha256": "BC9683DFCB36041CF4A43D41189F5221E8D5C0D939062CD716A0E106F0C28228"
+  },
+  {
+    "Path": "FinTrack\\Services\\SqlSchemaMetadataService.cs",
+    "Sha256": "01AADBE45BC51D83EE275FCBEAAA0791554ABF5671D2807F0E3E948519A594D6"
+  },
+  {
+    "Path": "FinTrack\\Services\\SqlQueryBuilderService.cs",
+    "Sha256": "3F592539D2B198C8A215770A8809941A186FB10F85CF9234E8DC82CE5DD618CA"
+  },
+  {
+    "Path": "FinTrack\\Services\\ShopBillAnalysisService.cs",
+    "Sha256": "4AD441567DCA516B17F270F500951DE231A348DE73DBCBEA0B912018B97B1E7E"
+  },
+  {
+    "Path": "FinTrack\\Services\\ReadOnlySqlAnalyzerService.cs",
+    "Sha256": "D16E2A6B703B9213DC948319CC6BDF84ADDC1F822168BB12CD45C662EAF45877"
+  },
+  {
+    "Path": "FinTrack\\Services\\MonthlyRecurringBillRegistrationService.cs",
+    "Sha256": "F4D952A50CDEE92EBCB460989D2F7332E936FCF5F38EFA0A1F06BC15B9B5CB9B"
+  },
+  {
+    "Path": "FinTrack\\Services\\MonthlyFinancialDeletionService.cs",
+    "Sha256": "85DFFB22F411ACBB76BF7EF1DB390F6FCA942FF284C2698928D98DBFEE453488"
+  },
+  {
+    "Path": "FinTrack\\Services\\ModalErrorHandler.cs",
+    "Sha256": "0B870666BD9A0AC25A09D300D6A0FF4234C2C4DBE5D2C62FED9D9B2D22319168"
+  },
+  {
+    "Path": "FinTrack\\Services\\LocalAuthenticationService.cs",
+    "Sha256": "6881C8FE00AE33DDAE82005256B9CE3121E7BF32BDD8D5D1F3A3B0BA32C6A73E"
+  },
+  {
+    "Path": "FinTrack\\Services\\IThemeService.cs",
+    "Sha256": "E383C9142B5A9EB1EF00B5FFA126A70A1D2BA439ABFA08D671BFF9034931B3E9"
+  },
+  {
+    "Path": "FinTrack\\Services\\ISqlSchemaMetadataService.cs",
+    "Sha256": "49F7048BFD0CFC12BEC28E1DB10DF988F1585A047D4B86321F6FC4F4036DD372"
+  },
+  {
+    "Path": "FinTrack\\Services\\IReadOnlySqlAnalyzerService.cs",
+    "Sha256": "CDB10CB2968C9D435B72267446CC393F5D3614674380EEB871217AB261F90AFD"
+  },
+  {
+    "Path": "FinTrack\\Services\\IExpenseStatementDocumentService.cs",
+    "Sha256": "9559D929C1046233959493FF056B9D7C1136AC3C2B8E6ED70FC2B2DDE7849DFE"
+  },
+  {
+    "Path": "FinTrack\\Services\\IExpenseStatementBuilder.cs",
+    "Sha256": "CD245308BF3C244A5A45D86D4458DF398BC5FF6333066577C07BDF6FF7937627"
+  },
+  {
+    "Path": "FinTrack\\Services\\IErrorHandler.cs",
+    "Sha256": "CB20A9ED738213984ACABFFD7A758E755B10B2A562B0A445A3E85B5AF8FD624D"
+  },
+  {
+    "Path": "FinTrack\\Services\\ICurrencyService.cs",
+    "Sha256": "6ED4058E7D0DEB7DBB5DD83C4BB0F4D384A9A975D20FB8DE801FF0392FDCE382"
+  },
+  {
+    "Path": "FinTrack\\Services\\ICriticalOperationState.cs",
+    "Sha256": "3F68A1873EF3B04FA2F8140916CDB0441617F5FA571BE6C41606DA6F09FB83CB"
+  },
+  {
+    "Path": "FinTrack\\Services\\IBackupService.cs",
+    "Sha256": "2A5FF0E486588D3BEB7751A32036CF0E3A1F9D48431E4C50E48698A893F1EC3A"
+  },
+  {
+    "Path": "FinTrack\\Services\\IBackupFileExporter.cs",
+    "Sha256": "4FC9930EEBFE292204C6EBB5AB47539DA151A92621B40371508558180BCABF6E"
+  },
+  {
+    "Path": "FinTrack\\Services\\IAuthenticationService.cs",
+    "Sha256": "A6D8583E9DCC76E8952EF586B1F113D39C8E2E1FB4DD1A6A25EACC4C8A881F25"
+  },
+  {
+    "Path": "FinTrack\\Services\\IApplicationCloseService.cs",
+    "Sha256": "1394DFD1CD5AF1A3C2EAFA606384A5A4153EBE35D6BFE7F799EBFFF9B878238D"
+  },
+  {
+    "Path": "FinTrack\\Services\\FinancialAccountContext.cs",
+    "Sha256": "1C9ADA85E6A9264C60497F5AB709AAE3912B5E15DD9122B6E36466728AAE4823"
+  },
+  {
+    "Path": "FinTrack\\Services\\ExpenseStatementDocumentService.cs",
+    "Sha256": "80D495A6E1B422A9DB13FE9699C83F3CF31C0477BA2D8E4773C0190066D69FA3"
+  },
+  {
+    "Path": "FinTrack\\Services\\ExpenseStatementBuilder.cs",
+    "Sha256": "06EEB4164387DA39DDB5B746E614B9340F209FCEE12A1C6C3387CECADB72377B"
+  },
+  {
+    "Path": "FinTrack\\Services\\EtlTextMappingService.cs",
+    "Sha256": "3FAE05750FBEADCFC98EF04C5C9166A0338E086C014C237D518FEC20F7ABD841"
+  },
+  {
+    "Path": "FinTrack\\Services\\EtlPdfImportService.cs",
+    "Sha256": "EE5885A56AD0E9242382500E6ED661910ECFD1DC82DD1E8456678D18EF41349D"
+  },
+  {
+    "Path": "FinTrack\\Services\\DefaultBackupFileExporter.cs",
+    "Sha256": "68DC265084EDA85BB74A78C0994C5609162CCA4413B8586057AE01E05297E4AF"
+  },
+  {
+    "Path": "FinTrack\\Services\\DefaultApplicationCloseService.cs",
+    "Sha256": "15A5C579DCB0EF5DB9EB46E390544731FC8FAFF66EC1F97BDA94C5F12A755E9D"
+  },
+  {
+    "Path": "FinTrack\\Services\\DashboardSearchService.cs",
+    "Sha256": "C7327A347C92A5A17AC535F8BB35D8A423D90C0441642D783C54A15D511EED8A"
+  },
+  {
+    "Path": "FinTrack\\Services\\CurrencyService.cs",
+    "Sha256": "F6B57A8ED5C667B32201138661661B3E5A6AC64E0D1BAED6675A99EFF32E3F07"
+  },
+  {
+    "Path": "FinTrack\\Models\\WeeklyExpenseChartData.cs",
+    "Sha256": "5B4ECE6591ACE506FDFBC5C3ABC174C6609D702AEF47DFDF68B3E43DB34C7205"
+  },
+  {
+    "Path": "FinTrack\\Models\\UserAccount.cs",
+    "Sha256": "8CD30CC3013CF08FC408278D3BBCCCCD8AF67063ED6835C19819FFDFF55733D9"
+  },
+  {
+    "Path": "FinTrack\\Models\\SqlSchemaModels.cs",
+    "Sha256": "C677602C105A6F8CEA00C2E0C056C0CD7C7BCD14744B228C5091C8036015BF81"
+  },
+  {
+    "Path": "FinTrack\\Models\\SqlQueryBuilderModels.cs",
+    "Sha256": "8D14C4E0CB90FCDDF7292EECD564365D15B050447688E3B10CA93C2D0D756C85"
+  },
+  {
+    "Path": "FinTrack\\Models\\ShopExpenseChartData.cs",
+    "Sha256": "DA4E2F6216664CCFF7D6FB8E85F4B4D80A9C3BFD49ACDA739506B688A0170F00"
+  },
+  {
+    "Path": "FinTrack\\Models\\ShopCategory.cs",
+    "Sha256": "0925D28A5C199264422CD350C229A750330937B16E45112BE65C108AFA799F24"
+  },
+  {
+    "Path": "FinTrack\\Models\\ShopBillAnalysisResult.cs",
+    "Sha256": "3F6B3DA9D2ADC552A250B13083F91A5966966EFDC30A9FC4EE1CA2A16EDDA9B4"
+  },
+  {
+    "Path": "FinTrack\\Models\\Shop.cs",
+    "Sha256": "DB110D6B0A18CDA1A0780A1E6125ED6688DD261995979CF78CABE7B70AC8A37E"
+  },
+  {
+    "Path": "FinTrack\\Models\\SetupSearchSuggestion.cs",
+    "Sha256": "61CC4D843E8B9BFF588495149638340D7D50D356E1D4F99B166B87F638F87ED4"
+  },
+  {
+    "Path": "FinTrack\\Models\\SetUpKeyValue.cs",
+    "Sha256": "784FE346585C49ABE455091FBEB71220876BD9B607BF6249182FCAF211BA80F7"
+  },
+  {
+    "Path": "FinTrack\\Models\\SelectedMonthsRestoreResult.cs",
+    "Sha256": "4C1C5DD4F5E69571FD752242A0B216438651C0AC03374E6F12D85BE6E6566C45"
+  },
+  {
+    "Path": "FinTrack\\Models\\RecurringRegistrationResult.cs",
+    "Sha256": "A6D5C9A2BB3FB21AC22DCCF44141E58E9B2478D57E963D641751ACD5672788DB"
+  },
+  {
+    "Path": "FinTrack\\Models\\RecurringBill.cs",
+    "Sha256": "75329B4B54AB8F3171439C69B679A556FEBEB594416777DFC7411A057B43BD73"
+  },
+  {
+    "Path": "FinTrack\\Models\\PaymentModeExpenseChartData.cs",
+    "Sha256": "0D230E05126E919E77EC96C64A04542DA24A4FDDDB583020A98993999259EC57"
+  },
+  {
+    "Path": "FinTrack\\Models\\PaymentMode.cs",
+    "Sha256": "D39FE7E2625AAFB0C7BE3243C4C9532C862FFDFEE4276219224CDEB73A4EE501"
+  },
+  {
+    "Path": "FinTrack\\Models\\MonthlyExpenseChartData.cs",
+    "Sha256": "5D474465EF49F63DB0D728AA91748E026D5EB69A1BA0C407BE8DD4BFBAAC1025"
+  },
+  {
+    "Path": "FinTrack\\Models\\MonthlyDeletionPlan.cs",
+    "Sha256": "63CBBFB1657AFB3DE3311E082DB8B13A98127696AAE3080E40F56BD112EE1028"
+  },
+  {
+    "Path": "FinTrack\\Models\\MonthlyDeletionChoice.cs",
+    "Sha256": "50352142D4389864AAEF734C657D0CEBAF967B062FEAE476982B2AEBAE3B6A19"
+  },
+  {
+    "Path": "FinTrack\\Models\\LocalUserSummary.cs",
+    "Sha256": "7333A8919B72B02AFE856980AB029EAC880AF6FF614424660398D0AB3E096951"
+  },
+  {
+    "Path": "FinTrack\\Models\\IncomeTransaction.cs",
+    "Sha256": "44A4C1775D6EA19840D61401DBEF81B7BABF7696B8A43028893B25F9091962C7"
+  },
+  {
+    "Path": "FinTrack\\Models\\IconData.cs",
+    "Sha256": "B6183691D23410507D8CABAB71E125BDF02F5D023F08C8D8331E150ECB406BFD"
+  },
+  {
+    "Path": "FinTrack\\Models\\GlobalDisplaySettings.cs",
+    "Sha256": "F7C11A1E591173F4906080849A01BBEE26D192A0D40F98AFCCFBE0E185F602FC"
+  },
+  {
+    "Path": "FinTrack\\Models\\FinancialTransactionType.cs",
+    "Sha256": "E2C1F5D3A7C331A031CD85A291BEFA4B62A443E9E5BFB7665C9BEE61AFA17884"
+  },
+  {
+    "Path": "FinTrack\\Models\\FinancialFlowMonth.cs",
+    "Sha256": "92AFEE8B198E3737980E95E365B689C69DB8F14AABCB1F2DEBEBECC3AA57D8B6"
+  },
+  {
+    "Path": "FinTrack\\Models\\FinancialFlowBarData.cs",
+    "Sha256": "E13E576CDE95448AA39766C2CB543EFEAE1B32DDA844354C603264B1172E1EED"
+  },
+  {
+    "Path": "FinTrack\\Models\\FinancialAccount.cs",
+    "Sha256": "D934CBF978157B1BC2F7604879999B43368393DC23A20C4C5E4CC594B4AC6761"
+  },
+  {
+    "Path": "FinTrack\\Models\\ExpenseStatementSnapshot.cs",
+    "Sha256": "E99D26C3BA522280701E261B6AE1FA21222470E299A4BF53BA03D3C73E1DBDEA"
+  },
+  {
+    "Path": "FinTrack\\Models\\ExpenseReportDescription.cs",
+    "Sha256": "E94F90DF7295EDC12B55BD5E784EC8BCEB4EC106F9684200D971DAFAF0B91884"
+  },
+  {
+    "Path": "FinTrack\\Models\\ExpensePeriodType.cs",
+    "Sha256": "203AE4847D1A38D4391D66A03A137F7F68B859330F9EE0E32419C08CDF9A72F6"
+  },
+  {
+    "Path": "FinTrack\\Models\\ExpensePeriodRange.cs",
+    "Sha256": "7517C73D9AA37CC95C5DD074FF069A24D3DB0E6BB4CB320F1F0CDF3A1F1B912D"
+  },
+  {
+    "Path": "FinTrack\\Models\\ExpenseMonthMaintenanceItem.cs",
+    "Sha256": "270BB53DDAFDCF7C401230DB398D79DDFD94624E2CC79F31FC743A3715DFB6CB"
+  },
+  {
+    "Path": "FinTrack\\Models\\ExpenseMonthGroup.cs",
+    "Sha256": "028F670941BAA6672D4E7A0197D53D8CC2B3C970628B9B1A2489F62E0E69CE08"
+  },
+  {
+    "Path": "FinTrack\\Models\\ExpenseListMode.cs",
+    "Sha256": "7279D355C84DAFF3F148DD049E5628CCACE2F5E848D5E40BA47FA6C38CA3F54E"
+  },
+  {
+    "Path": "FinTrack\\Models\\EtlTextMap.cs",
+    "Sha256": "B0F86CECA33F1405DAC511E76EB73C468CAD8EFC4EB0AD482AC7AECA00A272F8"
+  },
+  {
+    "Path": "FinTrack\\Models\\EtlMonthGroup.cs",
+    "Sha256": "377F9167A976FC155E8A4E759E23E68468E9B0C6371A49F3460A0C4ACE08704B"
+  },
+  {
+    "Path": "FinTrack\\Models\\EtlImportResult.cs",
+    "Sha256": "F2EF1C41DA15AC496B4D43568D1A4022638783D800EBE6522549FEAE19786746"
+  },
+  {
+    "Path": "FinTrack\\Models\\EtlBankTransaction.cs",
+    "Sha256": "CFC7B5E68B7655EA288D7506F01F27595EB8F2131C1C9643CBAC5BE052E70AE2"
+  },
+  {
+    "Path": "FinTrack\\Models\\DisplayCurrency.cs",
+    "Sha256": "E26C09EDE778DEEC381726130AB1070E1AADD69070DD5E990823664583F2AFE2"
+  },
+  {
+    "Path": "FinTrack\\Models\\DashboardSearchResult.cs",
+    "Sha256": "281C8AFC52B7AA131D626AEA33F91EE82ACE819497B058E920A6C2A5C4E0B2A5"
+  },
+  {
+    "Path": "FinTrack\\Models\\DailyExpenseCalendarItem.cs",
+    "Sha256": "A27564AC709EB3EB9DBFA638B328A8BE9A3E4B380E04390664DCEDC40FF440F8"
+  },
+  {
+    "Path": "FinTrack\\Models\\CategoryIconCatalog.cs",
+    "Sha256": "9FCB1756AB53EF15B9AF4EE6AA6124E5B3287415C750DA9866EE86BECC3C8E89"
+  },
+  {
+    "Path": "FinTrack\\Models\\CategoryExpenseGroup.cs",
+    "Sha256": "C186D283F3A21BE5DF07D221CE253609443BEC9B7C19AFC8C3449E99CB672ED3"
+  },
+  {
+    "Path": "FinTrack\\Models\\CategoryExpenseChartData.cs",
+    "Sha256": "E567EA14F2F876905D695A49E1780D876F5B13CCAADBBB85547AE568A4D7CF60"
+  },
+  {
+    "Path": "FinTrack\\Models\\Category.cs",
+    "Sha256": "2A17F8FA36FEAB1DDBA019BDC1A043167D4D0F10705CB34D8C8FE428B5027E5C"
+  },
+  {
+    "Path": "FinTrack\\Models\\BudgetSettings.cs",
+    "Sha256": "97545758BD32FE5D1F1836B6BBF81A385DA918AFC5AB370DB7897F24D48FE886"
+  },
+  {
+    "Path": "FinTrack\\Models\\BudgetReportSnapshot.cs",
+    "Sha256": "D62576A17A74046C87A7F39EA281F0E06ED275006BC5933F514C34B772D139F0"
+  },
+  {
+    "Path": "FinTrack\\Models\\BillTransaction.cs",
+    "Sha256": "3E5DD80C0AD2737E85A72BCF0B41E304DB5DBC0D76846F964CBC411861C94EDA"
+  },
+  {
+    "Path": "FinTrack\\Models\\BillChangedMessage.cs",
+    "Sha256": "00D87D77022CE12A0159E34466BB2EB5C85B19E1E69EE994E7572AADA44F062E"
+  },
+  {
+    "Path": "FinTrack\\Models\\BackupValidationResult.cs",
+    "Sha256": "D1EACB51AA1D04777F2E73D8781208ADB8DFFAFDBF70F8DE6C85113EB1E840F7"
+  },
+  {
+    "Path": "FinTrack\\Models\\BackupRecordSummary.cs",
+    "Sha256": "9555B98D1063DA645E48EBC3767331E0C7189CCFA26669D26D67257D72158D6A"
+  },
+  {
+    "Path": "FinTrack\\Models\\BackupMonthSelection.cs",
+    "Sha256": "FC1E069108667C55917551BF453ECA7DAEFAC70AF93FB9254D1B81FF7C25BB81"
+  },
+  {
+    "Path": "FinTrack\\Models\\BackupMetadata.cs",
+    "Sha256": "8D46C7584EF8EDFD423514F0D34D752D239FDCE891CB870E245911A0C81107A5"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ExpenseReportPage.xaml",
+    "Sha256": "0F09F2499877106A94127588DE65C4CBB87D3FE8B520C0E323C57B3AED7DCFE2"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ExpenseAnalysisPage.xaml.cs",
+    "Sha256": "5CA982A376AFAB90FFAD0B7CFD6F6771DF96576B93EB368397FC36B0F2A25FDB"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ExpenseAnalysisPage.xaml",
+    "Sha256": "D315B9BE5A3EBCF8C007B81FF35F53FD11A8993DE30474838352768F741A25B4"
+  },
+  {
+    "Path": "FinTrack\\Pages\\EtlTextMapPage.xaml.cs",
+    "Sha256": "3AAF4BD01E2957996FF62E59C247DECA9DFC50401445FBECDDBAE0B84D092C79"
+  },
+  {
+    "Path": "FinTrack\\Pages\\EtlTextMapPage.xaml",
+    "Sha256": "544C5734A7D167290E194AF2579C3717AFBB8765ED7E622C1D07B5C5BAC8B8D4"
+  },
+  {
+    "Path": "FinTrack\\Pages\\EtlDataPage.xaml.cs",
+    "Sha256": "6984D5B68514A8CBA3ECF07D35ABA6567AA696CD4239AA5552048EA7097DAC24"
+  },
+  {
+    "Path": "FinTrack\\Pages\\EtlDataPage.xaml",
+    "Sha256": "FBB3FBBC0B0DD87A9550D78BEB6544BCCC4DA7049A30FC6A9D269E6321C94099"
+  },
+  {
+    "Path": "FinTrack\\Pages\\EtlDataManagePage.xaml.cs",
+    "Sha256": "490F58AEDFC24F21B7FAE38437F2CD810CDE297E9A8BF3D49AD539D34AF9EAEA"
+  },
+  {
+    "Path": "FinTrack\\Pages\\EtlDataManagePage.xaml",
+    "Sha256": "B20F4958F7EC984C426F5A587D5022AB9929197EB39D6A4B98B51422BACAAF7D"
+  },
+  {
+    "Path": "FinTrack\\Pages\\DatabaseToolsPage.xaml.cs",
+    "Sha256": "92C0C35968EF115C6821FA5CD3B7E92F9A01FCEA037607BE7BAAC92C4349635A"
+  },
+  {
+    "Path": "FinTrack\\Pages\\DatabaseToolsPage.xaml",
+    "Sha256": "C6E96718C67511107D93456BAFBAD494D918BCEBC15AF2AB42742ED1AF1E1771"
+  },
+  {
+    "Path": "FinTrack\\Pages\\DailyDashPage.xaml.cs",
+    "Sha256": "83A05A3952C365319762F57DA3133E5A17397F977171176D40FF4FED5C8099FC"
+  },
+  {
+    "Path": "FinTrack\\Pages\\DailyDashPage.xaml",
+    "Sha256": "88697DC0F71B64135B38B04804BFDE64D1D0539199FD6601BA048B392C613A5E"
+  },
+  {
+    "Path": "FinTrack\\Pages\\DailyBillListPage.xaml.cs",
+    "Sha256": "49782CA89B70BEFE114E230C4A0DAA787D12BCA1121273D2EF3FE24AC41DD977"
+  },
+  {
+    "Path": "FinTrack\\Pages\\DailyBillListPage.xaml",
+    "Sha256": "1D9FE3A1B8439B961EC9577AF80D4EA98FC417059EB81DDC4603E05A1FE55D2A"
+  },
+  {
+    "Path": "FinTrack\\Pages\\WelcomePage.xaml.cs",
+    "Sha256": "0B649FBC128E9013AFB45880021AD9FF1FB96ED68649BB93134578A826258020"
+  },
+  {
+    "Path": "FinTrack\\Pages\\WelcomePage.xaml",
+    "Sha256": "3CAB4F40A291C27A208DBFBA7C1C4855E4AAE03E3EACA8FB9571641DFD3F842E"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ShopTransactionDatesPage.xaml.cs",
+    "Sha256": "0636C6604B2D99ABD8CB59A3E0622CC76D26E486D1C56AA8AF5AB019F64EECAB"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ShopTransactionDatesPage.xaml",
+    "Sha256": "D476E70C230E8224EF739D051242E1788B5B77A35C9DEA81779B151E582B83E6"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ShopListPage.xaml.cs",
+    "Sha256": "D7ED731F39555EE38146B57561DE0CA3814F5FA096C78D35DD96AD49DEC63FE8"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ShopListPage.xaml",
+    "Sha256": "1B52BEB3E1CE6A7C5D59C22EFAA88A28AD6C56E4EEF19F35D044F06EDF07484F"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ShopEntryPage.xaml.cs",
+    "Sha256": "0414A0DA34B0EBDD4B93761B68ECBB095E52AF9AB104EB355D135DBB807327DA"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ShopEntryPage.xaml",
+    "Sha256": "B86C502697018DDBBDECBED5E44C2E87AE1ADF5A6493136184FBF48616EA0259"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ShopBillDetailsPage.xaml.cs",
+    "Sha256": "7D0352CA274CAAF7694B99D303F996151E30C57B65EBCD6839F69B308F83B776"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ShopBillDetailsPage.xaml",
+    "Sha256": "7A97DC5B252FF1D0CBA210E9952C706C5809844EDA9673D720AB43D0229BF607"
+  },
+  {
+    "Path": "FinTrack\\Pages\\SetupPage.xaml.cs",
+    "Sha256": "55465A761A7F34610AFEDBF4110A790698DFF9E12E6307F9E619017AC1E80A74"
+  },
+  {
+    "Path": "FinTrack\\Pages\\SetupPage.xaml",
+    "Sha256": "E8DA816CBF6A83AA035ED795ECDF7F481238A14BDC647BD591391349E720F68C"
+  },
+  {
+    "Path": "FinTrack\\Pages\\SetupDataPage.xaml.cs",
+    "Sha256": "D2D339F317408839B3D0598600521CCD26EDA38EA63FE7EDAEB577AF5EF3BD98"
+  },
+  {
+    "Path": "FinTrack\\Pages\\SetupDataPage.xaml",
+    "Sha256": "6974D68783BAA1F360E0604426316AB7CADA71A629734FB9B178DFC266FAA0C8"
+  },
+  {
+    "Path": "FinTrack\\Pages\\RestoreDataPage.xaml.cs",
+    "Sha256": "BD312061297BA64A9B2168F6E2DCD1267213CA417A560EFB622CB65D73D8A70F"
+  },
+  {
+    "Path": "FinTrack\\Pages\\RestoreDataPage.xaml",
+    "Sha256": "F92CB735ACB56C8BE6456624BFE90FBADF43006C42880E989AB4CF40731E4232"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ReportsHubPage.cs",
+    "Sha256": "1DA94BA57B7083897704324A3BA51B1DC435EC6068B5EC30A313CFFA0C69A52B"
+  },
+  {
+    "Path": "FinTrack\\Pages\\RegisterPage.xaml.cs",
+    "Sha256": "95D2AFD8CF3C4626BF875AEEA7A0E7D339A4287AC6D23B792711959A78B2A8B0"
+  },
+  {
+    "Path": "FinTrack\\Pages\\RegisterPage.xaml",
+    "Sha256": "7DE420274693555DB6A0973EB0C030B5EB50E96F2563A96122425891F99AE30C"
+  },
+  {
+    "Path": "FinTrack\\Pages\\RecurringBillsPage.xaml.cs",
+    "Sha256": "3804CF8FB37A7EDC7DFFCDA36855D52EF075C567332C3270579B0E5F613F10FF"
+  },
+  {
+    "Path": "FinTrack\\Pages\\RecurringBillsPage.xaml",
+    "Sha256": "3C68F461B35FBC96B5029EF6B647105ABA63A47F450AE58EAE90E4FBA3815DE7"
+  },
+  {
+    "Path": "FinTrack\\Pages\\RecurringBillEntryPage.xaml.cs",
+    "Sha256": "A4DFA827D5909DAD385C206597F81315A3C8D59D65B96C80A21F712B52A266CC"
+  },
+  {
+    "Path": "FinTrack\\Pages\\RecurringBillEntryPage.xaml",
+    "Sha256": "9CFAF860134F2108A5D83258B9217B69743A721E8050B651876F96E16D6EB487"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ReadOnlySqlAnalyzerPage.xaml.cs",
+    "Sha256": "8875901CB874E922BD2B2109A5B297F39ED8B82208574957948BAD8FEDE4B7B3"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ReadOnlySqlAnalyzerPage.xaml",
+    "Sha256": "70EE8E948733E160AC31FDDDF9FE4ECE202EB1F1964A6456CBC2C8C4F853563E"
+  },
+  {
+    "Path": "FinTrack\\Pages\\PaymentModeListPage.xaml.cs",
+    "Sha256": "EA6115751F7813F21451A9D97659481CDDAD55FCE331C32E15844AD531A8CB84"
+  },
+  {
+    "Path": "FinTrack\\Pages\\PaymentModeListPage.xaml",
+    "Sha256": "EE136BF435B5B0F92411223DB0D2B2671B46A28B84755A1FADF17A8A6742A049"
+  },
+  {
+    "Path": "FinTrack\\Pages\\PaymentModeEntryPage.xaml.cs",
+    "Sha256": "3082B110164720C0294BF8FA1F13D3178C414DED5F8EC6B0770D88A8EB8E0FC5"
+  },
+  {
+    "Path": "FinTrack\\Pages\\PaymentModeEntryPage.xaml",
+    "Sha256": "2DB795A2FEEF45FAC44A49D536B35D631D7BEE4B4BD489BC041777C8BE61D7AD"
+  },
+  {
+    "Path": "FinTrack\\Pages\\PaymentModeBillListPage.xaml.cs",
+    "Sha256": "647DFC0F6FD3A743B8FDE1D5B325476B77DF689DA397616AD2CA39725A127267"
+  },
+  {
+    "Path": "FinTrack\\Pages\\PaymentModeBillListPage.xaml",
+    "Sha256": "D5AF7BB4024A71BC8163468083B5DAF5FCC509EF791B8F366116908ABC4492F2"
+  },
+  {
+    "Path": "FinTrack\\Pages\\PasswordResetPage.xaml.cs",
+    "Sha256": "47176B2E1FB47FF190525666B06D6903F78BDDF0429F29B54E455A50F316867F"
+  },
+  {
+    "Path": "FinTrack\\Pages\\PasswordResetPage.xaml",
+    "Sha256": "798361D484291B6E63324BF414CA9C1A6D44FA718072637C562892A295B21A1F"
+  },
+  {
+    "Path": "FinTrack\\Pages\\MyMExpense.xaml.cs",
+    "Sha256": "3FBE4FBD4D69689258F1AC7B1418E0B73BDAF166EF4D7A1B4D5F55415931D7B4"
+  },
+  {
+    "Path": "FinTrack\\Pages\\MyMExpense.xaml",
+    "Sha256": "4BBF1F7D416F24D134CAE595A1BA5823CF80919DADF8AB37CC26520538144FD6"
+  },
+  {
+    "Path": "FinTrack\\Pages\\MonthlyExpenseDataPage.xaml.cs",
+    "Sha256": "11C0AC9DA76E18DE658C53A2CB42196EA30857B3B82295BDDD19B356A06C8ABA"
+  },
+  {
+    "Path": "FinTrack\\Pages\\MonthlyExpenseDataPage.xaml",
+    "Sha256": "D9DB317FC0582A2EEDAF709BD125B646E8B0581A9A9D5B022AD3108C1F631F4A"
+  },
+  {
+    "Path": "FinTrack\\Pages\\MonthlyExpenseCalendarPage.xaml.cs",
+    "Sha256": "1F36308F7CDBAC533AAE0D086C69B0E749D0CCD69542BCABF57D61BD3FCC3C4D"
+  },
+  {
+    "Path": "FinTrack\\Pages\\MonthlyExpenseCalendarPage.xaml",
+    "Sha256": "BF9BC5B7532BF30C159241FEAD0A68CBCFB4016C719FD8A773A8BEE6D22CE26E"
+  },
+  {
+    "Path": "FinTrack\\Pages\\MonthlyBudgetReportPage.xaml.cs",
+    "Sha256": "54EAB0C6FACAE7E1BDBDC9599E78C846BD1FFF8B58ED6BBC21E47A3AE628CD32"
+  },
+  {
+    "Path": "FinTrack\\Pages\\MonthlyBudgetReportPage.xaml",
+    "Sha256": "B9155B86B60DBEEBF1C0B0D278BD9D74E56C547F3D14150C0C4E19FB081FDB9E"
+  },
+  {
+    "Path": "FinTrack\\Pages\\MainPage.xaml.cs",
+    "Sha256": "BDA513BE93266C33721591246A7524A8B1C0A0D00290D05B8CB8D7445E2AE057"
+  },
+  {
+    "Path": "FinTrack\\Pages\\MainPage.xaml",
+    "Sha256": "C4E6F9B93C89C31D9E7D26C8B79FAE8693257718121493A132AD5B7637501606"
+  },
+  {
+    "Path": "FinTrack\\Pages\\LoginPage.xaml.cs",
+    "Sha256": "7CDAFBE7BA335F3EFF069EB25EEE9311F3312119C42A9C4C7BA673DF75B81C0D"
+  },
+  {
+    "Path": "FinTrack\\Pages\\LoginPage.xaml",
+    "Sha256": "3CB7C59D5FD5F68AFD21932B5DC7C84E54FB56BCD1639F56261C9C2D631D4A83"
+  },
+  {
+    "Path": "FinTrack\\Pages\\LandingDashboardPage.xaml.cs",
+    "Sha256": "C488B9B9B599E3A8CFC59A080E636CA904975651232B2FA5C02BBC8478DDAD10"
+  },
+  {
+    "Path": "FinTrack\\Pages\\LandingDashboardPage.xaml",
+    "Sha256": "9E67641B7C5784631C71D0714937A4E3A01BD88B867AED8C2EB32F726AF48702"
+  },
+  {
+    "Path": "FinTrack\\Pages\\IncomeExpenseFlowPage.xaml.cs",
+    "Sha256": "DD01BADD35F63D5BB3EABE466CF8D1518124193782C506F3AD8239D0493C8AB7"
+  },
+  {
+    "Path": "FinTrack\\Pages\\IncomeExpenseFlowPage.xaml",
+    "Sha256": "786336D30889FC37804AE9EFC8EB128EBFFC82AAF5F124C643BBDB44A4403C93"
+  },
+  {
+    "Path": "FinTrack\\Pages\\IncomeAnalysisPage.xaml.cs",
+    "Sha256": "64D877D99E786416E5F19B20ECED2BB15101994CBB4284DCF01BF051139AE8E4"
+  },
+  {
+    "Path": "FinTrack\\Pages\\IncomeAnalysisPage.xaml",
+    "Sha256": "CBEC4D5144A532F7538648B27874D86994655D8C0D2B18481D1E53073BD9110E"
+  },
+  {
+    "Path": "FinTrack\\Pages\\GlobalDisplaySettingsPage.cs",
+    "Sha256": "127158F3D8BD33129D2CB2BA19944671E25315E7AF6AE00CCBB7A437C9FEE660"
+  },
+  {
+    "Path": "FinTrack\\Pages\\FinancialDashboardPage.xaml.cs",
+    "Sha256": "68CD6AF1BC92D28DDE9A9AA6555BB09073394A94CE96EF43225590ABE1EB20F7"
+  },
+  {
+    "Path": "FinTrack\\Pages\\FinancialDashboardPage.xaml",
+    "Sha256": "13726AAF1FE6D78BC0AF6B8027A8884B3B0B8525EEE2009AD9DCB79D7095B2D3"
+  },
+  {
+    "Path": "FinTrack\\Pages\\FinancialAccountCardsPage.cs",
+    "Sha256": "EC6890EBE8B5BAF3FA4C597DB831AE7944F48CB154CB32C3C280D547FDE2273A"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ExpenseStatementPreviewPage.xaml.cs",
+    "Sha256": "544072737FC1F9DD7C357C1103BD351EE596A7239C8233C325EF5012EDFDBBB6"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ExpenseStatementPreviewPage.xaml",
+    "Sha256": "93E4E852FBBFBD440C4F21C10F85D2DD39710160ED7211A7C572E07F41D2D7FD"
+  },
+  {
+    "Path": "FinTrack\\Pages\\ExpenseReportPage.xaml.cs",
+    "Sha256": "7FF64221AD4D4CEF72AECC0009370AB81C83E28D4F2042086DEF0B5F05E5510A"
+  },
+  {
+    "Path": "FinTrack\\Pages\\BillEntryPage.xaml",
+    "Sha256": "168474870EE4C23DF7702C8C8F31569D964A8E7E50AA1E6CBD6BC7A2BBC2A3AB"
+  },
+  {
+    "Path": "FinTrack\\Pages\\BillAnalysisPage.xaml.cs",
+    "Sha256": "AF67D8ADAEB6918A3AEDF594BE6C4090CFEE5E282299F3FDABAB4774B40C21E6"
+  },
+  {
+    "Path": "FinTrack\\Pages\\BillAnalysisPage.xaml",
+    "Sha256": "F05B632D0395242DEA2F2C472BCF56E9AFE7C738231949877EEBF2ADDFE4CD68"
+  },
+  {
+    "Path": "FinTrack\\Pages\\BackupRestorePage.xaml.cs",
+    "Sha256": "09B495A54E21FD4923CCDDBF8778A4DDF77CA423FA7974B11F2745A6CBC4BED5"
+  },
+  {
+    "Path": "FinTrack\\Pages\\BackupRestorePage.xaml",
+    "Sha256": "AFE4CAF239AD801694F9DE2E00D8CB39CADE1B63CE2A9C1F1169320EA525D21C"
+  },
+  {
+    "Path": "FinTrack\\Pages\\BackupDataPage.xaml.cs",
+    "Sha256": "8DF9113B23DCDAE0FFFF0E33399CF2AB17947FB54C742C61C0EC77195D826BAC"
+  },
+  {
+    "Path": "FinTrack\\Pages\\BackupDataPage.xaml",
+    "Sha256": "D61B0A2FCA4B89E1F9ED3363B08D84A6E8551704AF036C96BAC6D892BAC3C770"
+  },
+  {
+    "Path": "FinTrack\\Pages\\AddHubPage.cs",
+    "Sha256": "DEF540FD1067AE09C0BBB02E95DDFA36781F3D5165223F2A7B214664889AE1F0"
+  },
+  {
+    "Path": "FinTrack\\Pages\\CategoryEntryPage.xaml",
+    "Sha256": "40A494861DECBD0EF73C27A9CC91D694C226311D8156A6985F41DE730FA6BD64"
+  },
+  {
+    "Path": "FinTrack\\Pages\\BudgetReportPreviewPage.xaml.cs",
+    "Sha256": "77674047E0568F0CD847C5DAC8F22C5B2CEC255AE0CFE93CFDCF0647023E11EB"
+  },
+  {
+    "Path": "FinTrack\\Pages\\BudgetReportPreviewPage.xaml",
+    "Sha256": "600FAF69DD64EBF76F55F510F54966012AE1B3590C6B1C5481363E671EB06A60"
+  },
+  {
+    "Path": "FinTrack\\Pages\\BillEntryPage.xaml.cs",
+    "Sha256": "BA3EA53D1BB24739E5AF8B828B7C6A4B115A92C3ED0836A538A631BCFA651BAE"
+  },
+  {
+    "Path": "FinTrack\\Pages\\CategoryListPage.xaml",
+    "Sha256": "FA61323704A5F9DDC2420D2143CD45CA9E270A8DA952E6638BFC0DD33922A81E"
+  },
+  {
+    "Path": "FinTrack\\Pages\\CategoryEntryPage.xaml.cs",
+    "Sha256": "E3FBB336CEE87041362321795D3DEAC681ABE1B009CE25BAB7AD6E61D33E9D9C"
+  },
+  {
+    "Path": "FinTrack\\Pages\\CategoryListPage.xaml.cs",
+    "Sha256": "9A7EEDDE82C04BB07493696A85E02BEA578F4271F0F726AA6AAA60F03AC03A2F"
+  },
+  {
+    "Path": "FinTrack\\Pages\\CompanySelectionPage.cs",
+    "Sha256": "31FBA4907C9D7F1A149140E2AC16199F8A0D5378A31DE6DA38C0D684F729C105"
+  },
+  {
+    "Path": "FinTrack\\Resources\\Styles\\Styles.xaml",
+    "Sha256": "AA371C39C882BBCD4DB7C5D48C73669527B43DBD5BF3EEEF279AD82597D98BBF"
+  },
+  {
+    "Path": "FinTrack\\Resources\\Styles\\SharedDisplay.xaml",
+    "Sha256": "769BB83D939803F264FCC8ACC827A2F28EB4A7032D52A21C238FD80FECFB0707"
+  },
+  {
+    "Path": "FinTrack\\Resources\\Styles\\Colors.xaml",
+    "Sha256": "6BEB46C53B8E97EA60704629AF4702DE96C8EFF8A40FDB877BCF34991EB078D3"
+  },
+  {
+    "Path": "FinTrack\\Resources\\Styles\\AppStyles.xaml",
+    "Sha256": "A6149E704F0B1CF52B69E4C7C6F32127A2A75CB503B369A516DDADAB497550ED"
+  },
+  {
+    "Path": "FinTrack\\Platforms\\Windows\\App.xaml.cs",
+    "Sha256": "09CEA8C67C03BCA052B53CA86E56D736AF4E463AF258E02D842CEA327AB897B9"
+  },
+  {
+    "Path": "FinTrack\\Platforms\\Windows\\App.xaml",
+    "Sha256": "095F16FAE27167D1926D3C191F09C542A578FA2538039344BC285B7F697E353C"
+  },
+  {
+    "Path": "FinTrack\\Resources\\Fonts\\FluentUI.cs",
+    "Sha256": "D9CC4BF62689B2E7684DCA8B6FABA5C1D67403B73F1BBC7AAE3FBD35448D59B9"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\BottomTaskBar.xaml",
+    "Sha256": "9D13E0BD5195169EE9998E4D69313CE51C4DA05DC30D3576006CEEADE7E5F6E0"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\AppBar.cs",
+    "Sha256": "00552FDEF09AF8AC8B1642BF281378FB79CBC19D7A1EC145AF1AA9640784E176"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\CategoryExpenseBarChart.xaml",
+    "Sha256": "058C89D9DD5A0F3E033A4C512E29286F1218C347351E7E19FEBD6A3D84178185"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\BottomTaskBar.xaml.cs",
+    "Sha256": "DF787F4A636978F88BB5C9E9D89ACA3D089BAA340FCFDBDACC8ABDECC3B38EB6"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\CategoryExpenseBarChart.xaml.cs",
+    "Sha256": "29BB25AA29D70E4A15C1260B698034BF1FE3D6A98E6688ED3BA31E7F210D2888"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\CategoryExpenseChart.xaml",
+    "Sha256": "E7A06867B6EFD7340CD0515ADD0A1821820A8B94AB446A2040756B6173E503E0"
+  },
+  {
+    "Path": "FinTrack\\Platforms\\iOS\\AppDelegate.cs",
+    "Sha256": "A799C461EF51D46188EE8FB0F457D20EE38FCE505734DE1D75E6EEFA8E77CEC4"
+  },
+  {
+    "Path": "FinTrack\\Platforms\\iOS\\Program.cs",
+    "Sha256": "69FAD61AD74C81D69EA3D75418F37B2ED6944B29727A63D52BCA93E09E459B45"
+  },
+  {
+    "Path": "FinTrack\\Platforms\\MacCatalyst\\Program.cs",
+    "Sha256": "69FAD61AD74C81D69EA3D75418F37B2ED6944B29727A63D52BCA93E09E459B45"
+  },
+  {
+    "Path": "FinTrack\\Platforms\\MacCatalyst\\AppDelegate.cs",
+    "Sha256": "A799C461EF51D46188EE8FB0F457D20EE38FCE505734DE1D75E6EEFA8E77CEC4"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\MonthlyVisitsChart.xaml.cs",
+    "Sha256": "CA9CDFAE381CC404250283AF0554EF026A9785301924713F8B8D8DDD94FE069C"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\MonthlyVisitsChart.xaml",
+    "Sha256": "26BA5D85C1F29EDDE0D3410A37F79DBB1D9AEC044BC1EEFD1DA152670A854FDE"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\MonthlyExpenseChart.xaml.cs",
+    "Sha256": "BECA2981EF5CFCF1C3F0CB8D410EDFBE395366DD67EE3F1ED939F046A881A70A"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\MonthlyExpenseChart.xaml",
+    "Sha256": "036C85A8A98DCC2D774D450C4173A7CAC0B5FD2DF8CA784AF3DCAABD5E29C5C3"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\IncomeExpenseFlowChart.xaml.cs",
+    "Sha256": "F945B4EF5D2BFD7493431E7172F51E8467F5AD755BFB68075528D17FC1D908E9"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\IncomeExpenseFlowChart.xaml",
+    "Sha256": "D72DF7C64D96534980E9B16E8090121E5F7B21DD0FEA68A9FEE8296DD9D84DBB"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\DailyExpenseTrendChart.xaml.cs",
+    "Sha256": "C25D7D5C35B341E8CCA0AB4FC0D53A773D8092CDF46D7FE7A693543A7199CCDC"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\DailyExpenseTrendChart.xaml",
+    "Sha256": "85E240EAFE884FE7E25C2AF8C4238B31FE230BE7EB3FF2EF0D01D415EC437DB6"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\CategoryExpenseChart.xaml.cs",
+    "Sha256": "79C2064805DB6A8CA4283EF070C4BE0CDB1001A48EC1D82730374780422E2FFE"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\SetupSuggestedSearch.xaml",
+    "Sha256": "E0825D781D9FE283AE4CE6DEE146683F549C40509B61A19768F76EF583BB714A"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\ProcessingOverlay.xaml.cs",
+    "Sha256": "65CC1072A261396F4E267CEF45D705C1662CF3F5F941B3AE8886553CF5BF9309"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\ProcessingOverlay.xaml",
+    "Sha256": "DD256E0F4410DACB4AF6CE5CEBF5D63AF81EF0F0C2E107BBBF3B6152573060F2"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\PeriodNavigationControl.xaml.cs",
+    "Sha256": "E62D25D5D71810F95832BD981C0A590D8C16E2D7E3CB4857B370F3563881BA49"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\PeriodNavigationControl.xaml",
+    "Sha256": "8FD9A8AB0B5C014F4DB1D601BEAFACAA88E617D5DC904A9D44AAF83A33B84194"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\PaymentModeExpenseChart.xaml.cs",
+    "Sha256": "52D29A3F33276DB326FBFA08AE0D2613F95CA0FC81F2006769CFBF0C296A55B6"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\PaymentModeExpenseChart.xaml",
+    "Sha256": "9E58D732EA4876BFECCE9E01F7C41D79DFD80C841668CC991C1CBC0799953334"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\NavigationIcon.cs",
+    "Sha256": "4204B240333D5EC3171CAE9541EC19F91E5B7913E631468C00025CF08560F746"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\ShopVisitsChart.xaml",
+    "Sha256": "CACEEBCED96AD49DAD378E234D397318F8E9FA02C6985D40F366D485E3B797A6"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\ShopExpenseChart.xaml.cs",
+    "Sha256": "47FE013CC94EEB79FB61E7C3BEAA73256D66980B1AA3B4755F61E53393F9DDCD"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\ShopExpenseChart.xaml",
+    "Sha256": "AC70E883E9B39D8386EAF25C346936E8E66C4314D578D285A628772328381AA7"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\SetupSuggestedSearch.xaml.cs",
+    "Sha256": "D97BA8A98F9509F8F4881078BAF2563CF27681E269C614EB3F06E6CA8804734F"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\ThemeDialog.cs",
+    "Sha256": "A1327D2147C96FCA9512AE655014682B6958E566BFABFA6DDB8F9EC13174D07D"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\ShopVisitsChart.xaml.cs",
+    "Sha256": "B7BEE572E5F2BC4A37830BB94DBC987F762E720CF2E70745719EEB6A563BC158"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\WeeklyExpenseChart.xaml",
+    "Sha256": "C832271CB5BE58D6505AC626B8BB05B5961A236BF5E0064762CFC4AEA54DEF29"
+  },
+  {
+    "Path": "FinTrack\\Platforms\\Android\\AndroidBiometricAuthenticationService.cs",
+    "Sha256": "8BB070797507097D814D4B5EB496CC08C2C65FFFE252ED9311B9EF3069C3AFFC"
+  },
+  {
+    "Path": "FinTrack\\Platforms\\Android\\AndroidBackupFileExporter.cs",
+    "Sha256": "1AC0BEFE8947BE5233631951B9ED4B9F3FB75A88AD320A8CB6F9F9FF54B0BA2D"
+  },
+  {
+    "Path": "FinTrack\\Platforms\\Android\\AndroidApplicationCloseService.cs",
+    "Sha256": "0ED01EA5CFA530F89C38250801D23F813DAAF05ECB8F6906DA0B0E80E86FC5E6"
+  },
+  {
+    "Path": "FinTrack\\Platforms\\Android\\MainActivity.cs",
+    "Sha256": "B4A5F40EB5751F9F64DF2CC115C12B6D2620F995CA53F7BFADB89C6A0A69D4F8"
+  },
+  {
+    "Path": "FinTrack\\Platforms\\Android\\AndroidTopBarTheme.cs",
+    "Sha256": "6AEBEC2BE995B0A1F23AE185B03EE16283B0450D9D45B611AE290E0C08DD5D5D"
+  },
+  {
+    "Path": "FinTrack\\Platforms\\Android\\MainApplication.cs",
+    "Sha256": "50F34864B27997B763F4B331793511B9371073581E527910F880184D498F4EAE"
+  },
+  {
+    "Path": "FinTrack\\Pages\\Controls\\WeeklyExpenseChart.xaml.cs",
+    "Sha256": "C6CB5132EFBF28715BD2A786DD81B4F8EE77B05A963234EC1AE2498FD41B3419"
+  }
+]

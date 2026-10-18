@@ -16,6 +16,7 @@ public partial class ShopTransactionDatesPageModel(ShopBillAnalysisService analy
     [ObservableProperty] private int _shopId;
     [ObservableProperty] private int _year;
     [ObservableProperty] private int _month;
+    [ObservableProperty] private FinancialTransactionType _transactionType = FinancialTransactionType.Expense;
     [ObservableProperty] private string _shopName = string.Empty;
     [ObservableProperty] private ObservableCollection<ShopTransactionDateSummary> _dates = [];
     [ObservableProperty] private bool _isLoading;
@@ -35,6 +36,7 @@ public partial class ShopTransactionDatesPageModel(ShopBillAnalysisService analy
         if (query.TryGetValue("shopId", out var shop) && int.TryParse(shop?.ToString(), out var shopId)) ShopId = shopId;
         if (query.TryGetValue("year", out var year) && int.TryParse(year?.ToString(), out var parsedYear)) Year = parsedYear;
         if (query.TryGetValue("month", out var month) && int.TryParse(month?.ToString(), out var parsedMonth)) Month = parsedMonth;
+        TransactionType = query.TryGetValue("type", out var type) && Enum.TryParse<FinancialTransactionType>(type?.ToString(), true, out var parsedType) ? parsedType : FinancialTransactionType.Expense;
         OnPropertyChanged(nameof(MonthTitle));
         OnPropertyChanged(nameof(EmptyText));
     }
@@ -50,7 +52,9 @@ public partial class ShopTransactionDatesPageModel(ShopBillAnalysisService analy
             ProcessingMessage = $"Loading {MonthTitle} transaction dates...";
             IsLoading = true;
             await Task.Yield();
-            var result = await analysis.GetTransactionDatesAsync(ShopId, Year, Month);
+            var result = TransactionType == FinancialTransactionType.Income
+                ? await analysis.GetIncomeTransactionDatesAsync(ShopId, Year, Month)
+                : await analysis.GetTransactionDatesAsync(ShopId, Year, Month);
             ShopName = result.Shop.Name;
             Dates = new ObservableCollection<ShopTransactionDateSummary>(result.Dates);
             OnPropertyChanged(nameof(HasDates));
@@ -66,10 +70,10 @@ public partial class ShopTransactionDatesPageModel(ShopBillAnalysisService analy
         if (date is null || IsOverlayBusy || !await _navigationGate.WaitAsync(0)) return;
         try
         {
-            ProcessingMessage = $"Opening bills for {date.Date:dd MMMM yyyy}...";
+            ProcessingMessage = $"Opening {(TransactionType == FinancialTransactionType.Income ? "income" : "bills")} for {date.Date:dd MMMM yyyy}...";
             IsOpeningDate = true;
             await Task.Yield();
-            await Shell.Current.GoToAsync($"dailybills?shopId={ShopId}&date={date.Date:yyyy-MM-dd}");
+            await Shell.Current.GoToAsync($"dailybills?shopId={ShopId}&date={date.Date:yyyy-MM-dd}&type={TransactionType}");
         }
         catch (Exception ex) { errors.HandleError(ex); }
         finally { IsOpeningDate = false; _navigationGate.Release(); }

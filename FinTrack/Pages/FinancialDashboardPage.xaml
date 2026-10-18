@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:pm="clr-namespace:FinTracker.PageModels"
+             xmlns:m="clr-namespace:FinTracker.Models"
+             xmlns:models="clr-namespace:FinTracker.Models"
+             xmlns:controls="clr-namespace:FinTracker.Pages.Controls"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="FinTracker.Pages.FinancialDashboardPage"
+             x:Name="FinancialDashboard"
+             x:DataType="pm:FinancialDashboardPageModel"
+             Title="Financial Dashboard"
+             BackgroundColor="{DynamicResource Background}">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="12,12,12,20" Spacing="12">
+
+                <VerticalStackLayout IsVisible="{Binding IsSearchVisible}" Spacing="6">
+                    <Border Stroke="{DynamicResource Primary}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Background="{DynamicResource SurfaceSecondary}" Padding="10,4">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Entry x:Name="ShopSearchEntry" Text="{Binding Search.SearchText}" Placeholder="Search Shop or Ref" ClearButtonVisibility="WhileEditing" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Text="Search" Command="{Binding Search.OpenAnalysisCommand}" IsEnabled="{Binding Search.CanSearch}" BackgroundColor="Transparent" TextColor="{DynamicResource Primary}" Padding="8" SemanticProperties.Description="Open selected search result" />
+                        </Grid>
+                    </Border>
+                    <ActivityIndicator IsRunning="{Binding Search.IsSearching}" IsVisible="{Binding Search.IsSearching}" Color="{DynamicResource Primary}" HorizontalOptions="Start" />
+                    <Border IsVisible="{Binding Search.HasSuggestions}" Stroke="{DynamicResource Primary}" StrokeThickness="1" StrokeShape="RoundRectangle 12" Background="{DynamicResource SurfaceSecondary}" Padding="8">
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Search.Suggestions}" Spacing="2">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="m:DashboardSearchResult">
+                                    <Border StrokeThickness="0" Padding="10,8" Background="Transparent">
+                                        <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding BindingContext.Search.SelectShopCommand, Source={x:Reference FinancialDashboard}}" CommandParameter="{Binding .}" /></Border.GestureRecognizers>
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                            <Image Source="{Binding IconFileName}" WidthRequest="28" HeightRequest="28" />
+                                            <VerticalStackLayout Grid.Column="1"><Label Text="{Binding Detail}" FontSize="12" /><Label Text="{Binding Name}" MaxLines="1" LineBreakMode="TailTruncation" VerticalOptions="Center" /></VerticalStackLayout>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </Border>
+                    <Button Text="Show more results" Command="{Binding Search.LoadMoreCommand}" IsVisible="{Binding Search.HasMoreResults}" />
+            <Label Text="No matching shops or references found." IsVisible="{Binding Search.ShowNoMatches}" HorizontalOptions="Center" FontAttributes="Italic" />
+                </VerticalStackLayout>
+
+                <!-- Scenic artwork is text-free; all content remains accessible and localizable UI. -->
+                <Border MinimumHeightRequest="176" HorizontalOptions="Fill" Padding="0" StrokeThickness="0" StrokeShape="RoundRectangle 17">
+                    <Grid IsClippedToBounds="True" SizeChanged="OnGreetingArtworkSizeChanged">
+                        <AbsoluteLayout InputTransparent="True"><Image Source="financial_greeting_mountains_rounded.png" Aspect="AspectFill" AbsoluteLayout.LayoutBounds="0,0,1,1" AbsoluteLayout.LayoutFlags="All" /></AbsoluteLayout>
+                        <Grid>
+                            <Grid.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#D908224A" Offset="0" />
+                                    <GradientStop Color="#8008224A" Offset="0.62" />
+                                    <GradientStop Color="#2308224A" Offset="1" />
+                                </LinearGradientBrush>
+                            </Grid.Background>
+                            <Grid Padding="14,12" RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
+                                <VerticalStackLayout Grid.Row="0" Spacing="2" VerticalOptions="Start">
+                                    <Label Text="{Binding Greeting}" TextColor="White" FontSize="14" />
+                                    <Label Text="{Binding UserName}" TextColor="White" FontSize="24" FontAttributes="Bold" LineBreakMode="WordWrap" />
+                                    <Label Text="{Binding CompanyName}" TextColor="#DDEEFF" FontSize="12" LineBreakMode="WordWrap" />
+                                </VerticalStackLayout>
+                                <Border Grid.Row="1" StrokeThickness="1" Stroke="#B2FFFFFF" BackgroundColor="#E9FFFFFF" StrokeShape="RoundRectangle 15" MinimumHeightRequest="56" Padding="6,0">
+                                    <Picker Title="Period" ItemsSource="{Binding PeriodOptions}" SelectedItem="{Binding SelectedPeriod, Mode=TwoWay}" TextColor="#102650" FontSize="14" BackgroundColor="Transparent" MinimumHeightRequest="54" HorizontalOptions="Fill" VerticalOptions="Center" IsEnabled="{Binding IsProcessing, Converter={StaticResource InvertedBoolConverter}}" SemanticProperties.Description="Choose dashboard period" />
+                                </Border>
+                                <Label Grid.Row="2" Text="Let's keep your finances on track." TextColor="White" FontSize="13" LineBreakMode="WordWrap" />
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Arrows browse two-company windows; selecting a company changes the active account. -->
+                <Border BackgroundColor="#092A5A" Stroke="#FFB635" StrokeThickness="1" StrokeShape="RoundRectangle 18" Padding="4">
+                    <Grid ColumnDefinitions="38,*,*,38" ColumnSpacing="3" HeightRequest="54">
+                        <Button Text="←" Command="{Binding PreviousCompaniesCommand}" IsEnabled="{Binding CanMoveCompaniesBack}" BackgroundColor="Transparent" TextColor="White" FontSize="20" Padding="0" SemanticProperties.Description="Previous two companies" />
+                        <Border Grid.Column="1" BackgroundColor="{Binding FirstCompanyColor}" StrokeThickness="0" StrokeShape="RoundRectangle 17" Padding="5,0" IsVisible="{Binding ShowFirstCompany}">
+                            <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding SelectFirstCompanyCommand}" /></Border.GestureRecognizers>
+                            <Label Text="{Binding FirstCompanyName}" TextColor="White" FontSize="12" FontAttributes="Bold" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" MaxLines="1" LineBreakMode="TailTruncation" InputTransparent="True" />
+                        </Border>
+                        <Border Grid.Column="2" BackgroundColor="{Binding SecondCompanyColor}" StrokeThickness="0" StrokeShape="RoundRectangle 17" Padding="5,0" IsVisible="{Binding ShowSecondCompany}">
+                            <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding SelectSecondCompanyCommand}" /></Border.GestureRecognizers>
+                            <Label Text="{Binding SecondCompanyName}" TextColor="White" FontSize="12" FontAttributes="Bold" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" MaxLines="1" LineBreakMode="TailTruncation" InputTransparent="True" />
+                        </Border>
+                        <Button Grid.Column="3" Text="→" Command="{Binding NextCompaniesCommand}" IsEnabled="{Binding CanMoveCompaniesForward}" BackgroundColor="Transparent" TextColor="White" FontSize="20" Padding="0" SemanticProperties.Description="Next two companies" />
+                    </Grid>
+                </Border>
+
+
+                <!-- Actual income and expense data; comparison is shown only when prior data exists. -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Border Stroke="#30BF79" StrokeThickness="1" StrokeShape="RoundRectangle 17" BackgroundColor="{AppThemeBinding Light=#F3FFF8, Dark=#11392B}" Padding="10">
+                        <VerticalStackLayout Spacing="6">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="7">
+                                <Grid WidthRequest="32" HeightRequest="32">
+                                    <Ellipse Fill="#08B56E" StrokeThickness="0" />
+                                    <Label Text="+" TextColor="White" FontSize="20" FontAttributes="Bold" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                                </Grid>
+                                <Label Grid.Column="1" Text="Total Income" TextColor="{DynamicResource Success}" FontSize="12" VerticalTextAlignment="Center" />
+                            </Grid>
+                            <Label Text="{Binding IncomeAmount}" TextColor="{DynamicResource TextPrimary}" FontSize="19" FontAttributes="Bold" MaxLines="1" LineBreakMode="TailTruncation" />
+                            <Label Text="{Binding IncomeChange}" TextColor="{DynamicResource Success}" FontSize="13" FontAttributes="Bold" />
+                            <Label Text="{Binding ComparisonCaption}" TextColor="{DynamicResource TextSecondary}" FontSize="10" />
+                            <HorizontalStackLayout HeightRequest="32" Spacing="4" BindableLayout.ItemsSource="{Binding IncomeBars}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="pm:DashboardMiniBar">
+                                        <BoxView WidthRequest="8" HeightRequest="{Binding Height}" Color="#78DCB0" VerticalOptions="End" />
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1" Stroke="#FF626D" StrokeThickness="1" StrokeShape="RoundRectangle 17" BackgroundColor="{AppThemeBinding Light=#FFF6F6, Dark=#40232C}" Padding="10">
+                        <VerticalStackLayout Spacing="6">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="7">
+                                <Grid WidthRequest="32" HeightRequest="32">
+                                    <Ellipse Fill="#F04450" StrokeThickness="0" />
+                                    <Label Text="−" TextColor="White" FontSize="20" FontAttributes="Bold" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                                </Grid>
+                                <Label Grid.Column="1" Text="Total Expenses" TextColor="{DynamicResource Danger}" FontSize="12" VerticalTextAlignment="Center" />
+                            </Grid>
+                            <Label Text="{Binding ExpenseAmount}" TextColor="{DynamicResource TextPrimary}" FontSize="19" FontAttributes="Bold" MaxLines="1" LineBreakMode="TailTruncation" />
+                            <Label Text="{Binding ExpenseChange}" TextColor="{DynamicResource Danger}" FontSize="13" FontAttributes="Bold" />
+                            <Label Text="{Binding ComparisonCaption}" TextColor="{DynamicResource TextSecondary}" FontSize="10" />
+                            <HorizontalStackLayout HeightRequest="32" Spacing="4" BindableLayout.ItemsSource="{Binding ExpenseBars}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="pm:DashboardMiniBar">
+                                        <BoxView WidthRequest="8" HeightRequest="{Binding Height}" Color="#FF9EA5" VerticalOptions="End" />
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <Border Stroke="#FF9C2A" StrokeThickness="1" StrokeShape="RoundRectangle 17" BackgroundColor="{DynamicResource Surface}" Padding="12">
+                    <VerticalStackLayout Spacing="9">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                            <Label Text="Expense by Category" TextColor="{DynamicResource TextPrimary}" FontSize="17" FontAttributes="Bold" VerticalTextAlignment="Center" />
+                            <Button Grid.Column="1" Text="{Binding CategoryActionText}" Command="{Binding ToggleCategoriesCommand}" IsVisible="{Binding CanExpandCategories}" BackgroundColor="Transparent" TextColor="#0878EB" FontSize="13" Padding="8,4" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="{Binding PeriodCaption}" TextColor="{DynamicResource TextSecondary}" FontSize="12" />
+                            <Label Grid.Column="1" Text="{Binding CategoryTotal}" TextColor="{DynamicResource TextPrimary}" FontSize="14" FontAttributes="Bold" />
+                        </Grid>
+                        <Label Text="No expenses in this period." IsVisible="{Binding HasCategories, Converter={StaticResource InvertedBoolConverter}}" TextColor="{DynamicResource TextSecondary}" />
+                        <controls:CategoryExpenseChart ItemsSource="{Binding CategoryChart}" ChartHeight="215" ShowLegend="False" IsVisible="{Binding HasCategories}" CategorySelected="OnChartCategorySelected" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding VisibleCategories}" Spacing="7">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="pm:DashboardCategoryRow">
+                                    <Grid ColumnDefinitions="30,*,Auto" ColumnSpacing="8" RowDefinitions="Auto,Auto" Padding="2,4">
+                                        <Grid.GestureRecognizers><TapGestureRecognizer Tapped="OnCategoryTapped" /></Grid.GestureRecognizers>
+                                        <Image Source="{Binding Icon}" WidthRequest="24" HeightRequest="24" Grid.RowSpan="2" VerticalOptions="Center" />
+                                        <Label Grid.Column="1" Text="{Binding Name}" TextColor="{DynamicResource TextPrimary}" MaxLines="1" LineBreakMode="TailTruncation" FontSize="13" />
+                                        <Label Grid.Column="2" Text="{Binding Amount}" TextColor="{DynamicResource TextPrimary}" FontSize="12" FontAttributes="Bold" />
+                                        <ProgressBar Grid.Row="1" Grid.Column="1" Progress="{Binding Fraction}" ProgressColor="{Binding Color}" HeightRequest="6" VerticalOptions="Center" />
+                                        <Label Grid.Row="1" Grid.Column="2" Text="{Binding Percent}" TextColor="{DynamicResource TextSecondary}" FontSize="11" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Stroke="#34C995" StrokeThickness="1" StrokeShape="RoundRectangle 17" BackgroundColor="{DynamicResource Surface}" Padding="12">
+                    <VerticalStackLayout Spacing="9">
+                        <Label Text="Income by Category" FontSize="17" FontAttributes="Bold" TextColor="{DynamicResource TextPrimary}" />
+                        <Grid ColumnDefinitions="*,Auto"><Label Text="{Binding PeriodCaption}" /><Label Grid.Column="1" Text="{Binding IncomeAmount}" FontAttributes="Bold" TextColor="{DynamicResource Success}" /></Grid>
+                        <Label Text="No income in this period." IsVisible="{Binding HasIncomeCategories, Converter={StaticResource InvertedBoolConverter}}" />
+                        <controls:IncomeCategoryChart ItemsSource="{Binding IncomeCategoryChart}" ChartHeight="215" ShowLegend="False" IsVisible="{Binding HasIncomeCategories}" CategorySelected="OnIncomeChartCategorySelected" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding IncomeCategoryRows}" Spacing="3">
+                            <BindableLayout.ItemTemplate><DataTemplate x:DataType="pm:DashboardCategoryRow">
+                                <Grid ColumnDefinitions="30,*,Auto" ColumnSpacing="8" RowDefinitions="Auto,Auto" Padding="2,4">
+                                    <Grid.GestureRecognizers><TapGestureRecognizer Tapped="OnIncomeCategoryTapped" /></Grid.GestureRecognizers>
+                                    <Image Source="{Binding Icon}" WidthRequest="24" HeightRequest="24" Grid.RowSpan="2" />
+                                    <Label Grid.Column="1" Text="{Binding Name}" FontSize="13" />
+                                    <Label Grid.Column="2" Text="{Binding Amount}" FontSize="12" FontAttributes="Bold" TextColor="{DynamicResource Success}" />
+                                    <ProgressBar Grid.Row="1" Grid.Column="1" Progress="{Binding Fraction}" ProgressColor="{Binding Color}" HeightRequest="6" />
+                                    <Label Grid.Row="1" Grid.Column="2" Text="{Binding Percent}" FontSize="11" />
+                                </Grid>
+                            </DataTemplate></BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+                <Border Stroke="#64AFFF" StrokeThickness="1" StrokeShape="RoundRectangle 17" BackgroundColor="{DynamicResource Surface}" Padding="12">
+                    <VerticalStackLayout Spacing="9">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                            <Label Text="Recent Transactions" TextColor="{DynamicResource TextPrimary}" FontSize="17" FontAttributes="Bold" VerticalTextAlignment="Center" />
+                            <Button Grid.Column="1" Text="{Binding TransactionActionText}" Command="{Binding ToggleTransactionsCommand}" IsVisible="{Binding CanExpandTransactions}" BackgroundColor="Transparent" TextColor="#0878EB" FontSize="13" Padding="8,4" />
+                        </Grid>
+                        <Label Text="No transactions in this period." IsVisible="{Binding HasTransactions, Converter={StaticResource InvertedBoolConverter}}" TextColor="{DynamicResource TextSecondary}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding VisibleTransactions}" Spacing="1">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="pm:DashboardTransactionRow">
+                                    <Grid ColumnDefinitions="38,*,Auto" ColumnSpacing="9" Padding="2,8">
+                                        <Grid.GestureRecognizers><TapGestureRecognizer Tapped="OnTransactionTapped" /></Grid.GestureRecognizers>
+                                        <Image Source="{Binding Icon}" WidthRequest="30" HeightRequest="30" VerticalOptions="Center" />
+                                        <VerticalStackLayout Grid.Column="1" Spacing="1">
+                                            <Label Text="{Binding Name}" TextColor="{DynamicResource TextPrimary}" FontAttributes="Bold" MaxLines="1" LineBreakMode="TailTruncation" FontSize="13" />
+                                            <Label Text="{Binding DateText}" TextColor="{DynamicResource TextSecondary}" FontSize="11" />
+                                            <Label Text="{Binding Category}" TextColor="#0878EB" FontSize="10" MaxLines="1" LineBreakMode="TailTruncation" />
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="2" Text="{Binding Amount}" TextColor="{Binding AmountColor}" FontAttributes="Bold" FontSize="12" VerticalTextAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+        <controls:BottomTaskBar Grid.Row="1" />
+        <controls:ProcessingOverlay Grid.RowSpan="2" IsBusy="{Binding IsProcessing}" Message="{Binding ProcessingMessage}" SpinnerColor="#3B82F6" ShowProgress="False" />
+        <controls:ProcessingOverlay Grid.RowSpan="2" IsBusy="{Binding Search.IsOpeningAnalysis}" Message="{Binding Search.ProcessingMessage}" SpinnerColor="#3B82F6" ShowProgress="False" />
+    </Grid>
+</ContentPage>

@@ -46,17 +46,17 @@ public partial class PasswordResetPageModel(IAuthenticationService authenticatio
         if (IsBusy) return;
         if (SelectedUser is null || SelectedUser.Id <= 0)
         {
-            await Shell.Current.DisplayAlertAsync("Reset Password", "Select a local account.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Reset Password", "Select a local account.", "OK");
             return;
         }
         if (string.IsNullOrEmpty(NewPassword) || NewPassword.Length < LocalAuthenticationService.MinimumPasswordLength)
         {
-            await Shell.Current.DisplayAlertAsync("Reset Password", $"Password must be at least {LocalAuthenticationService.MinimumPasswordLength} characters.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Reset Password", $"Password must be at least {LocalAuthenticationService.MinimumPasswordLength} characters.", "OK");
             return;
         }
         if (NewPassword != RetypePassword)
         {
-            await Shell.Current.DisplayAlertAsync("Reset Password", "Passwords do not match.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Reset Password", "Passwords do not match.", "OK");
             return;
         }
 
@@ -67,13 +67,13 @@ public partial class PasswordResetPageModel(IAuthenticationService authenticatio
             var result = await authentication.ResetPasswordAsync(SelectedUser.Id, NewPassword);
             if (!result.Succeeded)
             {
-                await Shell.Current.DisplayAlertAsync("Reset Password", result.Message, "OK");
+                await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Reset Password", result.Message, "OK");
                 return;
             }
 
             NewPassword = string.Empty;
             RetypePassword = string.Empty;
-            await Shell.Current.DisplayAlertAsync("Password Changed", $"The password for {username} has been changed successfully.", "Login");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Password Changed", $"The password for {username} has been changed successfully.", "Login");
             await Shell.Current.GoToAsync("..");
         }
         catch (Exception ex) { errors.HandleError(ex); }

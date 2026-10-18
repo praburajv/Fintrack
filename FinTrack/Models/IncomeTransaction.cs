@@ -2,6 +2,9 @@ namespace FinTracker.Models;
 
 public sealed class IncomeTransaction
 {
+    public string? BillReferenceNo { get; set; }
+    public bool HasReference => !string.IsNullOrEmpty(BillReferenceNo);
+    public string ReferenceText => $"Reference No.: {BillReferenceNo}";
     public int Id { get; set; }
     public DateTime TransactionDate { get; set; } = DateTime.Today;
     public int ShopId { get; set; }

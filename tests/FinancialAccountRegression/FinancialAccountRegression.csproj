@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NuGetAudit>false</NuGetAudit>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="8.0.8" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.10" />
+    <Compile Include="../../FinTrack/Data/Constants.cs;../../FinTrack/Data/FinancialAccountRepository.cs;../../FinTrack/Data/CategoryRepository.cs;../../FinTrack/Data/ShopRepository.cs;../../FinTrack/Data/PaymentModeRepository.cs" Link="App/Data/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Models/FinancialAccount.cs;../../FinTrack/Models/Category.cs;../../FinTrack/Models/Shop.cs;../../FinTrack/Models/PaymentMode.cs;../../FinTrack/Models/ShopCategory.cs;../../FinTrack/Models/CategoryIconCatalog.cs;../../FinTrack/Models/DisplayCurrency.cs" Link="App/Models/%(Filename)%(Extension)" />
+    <Compile Include="../../FinTrack/Services/FinancialAccountContext.cs;../../FinTrack/Services/ICurrencyService.cs;../../FinTrack/Services/ICriticalOperationState.cs;../../FinTrack/Services/CriticalOperationState.cs" Link="App/Services/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

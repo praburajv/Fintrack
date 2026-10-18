@@ -1,0 +1,88 @@
+diff --git a/FinTrack/FinTrackerProgram.cs b/FinTrack/FinTrackerProgram.cs
+index 9a3f0cd..0c2f7ee 100644
+--- a/FinTrack/FinTrackerProgram.cs
++++ b/FinTrack/FinTrackerProgram.cs
+@@ -31,8 +31,13 @@ namespace FinTracker
+                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                     fonts.AddFont("SegoeUI-Semibold.ttf", "SegoeSemibold");
+                     fonts.AddFont("FluentSystemIcons-Regular.ttf", FluentUI.FontFamily);
++                    fonts.AddFont("Inter-Regular.ttf", InterfaceTypography.Regular);
++                    fonts.AddFont("Inter-Medium.ttf", InterfaceTypography.Medium);
++                    fonts.AddFont("Inter-SemiBold.ttf", InterfaceTypography.Semibold);
+                 });
+ 
++            InterfaceTypography.Configure();
++
+ #if DEBUG
+     		builder.Logging.AddDebug();
+     		builder.Services.AddLogging(configure => configure.AddDebug());
+diff --git a/FinTrack/Pages/Controls/AppBar.cs b/FinTrack/Pages/Controls/AppBar.cs
+index 464da60..0bddb86 100644
+--- a/FinTrack/Pages/Controls/AppBar.cs
++++ b/FinTrack/Pages/Controls/AppBar.cs
+@@ -39,7 +39,7 @@ public sealed class AppBar : ContentView
+ 
+     public AppBar()
+     {
+-        HeightRequest = 52;
++        MinimumHeightRequest = 52;
+         HorizontalOptions = LayoutOptions.Fill;
+         var grid = new Grid { ColumnSpacing = 2, ColumnDefinitions = { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Auto) } };
+         grid.SetDynamicResource(BackgroundColorProperty, "PrimaryDark");
+@@ -47,12 +47,12 @@ public sealed class AppBar : ContentView
+         var branding = new Grid { ColumnDefinitions = { new(GridLength.Auto), new(GridLength.Star) }, ColumnSpacing = 6, InputTransparent = true, VerticalOptions = LayoutOptions.Center };
+         var logo = new Image { HeightRequest = 32, WidthRequest = 32, Aspect = Aspect.AspectFit };
+         logo.SetBinding(Image.SourceProperty, new Binding(nameof(LogoSource), source: this));
+-        var title = new Label { FontFamily = "OpenSansSemibold", FontSize = 19, MaxLines = 1, LineBreakMode = LineBreakMode.TailTruncation, VerticalOptions = LayoutOptions.Center };
++        var title = new Label { FontFamily = "OpenSansSemibold", FontSize = 19, LineBreakMode = LineBreakMode.WordWrap, VerticalOptions = LayoutOptions.Center };
+         title.SetDynamicResource(Label.TextColorProperty, "TextOnPrimary");
+         title.SetDynamicResource(Label.FontFamilyProperty, "SharedHeadingFontFamily");
+         title.SetDynamicResource(Label.FontSizeProperty, "SharedHeaderFontSize");
+         title.SetBinding(Label.TextProperty, new Binding(nameof(AppName), source: this));
+-        var company = new Label { FontSize = 10, MaxLines = 1, LineBreakMode = LineBreakMode.TailTruncation };
++        var company = new Label { FontSize = 10, LineBreakMode = LineBreakMode.WordWrap };
+         company.SetDynamicResource(Label.TextColorProperty, "TextOnPrimary");
+         company.SetBinding(Label.TextProperty, new Binding(nameof(CompanyName), source: this));
+         var titles = new VerticalStackLayout { Spacing = 0, VerticalOptions = LayoutOptions.Center, Children = { title, company } };
+diff --git a/FinTrack/Pages/Controls/BottomTaskBar.xaml.cs b/FinTrack/Pages/Controls/BottomTaskBar.xaml.cs
+index 271e843..3738331 100644
+--- a/FinTrack/Pages/Controls/BottomTaskBar.xaml.cs
++++ b/FinTrack/Pages/Controls/BottomTaskBar.xaml.cs
+@@ -22,7 +22,7 @@ public partial class BottomTaskBar : ContentView
+                 circle.SetDynamicResource(BackgroundColorProperty, "Primary"); cell.Add(circle);
+             }
+             else cell.Add(icon);
+-            var label = new Label { Text = item, FontSize = 11, HorizontalTextAlignment = TextAlignment.Center, InputTransparent = true, MaxLines = 1 };
++            var label = new Label { Text = item, FontSize = 11, HorizontalTextAlignment = TextAlignment.Center, InputTransparent = true, LineBreakMode = LineBreakMode.WordWrap };
+             label.SetDynamicResource(Label.TextColorProperty, "TextSecondary");
+             label.SetDynamicResource(Label.FontFamilyProperty, "SharedFontFamily");
+             label.SetDynamicResource(Label.FontSizeProperty, "SharedNavigationFontSize"); cell.Add(label, 0, 1);
+diff --git a/FinTrack/Pages/LoginPage.xaml b/FinTrack/Pages/LoginPage.xaml
+index 6536bc7..78962e4 100644
+--- a/FinTrack/Pages/LoginPage.xaml
++++ b/FinTrack/Pages/LoginPage.xaml
+@@ -5,9 +5,9 @@
+   <Entry Placeholder="Username" Text="{Binding Username}" ClearButtonVisibility="WhileEditing" Margin="0,12,0,0" />
+   <Entry Placeholder="Password" Text="{Binding Password}" IsPassword="{Binding IsPassword}" />
+   <Button Text="{Binding PasswordToggleText}" Command="{Binding TogglePasswordCommand}" HorizontalOptions="Start" Padding="12,6" Margin="0,-4,0,4" />
+-  <Button Text="Login" Command="{Binding LoginCommand}" HeightRequest="52" FontSize="18" Margin="0,4,0,0" />
+-  <Button Text="🔒  Login with Fingerprint" Command="{Binding LoginWithBiometricCommand}" IsVisible="{Binding IsBiometricAvailable}" HeightRequest="48" />
++  <Button Text="Login" Command="{Binding LoginCommand}" MinimumHeightRequest="52" FontSize="18" Margin="0,4,0,0" />
++  <Button Text="🔒  Login with Fingerprint" Command="{Binding LoginWithBiometricCommand}" IsVisible="{Binding IsBiometricAvailable}" MinimumHeightRequest="48" />
+   <Button Text="Forgot Password?" Command="{Binding ForgotPasswordCommand}" HorizontalOptions="Center" Padding="8,4" BackgroundColor="Transparent" TextColor="{StaticResource Primary}" FontAttributes="Bold" />
+-  <HorizontalStackLayout HorizontalOptions="Center" Spacing="4" Margin="0,4,0,0"><Label Text="Don't have an account?" VerticalOptions="Center" /><Button Text="Register" Command="{Binding RegisterCommand}" Padding="4,2" BackgroundColor="Transparent" TextColor="{StaticResource Primary}" FontAttributes="Bold" /></HorizontalStackLayout>
++  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" Margin="0,4,0,0"><Label Text="Don't have an account?" VerticalOptions="Center" HorizontalTextAlignment="Center" LineBreakMode="WordWrap" /><Button Grid.Column="1" Text="Register" Command="{Binding RegisterCommand}" Padding="4,2" BackgroundColor="Transparent" TextColor="{StaticResource Primary}" FontAttributes="Bold" VerticalOptions="Center" /></Grid>
+  </VerticalStackLayout></ScrollView><controls:ProcessingOverlay IsBusy="{Binding IsBusy}" Message="Authenticating..." /></Grid>
+ </ContentPage>
+diff --git a/FinTrack/Pages/RegisterPage.xaml b/FinTrack/Pages/RegisterPage.xaml
+index afff88c..04ce985 100644
+--- a/FinTrack/Pages/RegisterPage.xaml
++++ b/FinTrack/Pages/RegisterPage.xaml
+@@ -3,6 +3,6 @@
+  <Grid><ScrollView><VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
+   <Label Text="Create Account" Style="{StaticResource Title1}" /><Entry Placeholder="Name" Text="{Binding Name}" /><Entry Placeholder="Username" Text="{Binding Username}" ClearButtonVisibility="WhileEditing" /><Entry Placeholder="Password" Text="{Binding Password}" IsPassword="{Binding IsPassword}" /><Entry Placeholder="Confirm Password" Text="{Binding ConfirmPassword}" IsPassword="{Binding IsPassword}" />
+   <Button Text="{Binding PasswordToggleText}" Command="{Binding TogglePasswordCommand}" HorizontalOptions="Start" /><Button Text="Register" Command="{Binding RegisterCommand}" />
+-  <HorizontalStackLayout HorizontalOptions="Center" Spacing="6"><Label Text="Already have an account?" /><Button Text="Login" Command="{Binding LoginCommand}" Padding="0" /></HorizontalStackLayout>
++  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6"><Label Text="Already have an account?" VerticalOptions="Center" HorizontalTextAlignment="Center" LineBreakMode="WordWrap" /><Button Grid.Column="1" Text="Login" Command="{Binding LoginCommand}" Padding="0" VerticalOptions="Center" /></Grid>
+  </VerticalStackLayout></ScrollView><controls:ProcessingOverlay IsBusy="{Binding IsBusy}" Message="Creating account..." /></Grid>
+ </ContentPage>

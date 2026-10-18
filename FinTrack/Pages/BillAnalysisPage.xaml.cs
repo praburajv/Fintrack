@@ -16,4 +16,10 @@ public partial class BillAnalysisPage : ContentPage
         if (BindingContext is BillAnalysisPageModel model)
             await model.OpenMonthCommand.ExecuteAsync(month);
     }
+
+    private async void OnIncomeMonthSelected(object? sender, MonthlyVisitData month)
+    {
+        if (BindingContext is BillAnalysisPageModel model)
+            await model.OpenIncomeMonthAsync(month);
+    }
 }

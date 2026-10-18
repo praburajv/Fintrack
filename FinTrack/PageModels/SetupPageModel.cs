@@ -63,18 +63,18 @@ public partial class SetupPageModel : ObservableObject
         var availability = await _biometric.GetAvailabilityAsync();
         if (availability == BiometricAvailability.NoEnrollment)
         {
-            await Shell.Current.DisplayAlertAsync("Fingerprint Login", "No fingerprint is currently configured on this device. Configure fingerprint authentication in Android Settings and try again.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Fingerprint Login", "No fingerprint is currently configured on this device. Configure fingerprint authentication in Android Settings and try again.", "OK");
             return;
         }
         if (availability != BiometricAvailability.Available)
         {
-            await Shell.Current.DisplayAlertAsync("Fingerprint Login", "Fingerprint authentication is currently unavailable.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Fingerprint Login", "Fingerprint authentication is currently unavailable.", "OK");
             return;
         }
 
         var existing = await _biometric.GetConfiguredUserIdAsync();
         if (existing.HasValue && existing.Value != _authentication.CurrentUser.Id
-            && !await Shell.Current.DisplayAlertAsync("Enable Fingerprint Login", "This will replace the currently configured biometric login account.", "Enable", "Cancel"))
+            && !await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Enable Fingerprint Login", "This will replace the currently configured biometric login account.", "Enable", "Cancel"))
             return;
 
         var result = await _biometric.AuthenticateAsync();

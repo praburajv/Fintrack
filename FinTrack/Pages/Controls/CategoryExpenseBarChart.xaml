@@ -20,14 +20,14 @@
         </ResourceDictionary>
     </Border.Resources>
 
-    <chart:SfCartesianChart IsTransposed="True" HeightRequest="320" SemanticProperties.Description="Expenses by category bar chart">
+    <chart:SfCartesianChart x:Name="CategoryChart" IsTransposed="True" HeightRequest="320" SemanticProperties.Description="Expenses by category bar chart">
         <chart:SfCartesianChart.XAxes>
             <chart:CategoryAxis LabelsIntersectAction="MultipleRows" />
         </chart:SfCartesianChart.XAxes>
         <chart:SfCartesianChart.YAxes>
             <chart:NumericalAxis LabelCreated="OnYAxisLabelCreated">
                 <chart:NumericalAxis.Title>
-                    <chart:ChartAxisTitle Text="{DynamicResource CurrencyExpenseAxisTitle}" />
+                    <chart:ChartAxisTitle x:Name="ValueAxisTitle" Text="{DynamicResource CurrencyExpenseAxisTitle}" />
                 </chart:NumericalAxis.Title>
             </chart:NumericalAxis>
         </chart:SfCartesianChart.YAxes>

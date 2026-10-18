@@ -37,7 +37,13 @@ public partial class MonthlyExpenseCalendarPage : ContentPage
         finally { _navigationPending = false; }
     }
 
-    private async void OnCategorySelected(object? sender, CategoryExpenseChartData category)
+    private async void OnExpenseCategorySelected(object? sender, CategoryExpenseChartData category)
+        => await NavigateToCategoryAsync(category, FinancialTransactionType.Expense);
+
+    private async void OnIncomeCategorySelected(object? sender, CategoryExpenseChartData category)
+        => await NavigateToCategoryAsync(category, FinancialTransactionType.Income);
+
+    private async Task NavigateToCategoryAsync(CategoryExpenseChartData category, FinancialTransactionType transactionType)
     {
         if (_navigationPending || BindingContext is not MonthlyExpenseCalendarPageModel model) return;
         try
@@ -46,8 +52,7 @@ public partial class MonthlyExpenseCalendarPage : ContentPage
             var start = new DateTime(model.Year, model.Month, 1);
             var end = start.AddMonths(1);
             var name = Uri.EscapeDataString(category.CategoryName);
-            var type = model.TransactionType == FinancialTransactionType.Income ? "&type=Income" : string.Empty;
-            await Shell.Current.GoToAsync($"dailybills?from={start:yyyy-MM-dd}&to={end:yyyy-MM-dd}&categoryId={category.CategoryId}&categoryName={name}{type}");
+            await Shell.Current.GoToAsync($"dailybills?from={start:yyyy-MM-dd}&to={end:yyyy-MM-dd}&categoryId={category.CategoryId}&categoryName={name}&type={transactionType}");
         }
         finally { _navigationPending = false; }
     }

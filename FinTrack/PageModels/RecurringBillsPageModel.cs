@@ -21,7 +21,7 @@ public partial class RecurringBillsPageModel(RecurringBillRepository repository,
     [RelayCommand] private Task Add() => Shell.Current.GoToAsync("recurringbill");
     [RelayCommand] private Task Edit(RecurringBill item) => Shell.Current.GoToAsync($"recurringbill?id={item.Id}");
     [RelayCommand] private async Task Toggle(RecurringBill item) { try { await repository.ToggleAsync(item); await LoadAsync(); } catch (Exception ex) { errors.HandleError(ex); } }
-    [RelayCommand] private async Task Delete(RecurringBill item) { if (!await Shell.Current.DisplayAlertAsync("Delete recurring bill?", item.ShopName, "Delete", "Cancel")) return; try { await repository.DeleteAsync(item.Id); await LoadAsync(); } catch (Exception ex) { await Shell.Current.DisplayAlertAsync("Cannot delete", ex.Message, "OK"); } }
+    [RelayCommand] private async Task Delete(RecurringBill item) { if (!await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Delete recurring bill?", item.ShopName, "Delete", "Cancel")) return; try { await repository.DeleteAsync(item.Id); await LoadAsync(); } catch (Exception ex) { await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Cannot delete", ex.Message, "OK"); } }
 
     [RelayCommand]
     private async Task Register()
@@ -31,7 +31,7 @@ public partial class RecurringBillsPageModel(RecurringBillRepository repository,
         {
             IsBusy = true; var result = await registration.RegisterMonthlyRecurringBillsAsync(TargetMonth);
             var message = result.Items.Count == 0 ? "No active recurring bills apply to this month." : $"{result.CreatedCount} new bill(s) registered.\n{result.ExistingCount} already registered.\nTotal: {EuroFormatter.Format(result.CreatedTotal)}";
-            await Shell.Current.DisplayAlertAsync("Registration complete", message, "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Registration complete", message, "OK");
         }
         catch (Exception ex) { errors.HandleError(ex); }
         finally { IsBusy = false; }

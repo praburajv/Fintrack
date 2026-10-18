@@ -2,19 +2,33 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:pm="clr-namespace:FinTracker.PageModels"
+             xmlns:models="clr-namespace:FinTracker.Models"
              xmlns:controls="clr-namespace:FinTracker.Pages.Controls"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="FinTracker.Pages.BillAnalysisPage"
              x:Name="AnalysisPage"
              x:DataType="pm:BillAnalysisPageModel"
              Title="Bill Analysis">
-    <ContentPage.Resources><ResourceDictionary><toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" /></ResourceDictionary></ContentPage.Resources>
+    <ContentPage.Resources><ResourceDictionary><toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" /><DataTemplate x:Key="BillRow" x:DataType="models:BillTransaction">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="0,6">
+            <Image Source="{Binding ShopIconFileName}" WidthRequest="28" HeightRequest="28" />
+            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                <Label Text="{Binding BillDate, StringFormat='{0:dd/MM/yyyy}'}" />
+                <Label Text="{Binding ShopName}" FontAttributes="Bold" />
+                <Label Text="{Binding PaymentModeName}" FontSize="12" />
+                <Label Text="{Binding ReferenceText}" IsVisible="{Binding HasReference}" FontSize="12" />
+            </VerticalStackLayout>
+            <Label Grid.Column="2" Text="{Binding AmountText}" TextColor="{Binding AmountTextColor}" VerticalOptions="Center" />
+        </Grid>
+    </DataTemplate></ResourceDictionary></ContentPage.Resources>
     <ContentPage.Behaviors><toolkit:EventToCommandBehavior BindingContext="{Binding BindingContext, Source={x:Reference AnalysisPage}}" EventName="Appearing" Command="{Binding AppearingCommand}" /></ContentPage.Behaviors>
     <Grid RowDefinitions="*,Auto">
         <ScrollView>
             <VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
                 <Label Text="Bill Analysis" Style="{StaticResource Title2}" />
                 <Label Text="{Binding ShopName}" FontSize="24" FontAttributes="Bold" MaxLines="2" LineBreakMode="TailTruncation" />
+                <Label Text="{Binding ReferenceFilterText}" IsVisible="{Binding HasReferenceFilter}" FontSize="12" />
+                <Button Text="Clear reference filter" Command="{Binding ClearReferenceFilterCommand}" IsVisible="{Binding HasReferenceFilter}" />
                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                     <Label Text="Year" FontAttributes="Bold" VerticalOptions="Center" />
                     <Picker Grid.Column="1" ItemsSource="{Binding YearOptions}" SelectedItem="{Binding SelectedYear}" HorizontalOptions="Fill" />
@@ -30,6 +44,23 @@
                 <Label Text="Monthly Visits" Style="{StaticResource Title2}" Margin="0,8,0,0" />
                 <Label Text="Tap a month bar to see transaction dates." FontSize="13" />
                 <controls:MonthlyVisitsChart ItemsSource="{Binding MonthlyVisits}" MonthSelected="OnMonthSelected" />
+                <Label Text="Expense bills" Style="{StaticResource Title2}" Margin="0,10,0,0" />
+                <Label Text="No matching transactions." IsVisible="{Binding HasExpenseBills, Converter={StaticResource InvertedBoolConverter}}" FontAttributes="Italic" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding ExpenseBills}" BindableLayout.ItemTemplate="{StaticResource BillRow}" Spacing="4" />
+
+                <Label Text="Income" Style="{StaticResource Title2}" Margin="0,18,0,0" />
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 12" Background="{DynamicResource SurfaceSecondary}" Padding="8,12"><VerticalStackLayout><Label Text="{Binding IncomeCountText}" FontSize="20" FontAttributes="Bold" HorizontalTextAlignment="Center" /><Label Text="Entries" FontSize="12" HorizontalTextAlignment="Center" /></VerticalStackLayout></Border>
+                    <Border Grid.Column="1" StrokeThickness="0" StrokeShape="RoundRectangle 12" Background="{DynamicResource SurfaceSecondary}" Padding="8,12"><VerticalStackLayout><Label Text="{Binding TotalIncomeText}" FontSize="18" FontAttributes="Bold" HorizontalTextAlignment="Center" MaxLines="1" LineBreakMode="TailTruncation" /><Label Text="Total Income" FontSize="12" HorizontalTextAlignment="Center" /></VerticalStackLayout></Border>
+                    <Border Grid.Column="2" StrokeThickness="0" StrokeShape="RoundRectangle 12" Background="{DynamicResource SurfaceSecondary}" Padding="8,12"><VerticalStackLayout><Label Text="{Binding AverageIncomeText}" FontSize="18" FontAttributes="Bold" HorizontalTextAlignment="Center" MaxLines="1" LineBreakMode="TailTruncation" /><Label Text="Avg / Entry" FontSize="12" HorizontalTextAlignment="Center" /></VerticalStackLayout></Border>
+                </Grid>
+                <Label Text="{Binding IncomeEmptyText}" IsVisible="{Binding HasIncome, Converter={StaticResource InvertedBoolConverter}}" HorizontalOptions="Center" FontAttributes="Italic" />
+                <Label Text="Monthly Income" Style="{StaticResource Title2}" Margin="0,8,0,0" />
+                <Label Text="Tap a month bar to see income dates." FontSize="13" />
+                <controls:MonthlyVisitsChart ItemsSource="{Binding IncomeMonthlyVisits}" MonthSelected="OnIncomeMonthSelected" />
+                <Label Text="Income transactions" Style="{StaticResource Title2}" Margin="0,10,0,0" />
+                <Label Text="No matching transactions." IsVisible="{Binding HasIncomeBills, Converter={StaticResource InvertedBoolConverter}}" FontAttributes="Italic" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding IncomeBills}" BindableLayout.ItemTemplate="{StaticResource BillRow}" Spacing="4" />
             </VerticalStackLayout>
         </ScrollView>
         <controls:ProcessingOverlay Grid.RowSpan="2" IsBusy="{Binding IsOverlayBusy}" Message="{Binding ProcessingMessage}" SpinnerColor="#3B82F6" ShowProgress="False" />

@@ -73,7 +73,7 @@ public partial class SetupDataPageModel(
     {
         if (!TryParseAmount(MonthlyIncomeEntry, out var value))
         {
-            await Shell.Current.DisplayAlertAsync("Validation", "Monthly Income must be a valid non-negative amount.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Validation", "Monthly Income must be a valid non-negative amount.", "OK");
             return;
         }
 
@@ -89,7 +89,7 @@ public partial class SetupDataPageModel(
     {
         if (!TryParseAmount(MonthlyBudgetEntry, out var value))
         {
-            await Shell.Current.DisplayAlertAsync("Validation", "Monthly Budget must be a valid non-negative amount.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Validation", "Monthly Budget must be a valid non-negative amount.", "OK");
             return;
         }
 

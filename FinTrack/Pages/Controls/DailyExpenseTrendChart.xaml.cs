@@ -11,7 +11,22 @@ public partial class DailyExpenseTrendChart : Border
     public static readonly BindableProperty ItemsSourceProperty = BindableProperty.Create(
         nameof(ItemsSource),
         typeof(IEnumerable<DailyExpenseCalendarItem>),
-        typeof(DailyExpenseTrendChart));
+        typeof(DailyExpenseTrendChart),
+        propertyChanged: (bindable, _, _) =>
+        {
+            var chart = (DailyExpenseTrendChart)bindable;
+            if (chart.IsIncomeChart) chart.UpdateChartLabels();
+        });
+
+    public static readonly BindableProperty IsIncomeChartProperty = BindableProperty.Create(
+        nameof(IsIncomeChart), typeof(bool), typeof(DailyExpenseTrendChart), false,
+        propertyChanged: (bindable, _, _) => ((DailyExpenseTrendChart)bindable).UpdateChartLabels());
+
+    public bool IsIncomeChart
+    {
+        get => (bool)GetValue(IsIncomeChartProperty);
+        set => SetValue(IsIncomeChartProperty, value);
+    }
 
     public IEnumerable<DailyExpenseCalendarItem>? ItemsSource
     {
@@ -20,6 +35,15 @@ public partial class DailyExpenseTrendChart : Border
     }
 
     public DailyExpenseTrendChart() => InitializeComponent();
+
+    private void UpdateChartLabels()
+    {
+        SemanticProperties.SetDescription(TrendChart, IsIncomeChart ? "Daily income trend for the selected month" : "Daily expenses trend for the selected month");
+        if (IsIncomeChart)
+            ValueAxisTitle.Text = $"Income ({Application.Current?.Resources["DisplayCurrencySymbol"] ?? "€"})";
+        else
+            ValueAxisTitle.SetDynamicResource(ChartAxisTitle.TextProperty, "CurrencyExpenseAxisTitle");
+    }
 
     private void OnYAxisLabelCreated(object? sender, ChartAxisLabelEventArgs e)
         => e.Label = EuroFormatter.FormatCompact(e.Position);

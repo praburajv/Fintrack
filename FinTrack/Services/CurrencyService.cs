@@ -8,6 +8,7 @@ public sealed class CurrencyService : ICurrencyService
 {
     private const string CurrencyPreferenceKey = "DisplayCurrencyCode";
     private const string DefaultCurrencyCode = "EUR";
+    private string? _accountOverride;
 
     private static readonly IReadOnlyList<DisplayCurrency> SupportedCurrencies =
     [
@@ -40,10 +41,20 @@ public sealed class CurrencyService : ICurrencyService
     }
 
     public void ApplyCurrency(string currencyCode) => ApplyCurrencyCore(currencyCode, save: true);
+    public void ApplyAccountCurrency(string currencyCode)
+    {
+        _accountOverride = currencyCode;
+        ApplyCurrencyCore(currencyCode, save: false);
+    }
+    public void ClearAccountCurrency()
+    {
+        _accountOverride = null;
+        LoadSavedPreference();
+    }
 
     private void ApplyCurrencyCore(string currencyCode, bool save)
     {
-        var selectedCurrency = FindCurrency(currencyCode);
+        var selectedCurrency = FindCurrency(_accountOverride ?? currencyCode);
         CurrentCurrency = selectedCurrency;
         EuroFormatter.Configure(selectedCurrency);
 

@@ -7,7 +7,7 @@ namespace FinTracker.Services;
 
 /// <summary>Preserves whole-month expense removal; Income requires provenance or individual user review.</summary>
 public sealed class MonthlyFinancialDeletionService(BillTransactionRepository bills,
-    IncomeTransactionRepository income, ICriticalOperationState criticalOperations)
+    IncomeTransactionRepository income, ICriticalOperationState criticalOperations, FinancialAccountContext accounts)
 {
     private async Task InitializeAsync(int year)
     {
@@ -25,8 +25,9 @@ public sealed class MonthlyFinancialDeletionService(BillTransactionRepository bi
         command.CommandText = @"SELECT CAST(substr(Transaction_date,6,2) AS INTEGER),
 SUM(CASE WHEN EtlImportId IS NOT NULL THEN 1 ELSE 0 END),
 SUM(CASE WHEN EtlImportId IS NULL THEN 1 ELSE 0 END)
-FROM income_transaction WHERE Transaction_date >= @from AND Transaction_date < @to
+FROM income_transaction WHERE FinancialAccountId=@account AND Transaction_date >= @from AND Transaction_date < @to
 GROUP BY substr(Transaction_date,6,2)";
+        command.Parameters.AddWithValue("@account", accounts.RequireId());
         AddRange(command, new DateTime(year, 1, 1), new DateTime(year + 1, 1, 1));
         var counts = new Dictionary<int, (int, int)>();
         await using var reader = await command.ExecuteReaderAsync();
@@ -36,6 +37,7 @@ GROUP BY substr(Transaction_date,6,2)";
 
     public async Task<MonthlyDeletionPlan> GetPlanAsync(int year, int month, string? importId = null)
     {
+        var accountId = accounts.RequireId();
         var from = new DateTime(year, month, 1);
         await InitializeAsync(year);
         await using var connection = new SqliteConnection(Constants.DatabasePath);
@@ -45,13 +47,14 @@ GROUP BY substr(Transaction_date,6,2)";
         command.CommandText = @"SELECT 0,b.Id,b.Bill_date,b.Shop_Id,b.Payment_Mode_Id,
 b.Bill_value,COALESCE(b.Note,''),COALESCE(s.Name,''),b.EtlImportId
 FROM Bill_transcation b LEFT JOIN Shop s ON s.Id=b.Shop_Id
-WHERE b.Bill_date >= @from AND b.Bill_date < @to AND (@import IS NULL OR b.EtlImportId=@import)
+WHERE b.FinancialAccountId=@account AND b.Bill_date >= @from AND b.Bill_date < @to AND (@import IS NULL OR b.EtlImportId=@import)
 UNION ALL
 SELECT 1,i.Id,i.Transaction_date,i.Shop_Id,i.Payment_Mode_Id,
 i.Amount,COALESCE(i.Note,''),COALESCE(s.Name,''),i.EtlImportId
 FROM income_transaction i LEFT JOIN Shop s ON s.Id=i.Shop_Id
-WHERE i.Transaction_date >= @from AND i.Transaction_date < @to AND (@import IS NULL OR i.EtlImportId=@import)
+WHERE i.FinancialAccountId=@account AND i.Transaction_date >= @from AND i.Transaction_date < @to AND (@import IS NULL OR i.EtlImportId=@import)
 ORDER BY 3,1,2";
+        command.Parameters.AddWithValue("@account", accountId);
         AddRange(command, from, from.AddMonths(1));
         command.Parameters.AddWithValue("@import", (object?)importId ?? DBNull.Value);
         var records = new List<MonthlyDeletionRecord>();
@@ -61,12 +64,14 @@ ORDER BY 3,1,2";
             reader.GetInt32(1), DateTime.Parse(reader.GetString(2), CultureInfo.InvariantCulture),
             reader.GetInt32(3), reader.GetInt32(4), Convert.ToDecimal(reader.GetValue(5), CultureInfo.InvariantCulture),
             reader.GetString(6), reader.GetString(7), reader.IsDBNull(8) ? null : reader.GetString(8)) { StoredDate = reader.GetString(2) });
-        return new MonthlyDeletionPlan(year, month, importId, records);
+        return new MonthlyDeletionPlan(year, month, importId, records) { FinancialAccountId = accountId };
     }
 
     public async Task<MonthlyDeletionResult> DeleteAsync(MonthlyDeletionPlan plan,
         IReadOnlyCollection<int> reviewedLegacyIncomeIds, IProgress<double>? progress = null)
     {
+        if (plan.FinancialAccountId != accounts.RequireId())
+            throw new InvalidOperationException("The active company changed during review. Reload this month before deleting.");
         var from = new DateTime(plan.Year, plan.Month, 1);
         var untracked = plan.UntrackedIncome.ToArray();
         if (reviewedLegacyIncomeIds.Any(id => !untracked.Any(row => row.Id == id)))
@@ -87,10 +92,11 @@ ORDER BY 3,1,2";
             {
                 scope.Transaction = transaction;
                 scope.CommandText = @"SELECT 0,Id FROM Bill_transcation
-WHERE Bill_date >= @from AND Bill_date < @to AND (@import IS NULL OR EtlImportId=@import)
+WHERE FinancialAccountId=@account AND Bill_date >= @from AND Bill_date < @to AND (@import IS NULL OR EtlImportId=@import)
 UNION ALL SELECT 1,Id FROM income_transaction
-WHERE Transaction_date >= @from AND Transaction_date < @to AND EtlImportId IS NOT NULL
+WHERE FinancialAccountId=@account AND Transaction_date >= @from AND Transaction_date < @to AND EtlImportId IS NOT NULL
 AND (@import IS NULL OR EtlImportId=@import)";
+                scope.Parameters.AddWithValue("@account", plan.FinancialAccountId);
                 AddRange(scope, from, from.AddMonths(1));
                 scope.Parameters.AddWithValue("@import", (object?)plan.ImportId ?? DBNull.Value);
                 var expected = plan.Expenses.Concat(plan.ImportedIncome).Select(row => (row.Type, row.Id)).ToHashSet();
@@ -111,10 +117,11 @@ AND (@import IS NULL OR EtlImportId=@import)";
                 await using var delete = connection.CreateCommand();
                 delete.Transaction = transaction;
                 // Compare the reviewed snapshot as well as ID: edits made during confirmation abort atomically.
-                delete.CommandText = $@"DELETE FROM {table} WHERE Id=@id AND {date}=@date
+                delete.CommandText = $@"DELETE FROM {table} WHERE Id=@id AND FinancialAccountId=@account AND {date}=@date
 AND Shop_Id=@shop AND Payment_Mode_Id=@mode AND CAST({amount} AS NUMERIC)=CAST(@amount AS NUMERIC)
 AND COALESCE(Note,'')=@note AND COALESCE(EtlImportId,'')=@import";
                 delete.Parameters.AddWithValue("@id", row.Id);
+                delete.Parameters.AddWithValue("@account", plan.FinancialAccountId);
                 delete.Parameters.AddWithValue("@date", row.StoredDate);
                 delete.Parameters.AddWithValue("@shop", row.ShopId);
                 delete.Parameters.AddWithValue("@mode", row.PaymentModeId);

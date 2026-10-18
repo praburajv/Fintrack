@@ -11,6 +11,10 @@ public sealed class ReadOnlySqlAnalyzerService : IReadOnlySqlAnalyzerService
 {
     public const int MaxDisplayedRows = 500;
 
+    private static readonly Regex TableInfoPragma = new(
+        """\APRAGMA\s+table_info\s*\(\s*(?:[A-Za-z_][A-Za-z0-9_]*|"(?:[^"]|"")+")\s*\)\s*\z""",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
     private static readonly HashSet<string> BlockedKeywords = new(StringComparer.OrdinalIgnoreCase)
     {
         "INSERT", "UPDATE", "DELETE", "REPLACE", "CREATE", "ALTER", "DROP", "VACUUM", "REINDEX", "ANALYZE",
@@ -119,6 +123,10 @@ public sealed class ReadOnlySqlAnalyzerService : IReadOnlySqlAnalyzerService
             statement = statement[..^1].TrimEnd();
         if (statement.Length == 0 || ContainsStatementSeparator(statement))
             return "Only one SQL statement is permitted.";
+
+        // A fully matched metadata query is safe even when a quoted table name contains
+        // spaces or SQL keywords. Never allow a trailing assignment or another statement.
+        if (TableInfoPragma.IsMatch(statement)) return null;
 
         var firstToken = Regex.Match(statement, @"^([A-Za-z_][A-Za-z0-9_]*)", RegexOptions.CultureInvariant).Groups[1].Value;
         if (!firstToken.Equals("SELECT", StringComparison.OrdinalIgnoreCase)

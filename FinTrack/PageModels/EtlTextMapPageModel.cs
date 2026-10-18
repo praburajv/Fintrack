@@ -77,17 +77,17 @@ public partial class EtlTextMapPageModel : ObservableObject, IQueryAttributable
             LookupText = LookupText.Trim();
             if (string.IsNullOrWhiteSpace(LookupText) || SelectedShop is null)
             {
-                await Shell.Current.DisplayAlertAsync("Validation", "Lookup text and Shop are required.", "OK");
+                await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Validation", "Lookup text and Shop are required.", "OK");
                 return;
             }
             if (LookupText.Length > 225)
             {
-                await Shell.Current.DisplayAlertAsync("Validation", "Lookup text cannot exceed 225 characters.", "OK");
+                await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Validation", "Lookup text cannot exceed 225 characters.", "OK");
                 return;
             }
             if (await _repository.ExistsLookupTextAsync(LookupText, _editing.Id))
             {
-                await Shell.Current.DisplayAlertAsync("Validation", "This lookup text is already mapped to a Shop.", "OK");
+                await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Validation", "This lookup text is already mapped to a Shop.", "OK");
                 return;
             }
             _editing.LookupText = LookupText;
@@ -96,7 +96,7 @@ public partial class EtlTextMapPageModel : ObservableObject, IQueryAttributable
             await _repository.SaveItemAsync(_editing);
             _queryId = null;
             await LoadAsync();
-            await Shell.Current.DisplayAlertAsync("ETL DATA MAPPING", "Mapping saved.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("ETL DATA MAPPING", "Mapping saved.", "OK");
         }
         catch (Exception ex) { _errors.HandleError(ex); }
         finally { _isSaving = false; IsBusy = false; }
@@ -119,7 +119,7 @@ public partial class EtlTextMapPageModel : ObservableObject, IQueryAttributable
         IsBusy = true;
         try
         {
-            if (!await Shell.Current.DisplayAlertAsync("Delete mapping?", $"{item.LookupText} → {item.ShopName}", "Delete", "Cancel")) return;
+            if (!await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Delete mapping?", $"{item.LookupText} → {item.ShopName}", "Delete", "Cancel")) return;
             await _repository.DeleteItemAsync(item);
             Items = await _repository.ListAsync();
         }

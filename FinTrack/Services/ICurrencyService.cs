@@ -9,4 +9,6 @@ public interface ICurrencyService
     event EventHandler? CurrencyChanged;
     void LoadSavedPreference();
     void ApplyCurrency(string currencyCode);
+    void ApplyAccountCurrency(string currencyCode);
+    void ClearAccountCurrency();
 }

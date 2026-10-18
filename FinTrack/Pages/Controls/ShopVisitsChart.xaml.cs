@@ -71,7 +71,7 @@ public partial class ShopVisitsChart : Border
         }
         catch (Exception)
         {
-            await Shell.Current.DisplayAlertAsync("Shop bills", "The shop bill list could not be opened. Please try again.", "OK");
+            await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Shop bills", "The shop bill list could not be opened. Please try again.", "OK");
         }
         finally { IsProcessing = false; }
     }

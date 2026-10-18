@@ -3,6 +3,6 @@
  <Grid><ScrollView><VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
   <Label Text="Create Account" Style="{StaticResource Title1}" /><Entry Placeholder="Name" Text="{Binding Name}" /><Entry Placeholder="Username" Text="{Binding Username}" ClearButtonVisibility="WhileEditing" /><Entry Placeholder="Password" Text="{Binding Password}" IsPassword="{Binding IsPassword}" /><Entry Placeholder="Confirm Password" Text="{Binding ConfirmPassword}" IsPassword="{Binding IsPassword}" />
   <Button Text="{Binding PasswordToggleText}" Command="{Binding TogglePasswordCommand}" HorizontalOptions="Start" /><Button Text="Register" Command="{Binding RegisterCommand}" />
-  <HorizontalStackLayout HorizontalOptions="Center" Spacing="6"><Label Text="Already have an account?" /><Button Text="Login" Command="{Binding LoginCommand}" Padding="0" /></HorizontalStackLayout>
+  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6"><Label Text="Already have an account?" VerticalOptions="Center" HorizontalTextAlignment="Center" LineBreakMode="WordWrap" /><Button Grid.Column="1" Text="Login" Command="{Binding LoginCommand}" Padding="0" VerticalOptions="Center" /></Grid>
  </VerticalStackLayout></ScrollView><controls:ProcessingOverlay IsBusy="{Binding IsBusy}" Message="Creating account..." /></Grid>
 </ContentPage>

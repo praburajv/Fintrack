@@ -47,7 +47,7 @@ public partial class IncomeAnalysisPageModel(IncomeTransactionRepository income,
             var groups = transactions.GroupBy(x => new { x.CategoryId, x.CategoryName, x.CategoryIconKey }).Select(group =>
             {
                 var result = new CategoryExpenseGroup { CategoryId = group.Key.CategoryId, CategoryName = group.Key.CategoryName, IconFileName = CategoryIconCatalog.FileNameFor(group.Key.CategoryIconKey) };
-                foreach (var item in group) result.Bills.Add(new BillTransaction { Id = item.Id, BillDate = item.TransactionDate, ShopId = item.ShopId, PaymentModeId = item.PaymentModeId, BillValue = item.Amount, Note = item.Note, ShopName = item.ShopName, PaymentModeName = item.PaymentModeName, TransactionType = FinancialTransactionType.Income });
+                foreach (var item in group) result.Bills.Add(new BillTransaction { Id = item.Id, BillReferenceNo = item.BillReferenceNo, BillDate = item.TransactionDate, ShopId = item.ShopId, PaymentModeId = item.PaymentModeId, BillValue = item.Amount, Note = item.Note, ShopName = item.ShopName, PaymentModeName = item.PaymentModeName, TransactionType = FinancialTransactionType.Income });
                 return result;
             }).OrderByDescending(x => x.TotalExpense).ThenBy(x => x.CategoryName).ToList();
             Groups = new ObservableCollection<CategoryExpenseGroup>(groups);

@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FinTracker.Models;
+using System.Collections.ObjectModel;
+using FinTracker.Pages.Controls;
 
 namespace FinTracker.PageModels;
 
@@ -14,17 +16,20 @@ public partial class EtlDataManagePageModel : ObservableObject
     private readonly EtlTextMappingService _mappingService;
     private readonly ModalErrorHandler _errors;
     private readonly IAuthenticationService _authentication;
+    private readonly FinancialAccountContext _accounts;
     private readonly SemaphoreSlim _loadGate = new(1, 1);
 
     [ObservableProperty] private CategoryExpenseGroup? _group;
     [ObservableProperty] private bool _isBusy = true;
     [ObservableProperty] private string _statusText = string.Empty;
+    [ObservableProperty] private ObservableCollection<EtlMonthGroup> _months = [];
+    [ObservableProperty] private string _companyName = string.Empty;
 
-    public bool HasBills => Group?.Bills.Count > 0;
+    public bool HasBills => Months.Count > 0;
     public bool HasGroup => Group is not null;
     public string EmptyStateText => Group is null ? StatusText : "No ETL bills found.";
 
-    public EtlDataManagePageModel(BillTransactionRepository bills, CategoryRepository categories, ShopRepository shops, EtlTextMapRepository textMaps, EtlTextMappingService mappingService, ModalErrorHandler errors, IAuthenticationService authentication)
+    public EtlDataManagePageModel(BillTransactionRepository bills, CategoryRepository categories, ShopRepository shops, EtlTextMapRepository textMaps, EtlTextMappingService mappingService, ModalErrorHandler errors, IAuthenticationService authentication, FinancialAccountContext accounts)
     {
         _bills = bills;
         _categories = categories;
@@ -33,6 +38,7 @@ public partial class EtlDataManagePageModel : ObservableObject
         _mappingService = mappingService;
         _errors = errors;
         _authentication = authentication;
+        _accounts = accounts;
     }
 
     [RelayCommand]
@@ -45,10 +51,13 @@ public partial class EtlDataManagePageModel : ObservableObject
         {
             IsBusy = true;
             await Task.Yield();
+            var accountId = _accounts.RequireId();
+            CompanyName = _accounts.Current?.Name ?? string.Empty;
             var category = (await _categories.ListAsync()).FirstOrDefault(x => x.Name.Equals(EtlCategoryName, StringComparison.OrdinalIgnoreCase));
             if (category is null)
             {
                 Group = null;
+                Months = [];
                 StatusText = "The ETL_DT category was not found. Configure it before managing ETL bills.";
                 OnPropertyChanged(nameof(HasBills));
                 OnPropertyChanged(nameof(HasGroup));
@@ -70,6 +79,17 @@ public partial class EtlDataManagePageModel : ObservableObject
                 bill.DisplayNumber = number++;
                 group.Bills.Add(bill);
             }
+
+            if (_accounts.RequireId() != accountId) return;
+            var oldExpanded = Months.ToDictionary(x => x.Month, x => x.IsExpanded);
+            var months = new ObservableCollection<EtlMonthGroup>();
+            foreach (var set in bills.GroupBy(x => new DateTime(x.BillDate.Year, x.BillDate.Month, 1)).OrderByDescending(x => x.Key))
+            {
+                var item = new EtlMonthGroup { Month = set.Key, FinancialAccountId = accountId, IsExpanded = oldExpanded.GetValueOrDefault(set.Key, false) };
+                foreach (var bill in set) item.Bills.Add(bill);
+                months.Add(item);
+            }
+            Months = months;
 
             Group = group;
             StatusText = string.Empty;
@@ -98,10 +118,58 @@ public partial class EtlDataManagePageModel : ObservableObject
     }
 
     [RelayCommand]
+    private void ToggleMonth(EtlMonthGroup month)
+    {
+        if (month is not null) month.IsExpanded = !month.IsExpanded;
+    }
+
+    [RelayCommand]
+    private async Task DeleteMonth(EtlMonthGroup month)
+    {
+        if (month is null || IsBusy || Group is null || month.FinancialAccountId != _accounts.RequireId() || !await RequireAuthenticationAsync()) return;
+        var company = _accounts.Current?.Name ?? "this company";
+        if (!await ThemeDialog.ConfirmAsync("Delete ETL month?",
+            $"Delete {month.Count} ETL expense bills from {month.Title} for {company}? Other months and manually categorized bills will remain.", "Delete month")) return;
+        IsBusy = true;
+        try
+        {
+            if (month.FinancialAccountId != _accounts.RequireId()) return;
+            await _bills.DeleteBillsByCategoryForMonthAsync(Group.CategoryId, month.Month.Year, month.Month.Month);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _errors.HandleError(ex); }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private async Task ProcessMonth(EtlMonthGroup month)
+    {
+        if (month is null || IsBusy || month.FinancialAccountId != _accounts.RequireId() || !await RequireAuthenticationAsync()) return;
+        if (!await ThemeDialog.ConfirmAsync("Process ETL month?", $"Apply current mappings to {month.Title} for {_accounts.Current?.Name}?", "Process")) return;
+        IsBusy = true;
+        try
+        {
+            var shops = await _shops.ListAsync();
+            var holding = shops.FirstOrDefault(x => x.Name.Equals("ETL_DATA_VAULT", StringComparison.OrdinalIgnoreCase));
+            if (holding is null) throw new InvalidOperationException("Create ETL_DATA_VAULT before processing this month.");
+            var mapping = await _textMaps.ListAsync();
+            var shopIds = shops.Select(x => x.Id).ToHashSet();
+            var candidates = month.Bills.Where(x => x.ShopId == holding.Id).ToArray();
+            var assignments = candidates.Select(x => (Bill: x, Target: _mappingService.FindMappedShopId(x.Note, mapping, shopIds)))
+                .Where(x => x.Target.HasValue && x.Target.Value != holding.Id).ToDictionary(x => x.Bill.Id, x => x.Target!.Value);
+            var changed = await _bills.ReassignShopIdsAsync(holding.Id, assignments);
+            await LoadAsync();
+            await ThemeDialog.AlertAsync("ETL month", $"{changed} bill(s) processed for {month.Title}.");
+        }
+        catch (Exception ex) { _errors.HandleError(ex); }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
     private async Task DeleteBill(BillTransaction bill)
     {
         if (bill is null || IsBusy || !await RequireAuthenticationAsync()) return;
-        if (!await Shell.Current.DisplayAlertAsync("Delete this bill?", "This action cannot be undone.", "Delete", "Cancel")) return;
+        if (!await ThemeDialog.ConfirmAsync("Delete this bill?", "This action cannot be undone.", "Delete")) return;
 
         IsBusy = true;
         try
@@ -126,15 +194,14 @@ public partial class EtlDataManagePageModel : ObservableObject
         if (Group is null || IsBusy || !await RequireAuthenticationAsync()) return;
         if (!HasBills)
         {
-            await Shell.Current.DisplayAlertAsync("ETL bills", "No ETL bills to delete.", "OK");
+            await ThemeDialog.AlertAsync("ETL bills", "No ETL bills to delete.");
             return;
         }
 
-        var confirmed = await Shell.Current.DisplayAlertAsync(
+        var confirmed = await ThemeDialog.ConfirmAsync(
             "Delete All ETL Bills?",
             "This will permanently delete all bills belonging to the ETL_DT category.\n\nThe ETL_DT category and its shops will not be deleted.\n\nThis action cannot be undone.",
-            "Delete All",
-            "Cancel");
+            "Delete All");
         if (!confirmed) return;
 
         IsBusy = true;
@@ -142,7 +209,7 @@ public partial class EtlDataManagePageModel : ObservableObject
         {
             var deleted = await _bills.DeleteBillsByCategoryAsync(Group.CategoryId);
             await LoadAsync(true);
-            await Shell.Current.DisplayAlertAsync("ETL bills", deleted == 0 ? "No ETL bills to delete." : $"{deleted} ETL bill(s) deleted successfully.", "OK");
+            await ThemeDialog.AlertAsync("ETL bills", deleted == 0 ? "No ETL bills to delete." : $"{deleted} ETL bill(s) deleted successfully.");
         }
         catch (Exception ex)
         {
@@ -158,11 +225,10 @@ public partial class EtlDataManagePageModel : ObservableObject
     private async Task Remap()
     {
         if (IsBusy || !await RequireAuthenticationAsync()) return;
-        var confirmed = await Shell.Current.DisplayAlertAsync(
+        var confirmed = await ThemeDialog.ConfirmAsync(
             "Re-Map ETL Bills?",
             "Current ETL text mappings will be applied to bills still assigned to ETL_DATA_VAULT. Matching bills will be reassigned to their configured Shops.",
-            "Re-Map",
-            "Cancel");
+            "Re-Map");
         if (!confirmed) return;
 
         IsBusy = true;
@@ -172,7 +238,7 @@ public partial class EtlDataManagePageModel : ObservableObject
             var holdingShop = shops.FirstOrDefault(x => x.Name.Equals("ETL_DATA_VAULT", StringComparison.OrdinalIgnoreCase));
             if (holdingShop is null)
             {
-                await Shell.Current.DisplayAlertAsync("ETL Re-Map", "The ETL_DATA_VAULT Shop was not found.", "OK");
+                await ThemeDialog.AlertAsync("ETL Re-Map", "The ETL_DATA_VAULT Shop was not found.");
                 return;
             }
 
@@ -186,7 +252,7 @@ public partial class EtlDataManagePageModel : ObservableObject
 
             var remapped = await _bills.ReassignShopIdsAsync(holdingShop.Id, assignments);
             await LoadAsync(Group?.IsExpanded ?? true);
-            await Shell.Current.DisplayAlertAsync("ETL Re-Map Completed", $"Bills Checked: {bills.Count}\nBills Re-Mapped: {remapped}\nBills Remaining Unmapped: {bills.Count - remapped}", "OK");
+            await ThemeDialog.AlertAsync("ETL Re-Map Completed", $"Bills Checked: {bills.Count}\nBills Re-Mapped: {remapped}\nBills Remaining Unmapped: {bills.Count - remapped}");
         }
         catch (Exception ex) { _errors.HandleError(ex); }
         finally { IsBusy = false; }
@@ -196,7 +262,7 @@ public partial class EtlDataManagePageModel : ObservableObject
     {
         if (AppShell.IsClosing) return false;
         if (_authentication.IsAuthenticated) return true;
-        await Shell.Current.DisplayAlertAsync("Authentication Required", "Please login to delete expenses.", "OK");
+        await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Authentication Required", "Please login to delete expenses.", "OK");
         return false;
     }
 }

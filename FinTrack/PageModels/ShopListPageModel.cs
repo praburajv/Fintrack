@@ -13,5 +13,5 @@ public partial class ShopListPageModel:ObservableObject
  [RelayCommand] private void SelectSuggestion(SetupSearchSuggestion suggestion){SearchText=suggestion.Name;_selectedSuggestionId=suggestion.Id;ApplyFilter();}
  [RelayCommand] private Task Add()=>Shell.Current.GoToAsync("shop");
  [RelayCommand] private Task Edit(Shop item)=>Shell.Current.GoToAsync($"shop?id={item.Id}");
- [RelayCommand] private async Task Delete(Shop item){if(await _bills.IsShopReferencedAsync(item.Id)){await Shell.Current.DisplayAlertAsync("Shop in use","This shop cannot be deleted because it is used by existing bills.","OK");return;}if(!await Shell.Current.DisplayAlertAsync("Delete shop?",item.Name,"Delete","Cancel"))return;try{await _shops.DeleteItemAsync(item);_allItems=await _shops.ListAsync();ApplyFilter();}catch(Exception ex){_errors.HandleError(ex);}}
+ [RelayCommand] private async Task Delete(Shop item){if(await _bills.IsShopReferencedAsync(item.Id)){await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Shop in use","This shop cannot be deleted because it is used by existing bills.","OK");return;}if(!await FinTracker.Pages.Controls.ThemeDialog.DisplayAlertAsync("Delete shop?",item.Name,"Delete","Cancel"))return;try{await _shops.DeleteItemAsync(item);_allItems=await _shops.ListAsync();ApplyFilter();}catch(Exception ex){_errors.HandleError(ex);}}
 }

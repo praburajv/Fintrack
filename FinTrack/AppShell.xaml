@@ -7,23 +7,16 @@
     xmlns:pages="clr-namespace:FinTracker.Pages"
     x:Name="RootShell"
     Shell.FlyoutBehavior="Flyout"
-    Title="Household Expense Tracker"
-    BackgroundColor="#4B2BD6"
-    ForegroundColor="White"
-    TitleColor="White"
+    Title="FinTracker"
+    BackgroundColor="{DynamicResource PrimaryDark}"
+    ForegroundColor="{DynamicResource TextOnPrimary}"
+    TitleColor="{DynamicResource TextOnPrimary}"
     Shell.NavBarHasShadow="False">
-
-    <Shell.TitleView>
-        <Grid BackgroundColor="#4B2BD6" ColumnDefinitions="56,*" ColumnSpacing="8" Padding="6,4" HeightRequest="56">
-            <Image Source="et_top_menu_logo.png" Aspect="AspectFit" HeightRequest="42" WidthRequest="42" />
-            <Image Grid.Column="1" Source="expense_tracker_text.png" Aspect="AspectFit" HorizontalOptions="Start" HeightRequest="30" />
-        </Grid>
-    </Shell.TitleView>
 
     <Shell.FlyoutHeader>
         <Border Padding="20,24,20,16" StrokeThickness="0" Background="{DynamicResource SurfaceSecondary}">
             <VerticalStackLayout Spacing="6">
-                <Label Text="Household Expense Tracker" Style="{StaticResource Title2}" TextColor="{DynamicResource TextPrimary}" />
+                <Label Text="FinTracker" Style="{StaticResource Title2}" TextColor="{DynamicResource TextPrimary}" />
                 <Label Text="Manage your household expenses in one place." TextColor="{DynamicResource TextPrimary}" IsVisible="{Binding IsLoggedOut, Source={x:Reference RootShell}}" />
                 <Label Text="Welcome," TextColor="{DynamicResource TextPrimary}" IsVisible="{Binding IsAuthenticated, Source={x:Reference RootShell}}" />
                 <Label Text="{Binding CurrentUserName, Source={x:Reference RootShell}}" Style="{StaticResource Title3}" TextColor="{DynamicResource TextPrimary}" IsVisible="{Binding IsAuthenticated, Source={x:Reference RootShell}}" />
@@ -37,10 +30,37 @@
     </Shell.FlyoutHeader>
 
     <ShellContent
-        Title="Dashboard"
+        Title="Financial Dashboard"
+        Icon="{StaticResource FlyoutIconDashboard}"
+        ContentTemplate="{DataTemplate pages:FinancialDashboardPage}"
+        Route="main" />
+
+    <ShellContent Title="Reports" Shell.FlyoutItemIsVisible="False"
+                  ContentTemplate="{DataTemplate pages:ReportsHubPage}" Route="reportshub" />
+    <ShellContent Title="Add" Shell.FlyoutItemIsVisible="False"
+                  ContentTemplate="{DataTemplate pages:AddHubPage}" Route="addhub" />
+
+    <!-- Keep the former tile-and-search landing page available without changing its behavior. -->
+    <ShellContent
+        Title="Dash cool"
         Icon="{StaticResource FlyoutIconDashboard}"
         ContentTemplate="{DataTemplate pages:LandingDashboardPage}"
-        Route="main" />
+        Route="dashcool" />
+
+    <ShellContent
+        Title="Welcome"
+        Shell.FlyoutItemIsVisible="False"
+        ContentTemplate="{DataTemplate pages:WelcomePage}"
+        Route="welcome" />
+
+    <ShellContent Title="Choose Company" Shell.FlyoutItemIsVisible="False"
+                  ContentTemplate="{DataTemplate pages:CompanySelectionPage}" Route="companies" />
+    <ShellContent Title="Company management" Shell.FlyoutItemIsVisible="False"
+                  ContentTemplate="{DataTemplate pages:FinancialAccountCardsPage}" Route="companymanagement" />
+
+    <!-- Login is a root so startup/logout can replace the authenticated stack. -->
+    <ShellContent Title="Login" Shell.FlyoutItemIsVisible="False"
+                  ContentTemplate="{DataTemplate pages:LoginPage}" Route="login" />
 
     <!-- Preserve the existing analytical dashboard as a separate Flyout destination. -->
     <ShellContent
@@ -112,12 +132,19 @@
         SemanticProperties.Description="Open application setup" />
 
     <MenuItem Text="Setup Data" IconImageSource="{StaticResource FlyoutIconDatabase}" Clicked="OnSetupDataClicked" SemanticProperties.Description="Manage payment modes, categories and shops" />
+    <MenuItem Text="Financial Accounts" IconImageSource="{StaticResource FlyoutIconDashboard}" Clicked="OnFinancialAccountsClicked" SemanticProperties.Description="Select or manage financial accounts" />
+
+    <MenuItem
+        Text="Show introduction"
+        IconImageSource="{StaticResource FlyoutIconDashboard}"
+        Clicked="OnShowIntroductionClicked"
+        SemanticProperties.Description="Show the FinTracker introduction" />
 
     <MenuItem
         Text="Close Application"
         IconImageSource="{StaticResource FlyoutIconClose}"
         Clicked="OnCloseApplicationClicked"
-        SemanticProperties.Description="Close Household Expense Tracker" />
+        SemanticProperties.Description="Close FinTracker" />
     
 
     <Shell.FlyoutFooter>

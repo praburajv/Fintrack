@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FinTracker.Models;
 using FinTracker.Services;
+using FinTracker.Pages.Controls;
 
 namespace FinTracker.PageModels;
 
@@ -36,7 +37,7 @@ public partial class RestoreDataPageModel(IBackupService backupService, ModalErr
             await using (var destination = File.Create(staged))
                 await source.CopyToAsync(destination);
             SelectedFile = staged; Progress = 35; OnPropertyChanged(nameof(ProgressText)); Validation = await backupService.ValidateBackupAsync(staged); Progress = 100; OnPropertyChanged(nameof(ProgressText));
-            if (!HasValidBackup) await Shell.Current.DisplayAlertAsync("Backup Cannot Be Restored", Validation?.ErrorMessage ?? "The selected file is invalid, corrupted, or incompatible.", "OK");
+            if (!HasValidBackup) await ThemeDialog.AlertAsync("Backup Cannot Be Restored", Validation?.ErrorMessage ?? "The selected file is invalid, corrupted, or incompatible.");
             else CurrentData = await backupService.GetCurrentSummaryAsync();
             OnPropertyChanged(nameof(HasValidBackup)); OnPropertyChanged(nameof(BackupFileName)); OnPropertyChanged(nameof(Metadata)); OnPropertyChanged(nameof(BackupData)); OnPropertyChanged(nameof(CreatedText));
             OnPropertyChanged(nameof(IsSelectedMonthsBackup)); OnPropertyChanged(nameof(SelectedMonthsText));
@@ -51,7 +52,7 @@ public partial class RestoreDataPageModel(IBackupService backupService, ModalErr
         var message = IsSelectedMonthsBackup
             ? $"This will permanently replace all destination bills for {SelectedMonthsText}. Other months and setup data will be preserved.\n\nImported bills: {Metadata?.SelectedMonthBillCount ?? 0}"
             : string.Join(Environment.NewLine, "This will replace your current data.", "", "CURRENT DATA", $"Shops: {CurrentData.ShopCount}", $"Payment Modes: {CurrentData.PaymentModeCount}", $"Bills: {CurrentData.BillCount}", "", "BACKUP DATA", $"Shops: {backup.ShopCount}", $"Payment Modes: {backup.PaymentModeCount}", $"Bills: {backup.BillCount}", "", "A safety backup will be created automatically.");
-        if (!await Shell.Current.DisplayAlertAsync("Restore Backup?", message, "Restore", "Cancel")) return;
+        if (!await ThemeDialog.ConfirmAsync("Restore Backup?", message, "Restore")) return;
         Progress = 0; OnPropertyChanged(nameof(ProgressText)); IsBusy = true; ProcessingMessage = "Protecting current data...";
         await Task.Yield();
         try
@@ -61,7 +62,7 @@ public partial class RestoreDataPageModel(IBackupService backupService, ModalErr
             {
                 var result = await backupService.RestoreSelectedMonthsBackupAsync(SelectedFile, progress: new Progress<double>(value => { Progress = value; OnPropertyChanged(nameof(ProgressText)); }));
                 Validation = null; RestoreCompleted = true;
-                await Shell.Current.DisplayAlertAsync("Selected Months Restored", $"Replaced: {result.Replaced} month(s)\nImported: {result.Imported} bill(s)", "OK");
+                await ThemeDialog.AlertAsync("Selected Months Restored", $"Replaced: {result.Replaced} month(s)\nImported: {result.Imported} bill(s)");
             }
             else
             {
@@ -72,7 +73,8 @@ public partial class RestoreDataPageModel(IBackupService backupService, ModalErr
             var restored = await backupService.GetCurrentSummaryAsync(); Validation = null; RestoreCompleted = true; CurrentData = restored;
             OnPropertyChanged(nameof(HasValidBackup)); OnPropertyChanged(nameof(Metadata));
             var success = string.Join(Environment.NewLine, $"Shops: {restored.ShopCount}", $"Payment Modes: {restored.PaymentModeCount}", $"Bills: {restored.BillCount}");
-            await Shell.Current.DisplayAlertAsync("Restore Completed Successfully", success, "OK");
+            await ThemeDialog.AlertAsync("Restore Completed Successfully", success);
+            await Shell.Current.GoToAsync("//companies");
             }
         }
         catch (Exception ex) { errors.HandleError(ex); } finally { IsBusy = false; ProcessingMessage = string.Empty; }

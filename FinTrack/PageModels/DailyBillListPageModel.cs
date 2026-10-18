@@ -34,7 +34,7 @@ public partial class DailyBillListPageModel : ObservableObject, IQueryAttributab
     public string DateTitle => CategoryId.HasValue
         ? $"{(TransactionType == FinancialTransactionType.Income ? "Income" : "Bills")} — {CategoryName} — {RangeDisplayText}"
         : ShopId.HasValue
-            ? $"Bills — {ShopName} — {(HasValidRange ? RangeDisplayText : SelectedDate.ToString("dd/MM/yyyy"))}"
+            ? $"{(TransactionType == FinancialTransactionType.Income ? "Income" : "Bills")} — {ShopName} — {(HasValidRange ? RangeDisplayText : SelectedDate.ToString("dd/MM/yyyy"))}"
             : $"{(TransactionType == FinancialTransactionType.Income ? "Income" : "Bills")} — {SelectedDate:dd/MM/yyyy}";
     public string TotalText => $"Total: {EuroFormatter.Format(DailyTotal)}";
     public bool HasBills => Items.Count > 0;
@@ -42,7 +42,7 @@ public partial class DailyBillListPageModel : ObservableObject, IQueryAttributab
     public string EmptyText => CategoryId.HasValue
         ? $"No {CategoryName} bills found for {RangeDisplayText}."
         : ShopId.HasValue
-            ? $"No {ShopName} bills found for {(HasValidRange ? RangeDisplayText : SelectedDate.ToString("dd/MM/yyyy"))}."
+            ? $"No {ShopName} {(TransactionType == FinancialTransactionType.Income ? "income" : "bills")} found for {(HasValidRange ? RangeDisplayText : SelectedDate.ToString("dd/MM/yyyy"))}."
             : $"No bills found for {SelectedDate:dd/MM/yyyy}.";
     public bool IsOverlayBusy => IsBusy || IsBillListLoading || IsSorting;
     private bool HasValidRange => RangeStart != default && RangeEndExclusive > RangeStart;
@@ -110,7 +110,7 @@ public partial class DailyBillListPageModel : ObservableObject, IQueryAttributab
             {
                 var useRange = CategoryId.HasValue || (ShopId.HasValue && HasValidRange);
                 var income = await _income.ListAsync(useRange ? RangeStart : SelectedDate.Date, useRange ? RangeEndExclusive : SelectedDate.Date.AddDays(1));
-                displayBills = income.Where(item => (!CategoryId.HasValue || item.CategoryId == CategoryId.Value) && (!ShopId.HasValue || item.ShopId == ShopId.Value)).Select(item => new BillTransaction { Id = item.Id, BillDate = item.TransactionDate, ShopId = item.ShopId, PaymentModeId = item.PaymentModeId, BillValue = item.Amount, Note = item.Note, ShopName = item.ShopName, PaymentModeName = item.PaymentModeName, ShopCategoryId = item.CategoryId, ShopCategoryName = item.CategoryName, ShopCategoryIconKey = item.CategoryIconKey, TransactionType = FinancialTransactionType.Income }).ToList();
+                displayBills = income.Where(item => (!CategoryId.HasValue || item.CategoryId == CategoryId.Value) && (!ShopId.HasValue || item.ShopId == ShopId.Value)).Select(item => new BillTransaction { Id = item.Id, BillReferenceNo = item.BillReferenceNo, BillDate = item.TransactionDate, ShopId = item.ShopId, PaymentModeId = item.PaymentModeId, BillValue = item.Amount, Note = item.Note, ShopName = item.ShopName, PaymentModeName = item.PaymentModeName, ShopCategoryId = item.CategoryId, ShopCategoryName = item.CategoryName, ShopCategoryIconKey = item.CategoryIconKey, TransactionType = FinancialTransactionType.Income }).ToList();
             }
             else
             {

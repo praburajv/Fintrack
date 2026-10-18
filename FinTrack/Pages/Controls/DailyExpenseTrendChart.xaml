@@ -21,6 +21,7 @@
     </Border.Resources>
 
     <chart:SfCartesianChart
+        x:Name="TrendChart"
         HeightRequest="280"
         SemanticProperties.Description="Daily expenses trend for the selected month">
         <chart:SfCartesianChart.XAxes>
@@ -33,7 +34,7 @@
         <chart:SfCartesianChart.YAxes>
             <chart:NumericalAxis LabelCreated="OnYAxisLabelCreated">
                 <chart:NumericalAxis.Title>
-                    <chart:ChartAxisTitle Text="{DynamicResource CurrencyExpenseAxisTitle}" />
+                    <chart:ChartAxisTitle x:Name="ValueAxisTitle" Text="{DynamicResource CurrencyExpenseAxisTitle}" />
                 </chart:NumericalAxis.Title>
             </chart:NumericalAxis>
         </chart:SfCartesianChart.YAxes>

@@ -9,4 +9,10 @@ public partial class ReadOnlySqlAnalyzerPage : ContentPage
         InitializeComponent();
         BindingContext = model;
     }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        if (BindingContext is ReadOnlySqlAnalyzerPageModel model) await model.RefreshTableStructuresAsync();
+    }
 }

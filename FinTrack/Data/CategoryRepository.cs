@@ -8,8 +8,10 @@ namespace FinTracker.Data;
 public sealed class CategoryRepository
 {
     private bool _initialized;
+    public void InvalidateAfterDatabaseRestore() => _initialized = false;
     private readonly ILogger<CategoryRepository> _logger;
     private readonly ICriticalOperationState _criticalOperations;
+    private readonly FinancialAccountContext _accounts;
 
     private static readonly (string Name, string IconKey)[] Seeds =
     [
@@ -29,19 +31,19 @@ public sealed class CategoryRepository
         ("Credits", "default_shop")
     ];
 
-    public CategoryRepository(ILogger<CategoryRepository> logger, ICriticalOperationState criticalOperations)
-    { _logger = logger; _criticalOperations = criticalOperations; }
+    public CategoryRepository(ILogger<CategoryRepository> logger, ICriticalOperationState criticalOperations, FinancialAccountContext accounts)
+    { _logger = logger; _criticalOperations = criticalOperations; _accounts = accounts; }
 
     private async Task Init()
     {
         if (_initialized) return;
         await using var connection = new SqliteConnection(Constants.DatabasePath);
         await connection.OpenAsync();
-        try { await EnsureSchemaAndSeedAsync(connection); _initialized = true; }
+        try { await EnsureSchemaAndSeedAsync(connection, _accounts.RequireId()); _initialized = true; }
         catch (Exception ex) { _logger.LogError(ex, "Error initializing Category table"); throw; }
     }
 
-    internal static async Task EnsureSchemaAndSeedAsync(SqliteConnection connection)
+    internal static async Task EnsureSchemaAndSeedAsync(SqliteConnection connection, int? accountId = null)
     {
         var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var tableCheck = connection.CreateCommand(); tableCheck.CommandText = "PRAGMA table_info(Category)";
@@ -75,11 +77,33 @@ public sealed class CategoryRepository
                 var addBudget = connection.CreateCommand(); addBudget.CommandText = "ALTER TABLE Category ADD COLUMN Budgeted REAL NOT NULL DEFAULT 0"; await addBudget.ExecuteNonQueryAsync();
             }
         }
+        if (columns.Contains("FinancialAccountId"))
+        {
+            // Account catalogs are seeded only during migration or company creation.
+            // Re-seeding on every open would silently undo a user's category deletion.
+        }
+        else
+        {
+            foreach (var seed in Seeds)
+            {
+                var insert = connection.CreateCommand();
+                insert.CommandText = "INSERT OR IGNORE INTO Category(Name, IconKey, Budgeted) VALUES(@name, @icon, 0);";
+                insert.Parameters.AddWithValue("@name", seed.Name); insert.Parameters.AddWithValue("@icon", seed.IconKey);
+                await insert.ExecuteNonQueryAsync();
+            }
+        }
+    }
+
+    internal static async Task SeedForAccountAsync(SqliteConnection connection, int accountId, SqliteTransaction? transaction = null)
+    {
         foreach (var seed in Seeds)
         {
-            var insert = connection.CreateCommand();
-            insert.CommandText = "INSERT OR IGNORE INTO Category(Name, IconKey, Budgeted) VALUES(@name, @icon, 0);";
-            insert.Parameters.AddWithValue("@name", seed.Name); insert.Parameters.AddWithValue("@icon", seed.IconKey);
+            await using var insert = connection.CreateCommand();
+            insert.Transaction = transaction;
+            insert.CommandText = "INSERT OR IGNORE INTO Category(Name,IconKey,Budgeted,FinancialAccountId) VALUES(@name,@icon,0,@account)";
+            insert.Parameters.AddWithValue("@name", seed.Name);
+            insert.Parameters.AddWithValue("@icon", seed.IconKey);
+            insert.Parameters.AddWithValue("@account", accountId);
             await insert.ExecuteNonQueryAsync();
         }
     }
@@ -105,7 +129,8 @@ public sealed class CategoryRepository
     public async Task<List<Category>> ListAsync()
     {
         await Init(); await using var connection = new SqliteConnection(Constants.DatabasePath); await connection.OpenAsync();
-        var command = connection.CreateCommand(); command.CommandText = "SELECT Id, Name, IconKey, Budgeted FROM Category ORDER BY Name COLLATE NOCASE";
+        var command = connection.CreateCommand(); command.CommandText = "SELECT Id, Name, IconKey, Budgeted, FinancialAccountId FROM Category WHERE FinancialAccountId=@account ORDER BY Name COLLATE NOCASE";
+        command.Parameters.AddWithValue("@account", _accounts.RequireId());
         var result = new List<Category>(); await using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync()) result.Add(Read(reader));
         return result;
@@ -114,14 +139,15 @@ public sealed class CategoryRepository
     public async Task<Category?> GetAsync(int id)
     {
         await Init(); await using var connection = new SqliteConnection(Constants.DatabasePath); await connection.OpenAsync();
-        var command = connection.CreateCommand(); command.CommandText = "SELECT Id, Name, IconKey, Budgeted FROM Category WHERE Id=@id"; command.Parameters.AddWithValue("@id", id);
+        var command = connection.CreateCommand(); command.CommandText = "SELECT Id, Name, IconKey, Budgeted, FinancialAccountId FROM Category WHERE Id=@id AND FinancialAccountId=@account"; command.Parameters.AddWithValue("@id", id); command.Parameters.AddWithValue("@account", _accounts.RequireId());
         await using var reader = await command.ExecuteReaderAsync(); return await reader.ReadAsync() ? Read(reader) : null;
     }
 
     public async Task<bool> ExistsByNameAsync(string name, int exceptId = 0)
     {
         await Init(); await using var connection = new SqliteConnection(Constants.DatabasePath); await connection.OpenAsync();
-        var command = connection.CreateCommand(); command.CommandText = "SELECT COUNT(*) FROM Category WHERE Name=@name COLLATE NOCASE AND Id<>@id";
+        var command = connection.CreateCommand(); command.CommandText = "SELECT COUNT(*) FROM Category WHERE Name=@name COLLATE NOCASE AND Id<>@id AND FinancialAccountId=@account";
+        command.Parameters.AddWithValue("@account", _accounts.RequireId());
         command.Parameters.AddWithValue("@name", name.Trim()); command.Parameters.AddWithValue("@id", exceptId);
         return Convert.ToInt32(await command.ExecuteScalarAsync()) > 0;
     }
@@ -130,24 +156,26 @@ public sealed class CategoryRepository
     {
         using var operation = _criticalOperations.Begin(); await Init();
         await using var connection = new SqliteConnection(Constants.DatabasePath); await connection.OpenAsync();
-        var command = connection.CreateCommand(); command.CommandText = "INSERT INTO Category(Name, IconKey, Budgeted) VALUES(@name,@icon,@budgeted); SELECT last_insert_rowid();";
+        var command = connection.CreateCommand(); command.CommandText = "INSERT INTO Category(Name, IconKey, Budgeted, FinancialAccountId) VALUES(@name,@icon,@budgeted,@account); SELECT last_insert_rowid();";
+        var accountId = _accounts.RequireId(); command.Parameters.AddWithValue("@account", accountId);
         command.Parameters.AddWithValue("@name", category.Name.Trim()); command.Parameters.AddWithValue("@icon", CategoryIconCatalog.Find(category.IconKey).IconKey); command.Parameters.AddWithValue("@budgeted", category.Budgeted);
-        category.Id = Convert.ToInt32(await command.ExecuteScalarAsync()); return category.Id;
+        category.Id = Convert.ToInt32(await command.ExecuteScalarAsync()); category.FinancialAccountId = accountId; return category.Id;
     }
 
     public async Task UpdateAsync(Category category)
     {
         using var operation = _criticalOperations.Begin(); await Init();
         await using var connection = new SqliteConnection(Constants.DatabasePath); await connection.OpenAsync();
-        var command = connection.CreateCommand(); command.CommandText = "UPDATE Category SET Name=@name, IconKey=@icon, Budgeted=@budgeted WHERE Id=@id";
+        var command = connection.CreateCommand(); command.CommandText = "UPDATE Category SET Name=@name, IconKey=@icon, Budgeted=@budgeted WHERE Id=@id AND FinancialAccountId=@account";
+        command.Parameters.AddWithValue("@account", _accounts.RequireId());
         command.Parameters.AddWithValue("@name", category.Name.Trim()); command.Parameters.AddWithValue("@icon", CategoryIconCatalog.Find(category.IconKey).IconKey); command.Parameters.AddWithValue("@budgeted", category.Budgeted); command.Parameters.AddWithValue("@id", category.Id);
-        await command.ExecuteNonQueryAsync();
+        if (await command.ExecuteNonQueryAsync() != 1) throw new InvalidOperationException("The category is not in the active company.");
     }
 
     public async Task<int> GetShopUsageCountAsync(int categoryId)
     {
         await Init(); await using var connection = new SqliteConnection(Constants.DatabasePath); await connection.OpenAsync();
-        var command = connection.CreateCommand(); command.CommandText = "SELECT COUNT(*) FROM Shop WHERE Category_Id=@id"; command.Parameters.AddWithValue("@id", categoryId);
+        var command = connection.CreateCommand(); command.CommandText = "SELECT COUNT(*) FROM Shop WHERE Category_Id=@id AND FinancialAccountId=@account"; command.Parameters.AddWithValue("@id", categoryId); command.Parameters.AddWithValue("@account", _accounts.RequireId());
         return Convert.ToInt32(await command.ExecuteScalarAsync());
     }
 
@@ -156,10 +184,10 @@ public sealed class CategoryRepository
         if (category.Name.Equals("Default Shop", StringComparison.OrdinalIgnoreCase)) return false;
         if (await GetShopUsageCountAsync(category.Id) > 0) return false;
         using var operation = _criticalOperations.Begin(); await using var connection = new SqliteConnection(Constants.DatabasePath); await connection.OpenAsync();
-        var command = connection.CreateCommand(); command.CommandText = "DELETE FROM Category WHERE Id=@id"; command.Parameters.AddWithValue("@id", category.Id);
+        var command = connection.CreateCommand(); command.CommandText = "DELETE FROM Category WHERE Id=@id AND FinancialAccountId=@account"; command.Parameters.AddWithValue("@id", category.Id); command.Parameters.AddWithValue("@account", _accounts.RequireId());
         return await command.ExecuteNonQueryAsync() > 0;
     }
 
     public async Task<Category> GetDefaultCategoryAsync() => (await ListAsync()).First(x => x.Name.Equals("Default Shop", StringComparison.OrdinalIgnoreCase));
-    private static Category Read(SqliteDataReader reader) => new() { Id = reader.GetInt32(0), Name = reader.GetString(1), IconKey = reader.GetString(2), Budgeted = reader.IsDBNull(3) ? 0 : Convert.ToDecimal(reader.GetValue(3), System.Globalization.CultureInfo.InvariantCulture) };
+    private static Category Read(SqliteDataReader reader) => new() { Id = reader.GetInt32(0), Name = reader.GetString(1), IconKey = reader.GetString(2), Budgeted = reader.IsDBNull(3) ? 0 : Convert.ToDecimal(reader.GetValue(3), System.Globalization.CultureInfo.InvariantCulture), FinancialAccountId = reader.GetInt32(4) };
 }
